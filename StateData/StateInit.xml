@@ -1,0 +1,627 @@
+<States>
+
+	<Menu>
+
+		<Intro>
+			<viewWidth>1024</viewWidth>
+			<viewHeight>768</viewHeight>
+			<Entity name='Predefined1' type='Button'>
+				<assembleFunc>Assemble_Button</assembleFunc>
+				<Attributes>
+					<x>350</x>
+					<y>380</y>
+					<width>150</width>
+					<height>50</height>
+					<text>Start Game</text>
+					<Font name='Asman'>ASMAN.ttf</Font>
+				</Attributes>
+				<Component name='State'>
+					<componentID>0</componentID>
+					<state>Menu,MainMenu</state>
+				</Component>
+			</Entity>
+			<Entity name='Custom1' type='KeyPress'>
+				<Component name='State'>
+					<componentID>0</componentID>
+					<state>Game,TestLevel</state>
+				</Component>
+			</Entity>
+			<Input type='key'>
+				<key>/24.</key>
+				<OnPressed>
+					<type>action/state</type>
+					<system>Function_Name</system>
+					<entity>
+						<entityType>KeyPress</entityType>
+						<entitytName>Custom1</entitytName>
+						<componentName>state</componentName>
+					</entity>
+				</OnPressed>
+				<OnReleased>
+					<system>Change_State</system>
+					<entity>
+						<entityType>KeyPress</entityType>
+						<entitytName>Custom1</entitytName>
+						<componentName>state</componentName>
+					</entity>
+				</OnReleased>
+			</Input>
+			<Input type='hotspot'>
+				<x>350</x>
+				<y>380</y>
+				<width>150</width>
+				<height>50</height>
+				<OnSelected>
+					<system>Function_Name</system>
+					<entity>
+						<entityType>Button</entityType>
+						<entitytName>Predefined1</entitytName>
+						<componentName>state</componentName>
+					</entity>
+				</OnSelected>
+				<OnDeselected>
+					<system>Function_Name</system>
+					<entity>
+						<entityType>Button</entityType>
+						<entitytName>Predefined1</entitytName>
+						<componentName>state</componentName>
+					</entity>
+				</OnDeselected>
+				<OnPressed>
+					<type>action/state</type>
+					<system>Function_Name</system>
+					<entity>
+						<entityType>Button</entityType>
+						<entitytName>Predefined1</entitytName>
+						<componentName>state</componentName>
+					</entity>
+				</OnPressed>
+				<OnReleased>
+					<system>Change_State</system>
+					<entity>
+						<entityType>Button</entityType>
+						<entitytName>Predefined1</entitytName>
+						<componentName>state</componentName>
+					</entity>
+				</OnReleased>
+			</Input>
+		</Intro>
+
+		<MainMenu>
+			<viewWidth>1024</viewWidth>
+			<viewHeight>768</viewHeight>
+			<Entity name='StartGame' type='Button'>
+				<assembleFunc>Assemble_Button</assembleFunc>
+				<Attributes>
+					<x>400</x>
+					<y>300</y>
+					<width>150</width>
+					<height>50</height>
+					<text>Start Game</text>
+					<Font name='Asman'>ASMAN.ttf</Font>
+				</Attributes>
+				<Component name='State'>
+					<componentID>0</componentID>
+					<state>Game,ChooseSavedGame</state>
+				</Component>
+			</Entity>
+			<Entity name='Instructions' type='Button'>
+				<assembleFunc>Assemble_Button</assembleFunc>
+				<Attributes>
+					<x>400</x>
+					<y>400</y>
+					<width>150</width>
+					<height>50</height>
+					<text>Instructions</text>
+					<Font name='Asman'>ASMAN.ttf</Font>
+				</Attributes>
+				<Component name='State'>
+					<componentID>0</componentID>
+					<state>Menu,Instructions</state>
+				</Component>
+			</Entity>
+			<Entity name='Options' type='Button'>
+				<assembleFunc>Assemble_Button</assembleFunc>
+				<Attributes>
+					<x>400</x>
+					<y>500</y>
+					<width>150</width>
+					<height>50</height>
+					<text>Options</text>
+					<Font name='Asman'>ASMAN.ttf</Font>
+				</Attributes>
+				<Component name='State'>
+					<componentID>0</componentID>
+					<state>Menu,Options</state>
+				</Component>
+			</Entity>
+			<Entity name='QuitGame' type='Button'>
+				<assembleFunc>Assemble_Button</assembleFunc>
+				<Attributes>
+					<x>400</x>
+					<y>600</y>
+					<width>150</width>
+					<height>50</height>
+					<text>Quit Game</text>
+					<Font name='Asman'>ASMAN.ttf</Font>
+				</Attributes>
+				<Component name='State'>
+					<componentID>0</componentID>
+					<state>QUIT,QUIT</state>
+				</Component>
+			</Entity>
+			<Input type='hotspot'>
+				<x>400</x>
+				<y>300</y>
+				<width>150</width>
+				<height>50</height>
+				<OnSelected>
+					<system>Oscillate_Box_Colors</system>
+					<entity>
+						<entityType>Button</entityType>
+						<entitytName>StartGame</entitytName>
+						<componentName>box</componentName>
+					</entity>
+				</OnSelected>
+				<OnDeselected>
+					<system>Oscillate_Box_Colors</system>
+					<entity>
+						<entityType>Button</entityType>
+						<entitytName>StartGame</entitytName>
+						<componentName>box</componentName>
+					</entity>
+				</OnDeselected>
+				<OnReleased>
+					<system>Change_State</system>
+					<entity>
+						<entityType>Button</entityType>
+						<entitytName>StartGame</entitytName>
+						<componentName>state</componentName>
+					</entity>
+				</OnReleased>
+			</Input>
+			<Input type='hotspot'>
+				<x>400</x>
+				<y>400</y>
+				<width>150</width>
+				<height>50</height>
+				<OnSelected>
+					<system>Oscillate_Box_Colors</system>
+					<entity>
+						<entityType>Button</entityType>
+						<entitytName>Instructions</entitytName>
+						<componentName>box</componentName>
+					</entity>
+				</OnSelected>
+				<OnDeselected>
+					<system>Oscillate_Box_Colors</system>
+					<entity>
+						<entityType>Button</entityType>
+						<entitytName>Instructions</entitytName>
+						<componentName>box</componentName>
+					</entity>
+				</OnDeselected>
+				<OnReleased>
+					<system>Change_State</system>
+					<entity>
+						<entityType>Button</entityType>
+						<entitytName>Instructions</entitytName>
+						<componentName>state</componentName>
+					</entity>
+				</OnReleased>
+			</Input>
+			<Input type='hotspot'>
+				<x>400</x>
+				<y>500</y>
+				<width>150</width>
+				<height>50</height>
+				<OnSelected>
+					<system>Oscillate_Box_Colors</system>
+					<entity>
+						<entityType>Button</entityType>
+						<entitytName>Options</entitytName>
+						<componentName>box</componentName>
+					</entity>
+				</OnSelected>
+				<OnDeselected>
+					<system>Oscillate_Box_Colors</system>
+					<entity>
+						<entityType>Button</entityType>
+						<entitytName>Options</entitytName>
+						<componentName>box</componentName>
+					</entity>
+				</OnDeselected>
+				<OnReleased>
+					<system>Change_State</system>
+					<entity>
+						<entityType>Button</entityType>
+						<entitytName>Options</entitytName>
+						<componentName>state</componentName>
+					</entity>
+				</OnReleased>
+			</Input>
+			<Input type='hotspot'>
+				<x>400</x>
+				<y>600</y>
+				<width>150</width>
+				<height>50</height>
+				<OnSelected>
+					<system>Oscillate_Box_Colors</system>
+					<entity>
+						<entityType>Button</entityType>
+						<entitytName>QuitGame</entitytName>
+						<componentName>box</componentName>
+					</entity>
+				</OnSelected>
+				<OnDeselected>
+					<system>Oscillate_Box_Colors</system>
+					<entity>
+						<entityType>Button</entityType>
+						<entitytName>QuitGame</entitytName>
+						<componentName>box</componentName>
+					</entity>
+				</OnDeselected>
+				<OnReleased>
+					<system>Change_State</system>
+					<entity>
+						<entityType>Button</entityType>
+						<entitytName>QuitGame</entitytName>
+						<componentName>state</componentName>
+					</entity>
+				</OnReleased>
+			</Input>
+		</MainMenu>
+
+		<Options>
+			<viewWidth>1024</viewWidth>
+			<viewHeight>768</viewHeight>
+			<Entity name='GoBack' type='Button'>
+				<assembleFunc>Assemble_Button</assembleFunc>
+				<Attributes>
+					<x>50</x>
+					<y>600</y>
+					<width>150</width>
+					<height>50</height>
+					<text>Go Back</text>
+					<Font name='Asman'>ASMAN.ttf</Font>
+				</Attributes>
+				<Component name='State'>
+					<componentID>0</componentID>
+					<state>Menu,MainMenu</state>
+				</Component>
+			</Entity>
+			<Input type='hotspot'>
+				<x>50</x>
+				<y>600</y>
+				<width>150</width>
+				<height>50</height>
+				<OnSelected>
+					<system>Oscillate_Box_Colors</system>
+					<entity>
+						<entityType>Button</entityType>
+						<entitytName>GoBack</entitytName>
+						<componentName>box</componentName>
+					</entity>
+				</OnSelected>
+				<OnDeselected>
+					<system>Oscillate_Box_Colors</system>
+					<entity>
+						<entityType>Button</entityType>
+						<entitytName>GoBack</entitytName>
+						<componentName>box</componentName>
+					</entity>
+				</OnDeselected>
+				<OnReleased>
+					<system>Change_State</system>
+					<entity>
+						<entityType>Button</entityType>
+						<entitytName>GoBack</entitytName>
+						<componentName>state</componentName>
+					</entity>
+				</OnReleased>
+			</Input>
+		</Options>
+			
+		<Instructions>
+			<viewWidth>1024</viewWidth>
+			<viewHeight>768</viewHeight>
+			<Entity name='GoBack' type='Button'>
+				<assembleFunc>Assemble_Button</assembleFunc>
+				<Attributes>
+					<x>50</x>
+					<y>600</y>
+					<width>150</width>
+					<height>50</height>
+					<text>Go Back</text>
+					<Font name='Asman'>ASMAN.ttf</Font>
+				</Attributes>
+				<Component name='State'>
+					<componentID>0</componentID>
+					<state>Menu,MainMenu</state>
+				</Component>
+			</Entity>
+			<Input type='hotspot'>
+				<x>50</x>
+				<y>600</y>
+				<width>150</width>
+				<height>50</height>
+				<OnSelected>
+					<system>Oscillate_Box_Colors</system>
+					<entity>
+						<entityType>Button</entityType>
+						<entitytName>GoBack</entitytName>
+						<componentName>box</componentName>
+					</entity>
+				</OnSelected>
+				<OnDeselected>
+					<system>Oscillate_Box_Colors</system>
+					<entity>
+						<entityType>Button</entityType>
+						<entitytName>GoBack</entitytName>
+						<componentName>box</componentName>
+					</entity>
+				</OnDeselected>
+				<OnReleased>
+					<system>Change_State</system>
+					<entity>
+						<entityType>Button</entityType>
+						<entitytName>GoBack</entitytName>
+						<componentName>state</componentName>
+					</entity>
+				</OnReleased>
+			</Input>
+		</Instructions>
+
+	</Menu>
+
+	<Game>
+		<Pause>
+			<viewWidth>1024</viewWidth>
+			<viewHeight>512</viewHeight>
+			<Entity name='Continue' type='Button'>
+				<assembleFunc>Assemble_Button</assembleFunc>
+				<Attributes>
+					<x>400</x>
+					<y>300</y>
+					<width>150</width>
+					<height>50</height>
+					<text>Continue</text>
+					<Font name='Asman'>ASMAN.ttf</Font>
+				</Attributes>
+				<Component name='State'>
+					<componentID>0</componentID>
+					<state>Game,PauseContinue</state>
+				</Component>
+			</Entity>
+			<Entity name='Quit' type='Button'>
+				<assembleFunc>Assemble_Button</assembleFunc>
+				<Attributes>
+					<x>400</x>
+					<y>500</y>
+					<width>150</width>
+					<height>50</height>
+					<text>Quit</text>
+					<Font name='Asman'>ASMAN.ttf</Font>
+				</Attributes>
+				<Component name='State'>
+					<componentID>0</componentID>
+					<state>QUIT,QUIT</state>
+				</Component>
+			</Entity>
+			<Input type='hotspot'>
+				<x>400</x>
+				<y>300</y>
+				<width>150</width>
+				<height>50</height>
+				<OnSelected>
+				</OnSelected>
+				<OnDeselected>
+				</OnDeselected>
+				<OnPressed>
+					<type>state</type>
+					qweqwe
+				</OnPressed>
+				<OnReleased>
+					<system>Change_State</system>
+					<entity>
+						<entityType>Button</entityType>
+						<entitytName>Continue</entitytName>
+						<componentName>state</componentName>
+					</entity>
+				</OnReleased>
+			</Input>
+			<Input type='hotspot'>
+				<x>400</x>
+				<y>500</y>
+				<width>150</width>
+				<height>50</height>
+				<OnSelected>
+				</OnSelected>
+				<OnDeselected>
+				</OnDeselected>
+				<OnPressed>
+					<type>state</type>
+					qweqwe
+				</OnPressed>
+				<OnReleased>
+					<system>Change_State</system>
+					<entity>
+						<entityType>Button</entityType>
+						<entitytName>Quit</entitytName>
+						<componentName>state</componentName>
+					</entity>
+				</OnReleased>
+			</Input>
+		</Pause>
+		
+		<NewGame>
+			<viewWidth>1024</viewWidth>
+			<viewHeight>512</viewHeight>
+			<Entity name='TutorialState' type='State'>
+				<Component name='State'>
+					<componentID>0</componentID>
+					<state>Game,TestLevel</state>
+				</Component>
+			</Entity>
+			<System type='action'>
+				<system>New_Game</system>
+			</System>
+			<System type='action'>
+				<system>Load_Level_Data</system>
+			</System>
+			<System type='action'>
+				<system>Change_State</system>				
+				<entity>
+					<entityType>State</entityType>
+					<entitytName>TutorialState</entitytName>
+					<componentName>State</componentName>
+				</entity>
+			</System>
+		</NewGame>
+
+		<PauseContinue>
+			<viewWidth>1024</viewWidth>
+			<viewHeight>512</viewHeight>
+			<Entity name='OnScreenEntities' type='Manager'>
+				<assembleFunc>Entity_List</assembleFunc>
+				<Attributes>
+				</Attributes>			
+			</Entity>
+			<Entity name='ChunkManager' type='Manager'>
+				<assembleFunc>Chunk_Manager</assembleFunc>
+				<Attributes>
+					<XChunkPosition>0</XChunkPosition>
+					<YChunkPosition>0</YChunkPosition>
+					<XChunksInWindow>2</XChunksInWindow>
+					<YChunksInWindow>2</YChunksInWindow>
+					<ChunkLayers>2</ChunkLayers>
+					<Texture name='TileAtlas0'>TestAtlas0</Texture>
+					<Texture name='TileAtlas1'>TestAtlas1</Texture>
+				</Attributes>
+			</Entity>
+		</PauseContinue>
+		
+		<Continue>
+			<viewWidth>1024</viewWidth>
+			<viewHeight>512</viewHeight>
+			<Entity name='OnScreenEntities' type='Manager'>
+				<assembleFunc>Entity_List</assembleFunc>
+				<Attributes>
+				</Attributes>			
+			</Entity>
+			<Entity name='ChunkManager' type='Manager'>
+				<assembleFunc>Chunk_Manager</assembleFunc>
+				<Attributes>
+					<XChunkPosition>0</XChunkPosition>
+					<YChunkPosition>0</YChunkPosition>
+					<XChunksInWindow>2</XChunksInWindow>
+					<YChunksInWindow>2</YChunksInWindow>
+					<ChunkLayers>2</ChunkLayers>
+					<Texture name='TileAtlas0'>TestAtlas0</Texture>
+					<Texture name='TileAtlas1'>TestAtlas1</Texture>
+				</Attributes>
+			</Entity>
+		</Continue>
+
+		<ChooseSavedGame>
+			<viewWidth>1024</viewWidth>
+			<viewHeight>512</viewHeight>
+			<Entity name='Save1' type='Button'>
+				<assembleFunc>Assemble_Button</assembleFunc>
+				<Attributes>
+					<x>400</x>
+					<y>300</y>
+					<width>150</width>
+					<height>50</height>
+					<text>Save1</text>
+					<Font name='Asman'>ASMAN.ttf</Font>
+				</Attributes>
+				<Component name='State'>
+					<componentID>0</componentID>
+					<state>Game,Continue</state>
+				</Component>
+			</Entity>
+			<Input type='hotspot'>
+				<x>400</x>
+				<y>300</y>
+				<width>150</width>
+				<height>50</height>
+				<OnPressed>
+					<system>Change_Player_Dir</system>
+				</OnPressed>
+				<OnReleased>
+					<system>Change_State</system>
+					<entity>
+						<entityType>Button</entityType>
+						<entitytName>Save1</entitytName>
+						<componentName>state</componentName>						
+					</entity>
+				</OnReleased>
+			</Input>
+		</ChooseSavedGame>
+		
+		<ChooseLevel>
+			<viewWidth>1024</viewWidth>
+			<viewHeight>512</viewHeight>
+			<Entity name='Tutorial' type='Button'>
+				<assembleFunc>Assemble_Button</assembleFunc>
+				<Attributes>
+					<x>400</x>
+					<y>300</y>
+					<width>150</width>
+					<height>50</height>
+					<text>Tutorial</text>
+					<Font name='Asman'>ASMAN.ttf</Font>
+				</Attributes>
+				<Component name='State'>
+					<componentID>0</componentID>
+					<state>Game,Continue</state>
+				</Component>
+			</Entity>
+			<Input type='hotspot'>
+				<x>400</x>
+				<y>300</y>
+				<width>150</width>
+				<height>50</height>
+				<OnSelected>
+				</OnSelected>
+				<OnDeselected>
+				</OnDeselected>
+				<OnPressed>
+					<type>state</type>
+					qweqwe
+				</OnPressed>
+				<OnReleased>
+					<system>Change_State</system>
+					<entity>
+						<entityType>Button</entityType>
+						<entitytName>Tutorial</entitytName>
+						<componentName>state</componentName>
+					</entity>
+				</OnReleased>
+			</Input>
+		</ChooseLevel>
+		
+		<TestLevel>
+			<viewWidth>512</viewWidth>
+			<viewHeight>384</viewHeight>
+			<Entity name='OnScreenEntities' type='Manager'>
+				<assembleFunc>Entity_List</assembleFunc>
+				<Attributes>
+				</Attributes>			
+			</Entity>
+			<Entity name='ChunkManager' type='Manager'>
+				<assembleFunc>Chunk_Manager</assembleFunc>
+				<Attributes>
+					<XChunkPosition>0</XChunkPosition>
+					<YChunkPosition>0</YChunkPosition>
+					<XChunksInWindow>2</XChunksInWindow>
+					<YChunksInWindow>2</YChunksInWindow>
+					<ChunkLayers>2</ChunkLayers>
+					<Texture name='TextAtlas0'>TestAtlas0.bmp</Texture>
+				</Attributes>
+			</Entity>
+		</TestLevel>
+	</Game>
+
+</States>
