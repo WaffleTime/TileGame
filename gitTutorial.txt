@@ -1,0 +1,38 @@
+Before I forget, when you first download Git, you must do these things (and these are important to the project so write them down somewhere or something) (I also ended up inputting how you use git to talk with the github repository, that's the reliable information.)
+(Also keep in mind that I haven't looked up anything, so don't be surprised if there are some errors, google it!)
+:
+(Only do these once)
+Configure your Name and Email for your git program.
+I think they were like,
+git --config user.name "your_name_here"
+git --config user.email "your_email_here"
+Then you must connect your git program with the github repository.
+You do that by,
+git remote add (variable name) "https://github.com/JakeWaffle/TileGame.git"
+(I think, the quotes may be wrong syntax-wise.)
+(And the (variable name) is an alias that will be used to reference the github repository for our game.)
+You also have to setup a folder for your local repository. Mine is within my home folder for my computer's user (e.g. C://User/username/localRepositoryName/)
+The local repository is basically a folder that interacts with the github repository. You must pull the files from github in order to get any changes that have been made to the code. Then once you make your changes, you can push your local repository back into the github repository.
+You can setup the local repository manually with Window's folder viewer shit. Or you can just use this command upon entering the git program:
+mkdir folderName
+Then you must enter the folder you just made for the localRepository, use this command to do so:
+cd localRepository
+And once you get into the local repository,
+you must flag that folder as your local repository for the git program. Do so with this command (you have to be in the directory of the local repository within the git program for this to work):
+git init
+So you have your local repository setup now and are connected to the game's repository.
+(Do these every time you're using git)
+For one, you need to be inside of the folder for the local repository, so you use cd again.
+cd localRepositoryName
+Then you can pull from the repository in order to update the changes in your local repository (It will merge files in the github repository with the files in your local repository I think.) Pull from the github repository with this command:
+git pull (variable name) master
+(variable name must be the same name you used before, it refers to our github repository.)
+(master is the branch name that you want to pull from, branches define different versions of the program, ours only has the master so far.)
+From there you can make changes to the up-to-date code. But then you'll have to push it back into the github repository. In order to push it back into the github repository, there are several commands to enter:
+git add fileNameOfFileThatHasBeenModified
+Then,
+git commit -m 'put a message here that sums up the changes you made, this is important to document.'
+And finally after adding all of the files you modified and committed those files, you can push the local repository into the github repository! Do so with this command:
+git push (variable name) master
+(Again variable name is the reference that you already defined, it refers to the connection to our github repository.) (Master is the branch that you want to push to, I'm thinking we should only push to master when we have another branch's code working though.)
+And that pretty much sums up what you'll have to do to get git running for our game's repository!
