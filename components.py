@@ -202,9 +202,10 @@ class Text_Line(Component):
     def _Render(self, renderWindow):
         renderWindow.draw(self._text)
 
-class Tile(object):
+class Tile(Component):
     """Denotes a single tile within a chunk."""
-    def __init__( self ):
+    def __init__( self, dData ):
+        Component.__init__(self, "Tile:%s"%(dData['componentID']), False, False)
         self._is_Active = False    #Tells whether or not the tile is visible or not
         self._tileID = 0           #Identifies the type of tile that is drawn (denotes tile IDs on the tile_atlas.)
         self._tile_AtlasID = 0
@@ -230,16 +231,71 @@ class Tile(object):
 
         return str((self._tileID-offset)/10) + str(offset)
 
+class Mesh(Component):
+    """This is for drawing with the gpu!"""
+    def __init__(self, dData):
+        Component.__init__(self, "Mesh:%s"%(dData["componentID"]), False, True)
+        self._mesh = [ [] for layer in xrange(config.CHUNK_LAYERS) ]
+
+        #This is for linking this mesh with a texture within the Asset_Manager.
+        self._lTileAtlasNames = []
+        
+        for i in config.CHUNK_LAYERS:
+
+            self._lTileAtlasNames.append(dData["tileAtlas"+i])
+
+    def _Clear_Meshes(self):
+        #Clears the mesh lists
+        for i in xrange(len(self._mesh)):
+            self.mesh[i] = []
+
+    def _Add_To_Mesh(self, layer, lVertices):
+        """This will concatenate a list of Vertices with the Vertex Array for the given layer index."""
+        self._mesh[layer] += lVertices
+
+    def _Get_Meshes(self):
+        return self._mesh
+
+    def _Render(self, renderWindow):
+        
+        for layer in xrange(config.CHUNK_LAYERS-1, -1, -1):
+            
+            renderWindow.draw(chunkEntity._Get_Component(MESH)._Get_Meshes()[layer], sf.QUADS, Asset_Manager._Get_Texture(self._lTileAtlasNames[layer]))
+
 class List(Component):
+    """This is for containing Components as well as Entities."""
     def __init__(self, dData):
         Component.__init__(self, "List:%s"%(dData['componentID']), False, False)
-        self._list = []
+        #Tjos cam also hold entities.
+        self._lComponents = []
 
-    def _Add_To_List(self, item):
-        self._list.append(item)
+    def _Add(self, item):
+        self._lComponents.append(item)
 
-    def _Get_Item(self, indx):
-        return self._list[indx]
+    def _Clear(self):
+        del self._lComponents
+
+    def _Get(self, indx):
+        return self._lComponents[indx]
+
+class Dictionary(Component):
+    """This is for containing Components as well as Entities."""
+    def __init__(self, dData):
+        Component.__init__(self, "Dict:%s"%(dData['componentID']), False, False)
+        #This can also hold entities
+        self._dComponents = {}
+
+    def _Add(self, itemName, item):
+        self._dComponents[itemName] = item
+
+    def _Remove(self, itemName):
+        del self._dComponents[itemName]
+
+    def _Clear(self):
+        del self._lComponents
+
+    def _Get_Item(self, itemName):
+        return self._dComponents[itemName]
 
 
 class Flag(Component):

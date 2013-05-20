@@ -451,15 +451,15 @@ def Update_Render_List(chunkDict, worldPos, chunksInWindow, renderList):
                 renderList._Append(pChunk)   #Put the chunk pointer into the render list!
 
 
-def Load_Data(chunkEntity):
+def Load_Data(dEntities):
     """From the data within the chunk's file, we then give this list of lists as an argument for the Chunk's _Load_Data().
     So from here we'll update the self._tiles list of lists with a list of lists of similar size (the data.)"""
 
-    fileName = config.Chunk_Directory + "/" + str(chunkEntity._Get_Component(CWORLD_POS)._Get_Position()[0]) + " " + str(chunkEntity._Get_Component(CWORLD_POS)._Get_Position()[1]) + ".txt"
+    fileName = config.Saved_Game_Directory + "/ChunkData" \
+                + str(dEntities["chunk"]._Get_Component("POS:0")._Get_X()) \
+                + " " + str(dEntities["chunk"]._Get_Component("POS:0")._Get_Y()) + ".txt"
 
     failureFlag = False
-
-    print "Loading stuff for the chunkssss!"
 
     try:
         fileObj = open(fileName, "r")
@@ -468,7 +468,7 @@ def Load_Data(chunkEntity):
 
         offset = 0
 
-        tiles = chunkEntity._Get_Component(TILES)
+        tiles = dEntities["chunk"]._Get_Component("List:tiles")
 
         for row in xrange(config.CHUNK_TILES_HIGH):
             for col in xrange(config.CHUNK_TILES_WIDE):
@@ -497,7 +497,7 @@ def Load_Data(chunkEntity):
 def Unload(chunkEntity):
     """This is where we'll be saving the contents of a chunk to a file."""
 
-    fileName = config.Chunk_Directory + "/" + str(chunkEntity._Get_Component(CWORLD_POS)._Get_Position()[0]) + " " + str(chunkEntity._Get_Component(CWORLD_POS)._Get_Position()[1]) + ".txt"
+    fileName = config.Saved_Game_Directory + "/ChunkData" + str(chunkEntity._Get_Component(CWORLD_POS)._Get_Position()[0]) + " " + str(chunkEntity._Get_Component(CWORLD_POS)._Get_Position()[1]) + ".txt"
 
     #try:
     fileObj = open(fileName, "w")       #This won't provoke errors, because the file will either be created or overwritten.
