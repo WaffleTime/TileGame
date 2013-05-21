@@ -208,12 +208,14 @@ class Tile(Component):
         Component.__init__(self, "Tile:%s"%(dData['componentID']), False, False)
         self._is_Active = False    #Tells whether or not the tile is visible or not
         self._tileID = 0           #Identifies the type of tile that is drawn (denotes tile IDs on the tile_atlas.)
-        self._tile_AtlasID = 0
 
+    def _Get_TileID(self):
+        return self._tileID
+    
     def _Set_TileID(self, iTileID):
         self._tileID = iTileID
-        
-        #Here we should set the tile_AtlasID also (it's a function of the tileID)
+
+        self._Set_Is_Active()
 
     def _Get_Tile_AtlasID(self):
         return self._tile_AtlasID
@@ -225,6 +227,9 @@ class Tile(Component):
         else:
             self._is_Active = False
 
+    def _Get_Is_Active( self ):
+         return self._is_Active
+
     def __str__( self ):
         """This is the tile's string representation for when it is saved to a file."""
         offset = self._tileID%10    #This will get the first digit for our tileID
@@ -234,7 +239,7 @@ class Tile(Component):
 class Mesh(Component):
     """This is for drawing with the gpu!"""
     def __init__(self, dData):
-        Component.__init__(self, "Mesh:%s"%(dData["componentID"]), False, True)
+        Component.__init__(self, "MESH:%s"%(dData["componentID"]), False, True)
         self._mesh = [ [] for layer in xrange(config.CHUNK_LAYERS) ]
 
         #This is for linking this mesh with a texture within the Asset_Manager.
@@ -265,7 +270,7 @@ class Mesh(Component):
 class List(Component):
     """This is for containing Components as well as Entities."""
     def __init__(self, dData):
-        Component.__init__(self, "List:%s"%(dData['componentID']), False, False)
+        Component.__init__(self, "LIST:%s"%(dData['componentID']), False, False)
         #Tjos cam also hold entities.
         self._lComponents = []
 
@@ -275,13 +280,22 @@ class List(Component):
     def _Clear(self):
         del self._lComponents
 
-    def _Get(self, indx):
+    def _Remove(self, indx):
+        del self._lComponents[indx]
+
+    def _Pop(self, indx):
+        return self._lComponents.pop(indx)
+
+    def __getattr__(self, indx):
         return self._lComponents[indx]
+
+    def __len__(self):
+        return len(self._lComponents)
 
 class Dictionary(Component):
     """This is for containing Components as well as Entities."""
     def __init__(self, dData):
-        Component.__init__(self, "Dict:%s"%(dData['componentID']), False, False)
+        Component.__init__(self, "DICT:%s"%(dData['componentID']), False, False)
         #This can also hold entities
         self._dComponents = {}
 
@@ -291,11 +305,17 @@ class Dictionary(Component):
     def _Remove(self, itemName):
         del self._dComponents[itemName]
 
+    def __getattr__(self, key):
+        return self._dComponents[key]
+
+    def __setattr(self, key, value):
+        self._dComponents[key] = value
+
     def _Clear(self):
         del self._lComponents
 
-    def _Get_Item(self, itemName):
-        return self._dComponents[itemName]
+    def _Get(self, itemName):
+        return self._dComponents.get(itemName, None)
 
 
 class Flag(Component):
@@ -336,6 +356,12 @@ class Position(Component):
 
     def _Set_Position(self, postion):
         self._position = position
+
+    def _Add_To_X(self, number):
+        self._position[0] += number
+
+    def _Add_To_Y(self, number):
+        self._position[1] += number
 
 
 class Misc(Component):

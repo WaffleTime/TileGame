@@ -45,19 +45,26 @@ def Assemble_Chunk(sEntityName, sEntityType, attribDict):
     entity._Add_Component(components.Flag({"componentID":"IsEmpty", "flag":True}))
     entity._Add_Component(components.Flag({"componentID":"IsLoaded", "flag":False}))
 
-    entityDict = components.Entity_Dict({"componentID":"tiles"})
+    tileList = components.List({"componentID":"Tiles"})
 
     for row in xrange(config.CHUNK_TILES_HIGH):
+        #Adds in a list for each row of the tiles
+        tileList._Add(components.List({"componentID":"Tiles"}))
+        
         for col in xrange(config.CHUNK_TILES_WIDE):
+            #Adds in a list for each col of the tiles
+            tileList._Get(row)._Add(components.List({"componentID":"Tiles"}))
             for depth in xrange(config.CHUNK_LAYERS):
-                entityDict._Add_To_List( components.Tile({"componentID":row+","+col+","+depth}) )
+                #Then adds in a tile, for each layer that exists, into
+                #   each 2d tile position in this chunk.
+                tileList[row][col][depth]._Add_To_List( components.Tile({"componentID":row+","+col+","+depth}) )
 
-    entity._Add_Component(entityDict)
+    entity._Add_Component(tileList)
 
     return entity
 
 
-def Assemble_Chunk_Manager(sEntityName, sEntityType, attribDict): lWorldPos, lChunksInWindow):
+def Assemble_Chunk_Manager(sEntityName, sEntityType, attribDict):
     """This will return an Entity object that contains a list of lists of lists of tiles,
     some world coordinates, the number of chunks in the screen, and all that stuff that is
     needed in order to manager a chunks of tiles (except for the textures, those are already
@@ -68,25 +75,24 @@ def Assemble_Chunk_Manager(sEntityName, sEntityType, attribDict): lWorldPos, lCh
     entity._Add_Component(components.Position({"componentID":"1", "ChunksInWind":attribDict["ChunksInWind"].split(",")}))
     entity._Add_Component(components.Flag({"componentID":"VisibilityUpdate", "flag":False}))
 
-    entity._Add_Component(components.Dictionary({"componentID":"chunkDict"}))
+    entity._Add_Component(components.Dictionary({"componentID":"ChunkDict"}))
 
-    entity._Add_Component(components.List({"componentID":"loadList"}))
-    entity._Add_Component(components.List({"componentID":"rebuildList"}))
-    entity._Add_Component(components.List({"componentID":"unloadList"}))
-    entity._Add_Component(components.List({"componentID":"flagList"}))
-    entity._Add_Component(components.List({"componentID":"renderList"}))
+    entity._Add_Component(components.List({"componentID":"LoadList"}))
+    entity._Add_Component(components.List({"componentID":"RebuildList"}))
+    entity._Add_Component(components.List({"componentID":"UnloadList"}))
+    entity._Add_Component(components.List({"componentID":"FlagList"}))
+    entity._Add_Component(components.List({"componentID":"RenderList"}))
 
     #This will strictly assemble the chunks around the outside of the chunks on the screen (the first items in the loadList get loaded last, so we add these first!)
     #This only will loop through the chunks to the left and right of the screen.
     for i in xrange( lWorldPos[0]-1, lWorldPos[0] + lChunksInWindow[0]+1 ):
         for j in xrange( lWorldPos[1]-1, lWorldPos[1] + lChunksInWindow[1]+1, lChunksInWindow[1]+1 ):
 
-            print (i,j)
-
-            entity._Get_Component("List:chunkDict")._Add(i+","+j,
-                                                        Assemble_Chunk( "Chunk at (%d, %d)" % (lWorldPos[0], lWorldPos[1]),
-                                                                                               [i - lWorldPos[0], j - lWorldPos[1]],
-                                                                                               (i,j)) )
+            entity._Get_Component("List:chunkDict")._Add( i+","+j,
+                                                          Assemble_Chunk( "%d, %d" % (lWorldPos[0], lWorldPos[1]),
+                                                                          "Chunk",
+                                                                          {"WorldPos":i+","+j,
+                                                                           "WindowPos":str(i - lWorldPos[0])+","+str(j - lWorldPos[1])} ) )
 
             pChunk = entity._Get_Component("List:chunkDict")._Get(i+","+j)
 
@@ -96,12 +102,11 @@ def Assemble_Chunk_Manager(sEntityName, sEntityType, attribDict): lWorldPos, lCh
     for i in xrange( lWorldPos[0]-1, lWorldPos[0] + lChunksInWindow[0]+1, lChunksInWindow[0]+1 ):
         for j in xrange( lWorldPos[1]-1, lWorldPos[1] + lChunksInWindow[1]+1):
 
-            print (i,j)
-
-            entity._Get_Component("List:chunkDict")._Add(i+","+j,
-                                                        Assemble_Chunk( "Chunk at (%d, %d)" % (lWorldPos[0], lWorldPos[1]),
-                                                                                               [i - lWorldPos[0], j - lWorldPos[1]],
-                                                                                               (i,j)) )
+            entity._Get_Component("List:chunkDict")._Add( i+","+j,
+                                                          Assemble_Chunk( "%d, %d" % (lWorldPos[0], lWorldPos[1]),
+                                                                          "Chunk",
+                                                                          {"WorldPos":i+","+j,
+                                                                           "WindowPos":str(i - lWorldPos[0])+","+str(j - lWorldPos[1])} ) )
             pChunk = entity._Get_Component("List:chunkDict")._Get(i+","+j)
 
             entity._Get_Component("List:loadList")._Add(pChunk)
@@ -110,10 +115,12 @@ def Assemble_Chunk_Manager(sEntityName, sEntityType, attribDict): lWorldPos, lCh
     for i in xrange(lWorldPos[0], lWorldPos[0] + lChunksInWindow[0]):
         for j in xrange(lWorldPos[1], lWorldPos[1] + lChunksInWindow[1]):
 
-            entity._Get_Component("List:chunkDict")._Add(i+","+j,
-                                                        Assemble_Chunk( "Chunk at (%d, %d)" % (lWorldPos[0], lWorldPos[1]),
-                                                                                               [i - lWorldPos[0], j - lWorldPos[1]],
-                                                                                               (i,j)) )
+            entity._Get_Component("List:chunkDict")._Add( i+","+j,
+                                                          Assemble_Chunk( "%d, %d" % (lWorldPos[0], lWorldPos[1]),
+                                                                          "Chunk",
+                                                                          {"WorldPos":i+","+j,
+                                                                           "WindowPos":str(i - lWorldPos[0])+","+str(j - lWorldPos[1])} ) )
+            
             pChunk = entity._Get_Component("List:chunkDict")._Get(i+","+j)
 
             entity._Get_Component("List:loadList")._Add(pChunk)
@@ -122,13 +129,6 @@ def Assemble_Chunk_Manager(sEntityName, sEntityType, attribDict): lWorldPos, lCh
 
 
     return entity
-
-def Assemble_View_Manager():
-    """This is another abstraction over the ChunkManager entity. It will
-    hold up to a few different ChunkManagers
-    @return An EntityList object that contains the ChunkManagers that
-    are requested."""
-    entityList = Entity_List(sEntityName, sEntityType, {}, [])
 
 class Entity(object):
     def __init__(self, sEntityName, sEntityType, dComponents):

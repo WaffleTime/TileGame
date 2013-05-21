@@ -180,22 +180,6 @@ def Oscillate_Box_Colors(dEntities):
 
 
 
-
-
-
-
-
-
-
-
-
-def Render_Chunk(renderWindow, lTileAtlas, chunkEntity):
-    """This renders the chunks that are within the render list."""
-
-    for layer in xrange(config.CHUNK_LAYERS-1, -1, -1):
-
-        renderWindow.draw(chunkEntity._Get_Component(MESH)._Get_Meshes()[layer], sf.QUADS, lTileAtlas[layer])
-
 def Alter_Tiles(lTileData, ManChunkEntity):
 
     #Just initializing some variables for the upcoming for loop
@@ -232,24 +216,24 @@ def Alter_Tiles(lTileData, ManChunkEntity):
 
 
 
-def Move_Chunk_Position(manChunkEntity, xOffset, yOffset ):
+def Move_Chunk_Position(dEntities):
     """This will add/remove chunks from our dictionary and is meant to be used when we translate our window across the chunk world (because scrolling.)
     There are chunks assumed to already be active on the screen."""
     #If the chunk position hasn't been moved, then we don't need to rebuild any meshes or initialize any new chunks
     if xOffset != 0 or yOffset != 0:
 
         #Here we update our world chunk coords.
-        manChunkEntity._Get_Component(CMWORLD_POS)._Add_To_Position(0, xOffset)
-        manChunkEntity._Get_Component(CMWORLD_POS)._Add_To_Position(1, yOffset)
+        dEntities["ChunkMan"]._Get_Component("POS:WorldPos")._Add_To_X(xOffset)
+        dEntities["ChunkMan"]._Get_Component("POS:WorldPos")._Add_To_Y(yOffset)
 
-        worldPos = manChunkEntity._Get_Component(CMWORLD_POS)._Get_Position()
-        chunksInWindow = manChunkEntity._Get_Component(CHUNKS_IN_WINDOW)._Get_Position()
+        worldPos = dEntities["ChunkMan"]._Get_Component("POS:WorldPos")._Get_Position()
+        chunksInWindow = dEntities["ChunkMan"]._Get_Component("POS:ChunksInWind")._Get_Position()
 
-        chunkDict = manChunkEntity._Get_Component(CHUNK_DICT)
+        chunkDict = dEntities["ChunkMan"]._Get_Component("DICT:ChunkDict")
         
-        loadList = manChunkEntity._Get_Component(LOAD_LIST)
-        rebuildList = manChunkEntity._Get_Component(REBUILD_LIST)
-        unloadList = manChunkEntity._Get_Component(UNLOAD_LIST)
+        loadList = dEntities["ChunkMan"]._Get_Component("LIST:LoadList")
+        rebuildList = dEntities["ChunkMan"]._Get_Component("LIST:RebuildList")
+        unloadList = dEntities["ChunkMan"]._Get_Component("LIST:UnloadList")
 
         #These variables are determined before the following for loop because they will otherwise have to be calculated more than once.
         if (chunksInWindow[0] + xOffset) % 2 == 0:
@@ -268,19 +252,19 @@ def Move_Chunk_Position(manChunkEntity, xOffset, yOffset ):
             for j in xrange( worldPos[1] - 1, worldPos[1] + chunksInWindow[1] + 1 ):
 
                 #This checks to see if the chunk already exists in our dictionary (it was already inside the window or window buffer.)
-                if chunkDict.get((i,j), None) != None:
+                if chunkDict._Get(i+","+j) != None:
 
-                    pChunk = chunkDict[(i,j)]
+                    pChunk = chunkDict[i+","+j]
 
                     #Each chunk needs to be checked to see if its position isn't equal to what we'll be setting it to.
                     #So then the chunks that have the correct position already won't be added to the rebuild list (their mesh is already correct.)
-                    if pChunk._Get_Component(CWINDOW_POS)._Get_Position() != [i - worldPos[0], j - worldPos[1]]:
+                    if pChunk._Get_Component("POS:WindowPos")._Get_Position() != [i - worldPos[0], j - worldPos[1]]:
 
                         #Then we need to update the window chunk position
-                        pChunk._Get_Component(CWINDOW_POS)._Set_Position([ i - worldPos[0], j - worldPos[1] ])
+                        pChunk._Get_Component("POS:WindowPos")._Set_Position([ i - worldPos[0], j - worldPos[1] ])
 
                         #and push the chunk onto the rebuild list
-                        rebuildList._Append(pChunk)
+                        rebuildList._Add(pChunk)
 
                     #else:
 
@@ -293,11 +277,14 @@ def Move_Chunk_Position(manChunkEntity, xOffset, yOffset ):
                     #For each chunk that is initialized, there will be one that we will have to free from memory.
 
                     #Initialize a new chunk at position i,j in the world of chunks and put it into our dictionary.
-                    chunkDict[(i,j)] = entities.Assemble_Chunk("%d, %d Chunk" % (i,j), [i - worldPos[0], j - worldPos[1]], (i,j))
+                    chunkDict[i+","+j] = entities.Assemble_Chunk( "%d, %d" % (i,j),     \
+                                                                   "Chunk",              \
+                                                                   {"WorldPos":i+","+j,
+                                                                    "WindowPos":str(i - worldPos[0])+","+str(j - worldPos[1])} )
 
-                    pChunk = chunkDict[(i,j)]
+                    pChunk = chunkDict[i+","+j]
 
-                    loadList._Append(pChunk)
+                    loadList._Add(pChunk)
                     #Schedule an old chunk to be unloaded and then removed from the chunk dictionary
 
                     #Find the middle chunk position inbetween the previous and the next world chunk position.
@@ -318,137 +305,147 @@ def Move_Chunk_Position(manChunkEntity, xOffset, yOffset ):
                     #print "chunk removed at", p, q
 
                     #This saves the chunk's data
-                    pChunk = chunkDict[(p,q)]
+                    pChunk = chunkDict[p+","+q]
 
-                    unloadList._Append(pChunk)
+                    unloadList._Add(pChunk)
 
-def Update(manChunkEntity):
+def Update(dEntities):
     """This will initiate all of the different updates that need done for
     the Chunk Manager Entity."""
     
-    Update_Load_List(manChunkEntity._Get_Component(LOAD_LIST))
+    Update_Load_List({"LoadList":dEntities["chunkManager"]._Get_Component("LIST:LoadList")})
 
-    Update_Rebuild_List(manChunkEntity._Get_Component(REBUILD_LIST), manChunkEntity._Get_Component(FLAG_LIST), manChunkEntity._Get_Component(VISIBILITY_UPDATE))
+    Update_Rebuild_List({"RebuildList":dEntities["chunkManager"]._Get_Component("LIST:RebuildList"),    \
+                        "FlagList":dEntities["chunkManager"]._Get_Component("LIST:FlagList"),           \
+                        "VisibilityUpdate":dEntities["chunkManager"]._Get_Component("FLAG:VisibilityUpdate")})
 
-    Update_Unload_List(manChunkEntity._Get_Component(UNLOAD_LIST), manChunkEntity._Get_Component(CHUNK_DICT))
+    Update_Unload_List({"UnloadList":dEntities["chunkManager"]._Get_Component("LIST:UnloadList"),     \
+                       "ChunkDict":dEntities["chunkManager"]._Get_Component("DICT:ChunkDict")})
 
-    if manChunkEntity._Get_Component(VISIBILITY_UPDATE)._Get_Flag():
+    if dEntities["chunkManager"]._Get_Component("FLAG:VisibilityUpdate")._Get_Flag():
 
-        print "Doing render stuff"
-        Update_Flag_List(manChunkEntity._Get_Component(FLAG_LIST))
+        Update_Flag_List({"FlagList":dEntities["chunkManager"]._Get_Component("LIST:FlagList")})
 
         #Update the render list if the camera's Position has changed
-        Update_Render_List(manChunkEntity._Get_Component(CHUNK_DICT), manChunkEntity._Get_Component(CMWORLD_POS), manChunkEntity._Get_Component(CHUNKS_IN_WINDOW), manChunkEntity._Get_Component(RENDER_LIST))
+        Update_Render_List({"ChunkDict":dEntities["chunkManager"]._Get_Component("DICT:ChunkDict"),
+                           "WorldPos":dEntities["chunkManager"]._Get_Component("POS:WorldPos"),
+                           "ChunksInWind":dEntities["chunkManager"]._Get_Component("POS:ChunksInWind"),
+                           "RenderList":dEntities["chunkManager"]._Get_Component("LIST:RenderList")})
 
-        manChunkEntity._Get_Component(VISIBILITY_UPDATE)._Set_Flag(False)
+        dEntities["chunkManager"]._Get_Component("FLAG:VisibilityUpdate")._Set_Flag(False)
 
 
 
-def Update_Load_List(loadList):
+def Update_Load_List(dEntities):
     """This will signal chunks to load its data from their text files. Don't confuse this for updating the meshes of the chunks."""
     iNumberOfChunksLoaded = 0
 
-    for iChunk in xrange(len(loadList)-1,-1,-1):
+    for iChunk in xrange(len(dEntities["LoadList"])-1,-1,-1):
 
         #Checks to see if the chunk has been loaded yet
-        if loadList[iChunk]._Get_Component(IS_LOADED)._Get_Flag() == False:
+        if dEntities["LoadList"]._Get(iChunk)._Get_Component("FLAG:IsLoaded")._Get_Flag() == False:
 
             #This limits chunk loading for a single tick
             if iNumberOfChunksLoaded != 4:
-                print "Loading chunk Data!"
-                #Loads the tile data from its file
-                Load_Data(loadList[iChunk])
-                loadList[iChunk]._Get_Component(IS_LOADED)._Set_Flag(True)
 
-                loadList._Delete(iChunk)
+                #Loads the tile data from its file
+                Load_Data({"chunk":dEntities["LoadList"]._Get(iChunk)})
+                dEntities["LoadList"]._Get(iChunk)._Get_Component("FLAG:IsLoaded")._Set_Flag(True)
+
+                dEntities["LoadList"]._Remove(iChunk)
 
                 iNumberOfChunksLoaded += 1
 
             else:
                 break
 
-def Update_Rebuild_List(rebuildList, flagList, visibilityUpdateFlag):
+def Update_Rebuild_List(dEntities):
     """If a chunk has been updated and added to the rebuild_List. Then we will be signaling it to rebuild its mesh here. I also took out the section that
     was trying to optimize the render calls. But then I realized that in a 2d world, chunks can't really be occluded by other chunks (was thinking in 3d.)"""
     iNumberOfChunksRebuilt = 0
-    for iChunk in xrange(len(rebuildList)-1,-1,-1):
+    for iChunk in xrange(len(dEntities["RebuildList"])-1,-1,-1):
 
         #Checking to see if the chunk has been loaded yet
-        if rebuildList[iChunk]._Get_Component(IS_LOADED)._Get_Flag():
+        if dEntities["RebuildList"]._Get(iChunk)._Get_Component(IS_LOADED)._Get_Flag():
 
             #This limits our chunk rebuilds to 3
             if iNumberOfChunksRebuilt != 4:
                 print "Building a mesh..."
-                Build_Meshes(rebuildList[iChunk])
+                Build_Meshes(dEntities["RebuildList"]._Get(iChunk))
 
                 iNumberOfChunksRebuilt += 1
 
                 #This limits us to doing only one update to this component
                 if iNumberOfChunksRebuilt == 1:
 
-                    visibilityUpdateFlag._Set_Flag(True)
+                    dEntities["VisibilityUpdate"]._Set_Flag(True)
 
-                flagList._Append(rebuildList._Pop(iChunk))  #removes the chunk pointer from the list
+                dEntities["FlagList"]._Add(dEntities["RebuildList"]._Pop(iChunk))  #removes the chunk pointer from the list
 
             else:
                 break
 
-def Update_Unload_List(unloadList, chunkDict):
+def Update_Unload_List(dEntities):
     """Here we will be freeing the memory associated with chunks that are far enough away from the window that we don't care about them anymore.
     So we will pop them from the _chunk_Dict and then save their data to their respective file."""
     #The del command will probably be helpful here
     iNumberOfChunksUnloaded = 0
-    for iChunk in xrange(len(unloadList)-1,-1,-1):
+    for iChunk in xrange(len(dEntities["UnloadList"])-1,-1,-1):
 
-        if iNumberOfChunksUnloaded < 3 and unloadList[iChunk]._Get_Component(IS_LOADED)._Get_Flag():
+        if iNumberOfChunksUnloaded < 3  \
+           and dEntities["UnloadList"]._Get(iChunk)._Get_Component("FLAG:IsLoaded")._Get_Flag():
 
-            Unload(unloadList[iChunk])    #This will save the contents of our chunk to a file (so we can free our memory.)
+            Unload(dEntities["UnloadList"]._Get(iChunk))    #This will save the contents of our chunk to a file (so we can free our memory.)
 
-            print unloadList[iChunk]._Get_Component(CWORLD_POS)._Get_Position()
+            #print dEntities["UnloadList"]._Get(iChunk)._Get_Component(CWORLD_POS)._Get_Position()
 
             #Now we take the chunk and chunk pointer variables outside of the lists because they aren't needed anymore.
-            chunkDict.pop((unloadList[iChunk]._Get_Component(CWORLD_POS)._Get_Position()[0], unloadList[iChunk]._Get_Component(CWORLD_POS)._Get_Position()[1]))
+            chunkDict.pop(dEntities["UnloadList"]._Get(iChunk)._Get_Component("POS:WorldPos")._Get_X()  \
+                          + "," + dEntities["UnloadList"]._Get(iChunk)._Get_Component("POS:WorldPos")._Get_Y())
 
-            unloadList._Delete(iChunk)
+            dEntities["UnloadList"]._Remove(iChunk)
 
             iNumberOfChunksUnloaded += 1
 
-def Update_Flag_List(flagList):
+def Update_Flag_List(dEntities):
     """The chunks within the flag list have just recently either been loaded or had their tile data altered. So here we will see if those chunks are empty. And if they are,
     we'll just update their flags."""
 
     #This computation is quite small, so I haven't limited the updates.
-    for iChunk in xrange(len(flagList)-1,-1,-1):
+    for iChunk in xrange(len(dEntities["FlagList"])-1,-1,-1):
         #This will tell the chunk to determine if it is empty or not
-        Flag_Update(flagList[iChunk])
+        Flag_Update(dEntities["FlagList"]._Get(iChunk))
 
         print "updating flagList!"
 
-        flagList._Delete(iChunk)     #This removes the pointer from our flag update list.
+        #This removes the pointer from our flag update list.
+        dEntities["FlagList"]._Remove(iChunk)
 
-def Update_Render_List(chunkDict, worldPos, chunksInWindow, renderList):
+def Update_Render_List(dEntities):
     """Depending on where window is in the world and which chunks are renderable. We will determine which chunks are going to be rendered
     next time rendering occurs."""
 
-    renderList._Clear()
+    dEntities["RenderList"]._Clear()
 
     print "These are the world positions of the chunks that are in the render list!"
 
     #Only the chunks within the window are applicable
     #This will iterate through all of the chunks inside the window at the moment.
-    for i in xrange( worldPos._Get_Position()[0], worldPos._Get_Position()[0] + chunksInWindow._Get_Position()[0]):
-        for j in xrange(worldPos._Get_Position()[1], worldPos._Get_Position()[1] + chunksInWindow._Get_Position()[1] ):
+    for i in xrange( dEntities["WorldPos"]._Get_X(), dEntities["WorldPos"]._Get_X() + dEntities["ChunksInWind"]._Get_X() ):
+        for j in xrange( dEntities["WorldPos"]._Get_Y(), dEntities["WorldPos"]._Get_Y() + dEntities["ChunksInWind"]._Get_Y() ):
 
             print i, j
 
             #Check to see if the chunk is loaded and not empty!
-            if chunkDict[(i,j)]._Get_Component(IS_LOADED)._Get_Flag() and not chunkDict[(i,j)]._Get_Component(IS_EMPTY)._Get_Flag():
+            if dEntities["ChunkDict"]._Get(i+","+j)._Get_Component("FLAG:IsLoaded")._Get_Flag() \
+               and not dEntities["ChunkDict"]._Get(i+","+j)._Get_Component("FLAG:IsEmpty")._Get_Flag():
 
                 print "A chunk is being added to the render List!"
 
-                pChunk = chunkDict[(i,j)]
+                pChunk = dEntities["ChunkDict"]._Get(i+","+j)
 
-                renderList._Append(pChunk)   #Put the chunk pointer into the render list!
+                #Put the chunk pointer into the render list!
+                dEntities["RenderList"]._Add(pChunk)
 
 
 def Load_Data(dEntities):
@@ -461,14 +458,14 @@ def Load_Data(dEntities):
 
     failureFlag = False
 
+    tiles = dEntities["chunk"]._Get_Component("LIST:Tiles")
+
     try:
         fileObj = open(fileName, "r")
 
         dataBuffer = fileObj.read()
 
         offset = 0
-
-        tiles = dEntities["chunk"]._Get_Component("List:tiles")
 
         for row in xrange(config.CHUNK_TILES_HIGH):
             for col in xrange(config.CHUNK_TILES_WIDE):
@@ -477,10 +474,10 @@ def Load_Data(dEntities):
                     #The 1d index for the dataBuffer's current number
                     index = ((row*config.CHUNK_TILES_WIDE + col)*config.CHUNK_LAYERS + depth)*3 + offset    #Note that the *3 refers to the spaces taken up by each element in the data file.
 
-                    tiles[row][col][depth]._Set_Tile_ID(int(dataBuffer[index])*10 + int(dataBuffer[index+1]))  #This will not always set a tile to active (if tileType is 0, then it isn't active)
+                    tiles[row][col][depth]._Set_TileID(int(dataBuffer[index])*10 + int(dataBuffer[index+1]))  #This will not always set a tile to active (if tileType is 0, then it isn't active)
 
         #Flag that the chunk has been updated with data
-        chunkEntity._Get_Component(IS_LOADED)._Set_Flag(True)
+        dEntities["chunk"]._Get_Component("FLAG:IsLoaded")._Set_Flag(True)
 
         fileObj.close()
 
@@ -494,10 +491,12 @@ def Load_Data(dEntities):
 
                     tiles[row][col][depth]._Set_Tile_ID(0)
 
-def Unload(chunkEntity):
+def Unload(dEntities):
     """This is where we'll be saving the contents of a chunk to a file."""
 
-    fileName = config.Saved_Game_Directory + "/ChunkData" + str(chunkEntity._Get_Component(CWORLD_POS)._Get_Position()[0]) + " " + str(chunkEntity._Get_Component(CWORLD_POS)._Get_Position()[1]) + ".txt"
+    fileName = config.Saved_Game_Directory + "/ChunkData"   \
+               + str(dEntities["chunk"]._Get_Component("POS:WorldPos")._Get_X()) \
+               + " " + str(dEntities["chunk"]._Get_Component("POS:WorldPos")._Get_Y()) + ".txt"
 
     #try:
     fileObj = open(fileName, "w")       #This won't provoke errors, because the file will either be created or overwritten.
@@ -506,7 +505,7 @@ def Unload(chunkEntity):
 
     dataString = ""
 
-    tiles = chunkEntity._Get_Component(TILES)
+    tiles = dEntities["chunk"]._Get_Component("LIST:Tiles")
 
     for row in xrange(config.CHUNK_TILES_HIGH):
         for col in xrange(config.CHUNK_TILES_WIDE):
@@ -520,22 +519,22 @@ def Unload(chunkEntity):
     #except Exception:
         #print fileName, "failed to load, because it does not exist!"
 
-def Flag_Update(chunkEntity):
+def Flag_Update(dEntities):
     """This will determine if a chunk is empty or not depending on its meshes (a chunk with an empty mesh might as well be empty.)"""
-    chunkEntity._Get_Component(IS_EMPTY)._Set_Flag(True)
+    dEntities["chunk"]._Get_Component("FLAG:IsEmpty")._Set_Flag(True)
 
-    for mesh in chunkEntity._Get_Component(MESH)._Get_Meshes():
+    for mesh in dEntities["chunk"]._Get_Component("MESH:0")._Get_Meshes():
         if len(mesh) != 0:
-            chunkEntity._Get_Component(IS_EMPTY)._Set_Flag(False)
+            dEntities["chunk"]._Get_Component("FLAG:IsEmpty")._Set_Flag(False)
             break
 
-def Build_Meshes(chunkEntity):
+def Build_Meshes(dEntities):
     """We create a mesh here using a VertexArray for a chunk that's on the screen. This only is meant to be for chunk's in relation to their position on the screen.
     Chunks off the screen don't need to have their meshes updated for no reason, but they can still have their data loaded before getting onto the screen."""
     #Makes sure that we have an empty vertex array to add to
-    chunkEntity._Get_Component(MESH)._Clear_Meshes()
+    dEntities["chunk"]._Get_Component("MESH:0")._Clear_Meshes()
 
-    windowPos = chunkEntity._Get_Component(CWINDOW_POS)._Get_Position()
+    windowPos = dEntities["chunk"]._Get_Component("POS:WindowPos")._Get_Position()
     
     #Handles the building of the tiles within the chunk
     for j in xrange(config.VIEW_TILE_HEIGHT):
@@ -543,21 +542,21 @@ def Build_Meshes(chunkEntity):
             #This assumes that depth 0 is the very front of the screen.
             for k in xrange(config.CHUNK_LAYERS):
 
-                if chunkEntity._Get_Component(TILES)[j][i][k]._Get_Is_Active():
+                if dEntities["chunk"]._Get_Component("LIST:Tiles")[j][i][k]._Get_Is_Active():
 
                     #Calculates the position inside of our window where the tile will be placed
                     tileXPos = (windowPos[0]+i)*config.TILE_SIZE
                     tileYPos = (windowPos[1]+j)*config.TILE_SIZE
 
                     #Determine the coordinates of the tileType for our tile atlas (TILE_ATLAS_SIZE^2 possible tileTypes) (not working with pixel coords yet)
-                    textXPos = (chunkEntity._Get_Component(TILES)[j][i][k]._Get_Tile_ID()-1) % config.TILE_ATLAS_SIZE
-                    textYPos = (chunkEntity._Get_Component(TILES)[j][i][k]._Get_Tile_ID()-1-textXPos) / config.TILE_ATLAS_SIZE
+                    textXPos = (dEntities["chunk"]._Get_Component("LIST:Tiles")[j][i][k]._Get_Tile_ID()-1) % config.TILE_ATLAS_SIZE
+                    textYPos = (dEntities["chunk"]._Get_Component("LIST:Tiles")[j][i][k]._Get_Tile_ID()-1-textXPos) / config.TILE_ATLAS_SIZE
 
                     #Normalize the texture positions!
                     textXPos *= config.TILE_SIZE
                     textYPos *= config.TILE_SIZE
 
-                    chunkEntity._Get_Component(MESH)._Add_To_Mesh(k, [sf.Vertex( (tileXPos, tileYPos), sf.Color.WHITE, (textXPos, textYPos) ),  \
+                    dEntities["chunk"]._Get_Component("MESH:0")._Add_To_Mesh(k, [sf.Vertex( (tileXPos, tileYPos), sf.Color.WHITE, (textXPos, textYPos) ),  \
                                                                       sf.Vertex( (tileXPos, tileYPos+config.TILE_SIZE), sf.Color.WHITE, (textXPos, textYPos+config.TILE_SIZE) ),    \
                                                                       sf.Vertex( (tileXPos+config.TILE_SIZE, tileYPos+config.TILE_SIZE), sf.Color.WHITE, (textXPos+config.TILE_SIZE, textYPos+config.TILE_SIZE) ),  \
                                                                       sf.Vertex( (tileXPos+config.TILE_SIZE, tileYPos), sf.Color.WHITE, (textXPos+config.TILE_SIZE, textYPos) )])
@@ -570,7 +569,7 @@ def Build_Meshes(chunkEntity):
 ##
                     print "ActiveTile!", tileXPos, tileYPos
                     #If this tile isn't partially see-through, then all tiles behind it are occluded and we don't need to add them to their meshes.
-                    if chunkEntity._Get_Component(TILES)[j][i][k]._Get_Is_Solid():
+                    if dEntities["chunk"]._Get_Component("LIST:Tiles")[j][i][k]._Get_Is_Solid():
                         #This is confirmed to correctly break out of ONLY the CHUNK_LAYERS loop and still allow the other loops to continue.
                         break
 

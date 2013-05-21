@@ -106,15 +106,15 @@ class TreeNode(object):
 
                                 #print self._subnodes[yIndx][xIndx]._items, "herder"
                             else:
-
-                                #print "No collisions here...", self._dimensions[0]+(self._dimensions[2]/2*xIndx), \
+                                pass
+                                """print "No collisions here...", self._dimensions[0]+(self._dimensions[2]/2*xIndx), \
                                                      self._dimensions[1]+(self._dimensions[3]/2*yIndx), \
                                                      self._dimensions[2]/2, \
                                                      self._dimensions[3]/2, \
                                                      self._items[indx][0], \
                                                      self._items[indx][1], \
                                                      self._items[indx][2], \
-                                                     self._items[indx][3]
+                                                     self._items[indx][3]"""
                                 #print "\n"
 
                 #print self._subnodes[0][0]._items, self._subnodes[0][1]._items, self._subnodes[1][0]._items, self._subnodes[1][1]._items
@@ -161,7 +161,7 @@ class TreeNode(object):
             #Iterate through the self._items to see if the mouse is colliding with one of the hotspots
             for i in xrange(len(self._items)-1,-1,-1):
 
-                #print self._Check_Collision(self._items[i][0], self._items[i][1], self._items[i][2], self._items[i][3], mousePos[0], mousePos[1])
+                #rint Check_Collision(self._items[i][0], self._items[i][1], self._items[i][2], self._items[i][3], mousePos[0], mousePos[1])
 
                 #Check to see if this item is colliding with the mouse!
                 if Check_Collision(self._items[i][0], self._items[i][1], self._items[i][2], self._items[i][3], mousePos[0], mousePos[1]):
