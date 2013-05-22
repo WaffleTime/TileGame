@@ -10,7 +10,7 @@ def Assemble_Text_Box(sEntityName, sEntityType, attribDict):
     entity = Entity(sEntityName, sEntityType, {})
 
     #The first argument represents the ID of the component with respect to its type (multiple components of a single type need to have different IDs.)
-    entity._Add_Component(components.Text_Line({'componentID': attrib, 'x': attribDict['x'], 'y': attribDict['y'], 'width': attribDict['width'], 'height': attribDict['height'], 'text': attribDict['text'], 'font': attribDict['Font'][0]}))
+    entity._Add_Component(components.Text_Line({'componentID': attrib, 'x': attribDict['x'], 'y': attribDict['y'], 'width': attribDict['width'], 'height': attribDict['height'], 'text': attribDict['text'], 'font': attribDict["Font"]["Asman"]}))
     entity._Add_Component(components.Box({'componentID': '0', 'x': attribDict['x'], 'y': attribDict['y'], 'width': attribDict['width'], 'height': attribDict['height']}))
 
     return entity
@@ -21,7 +21,7 @@ def Assemble_Button(sEntityName, sEntityType, attribDict):
     entity = Entity(sEntityName, sEntityType, {})
     
     entity._Add_Component(components.Box({'componentID': '0', 'x': attribDict['x'], 'y': attribDict['y'], 'width': attribDict['width'], 'height': attribDict['height']}))
-    entity._Add_Component(components.Text_Line({'componentID': '0', 'x': attribDict['x'], 'y': attribDict['y'], 'width': attribDict['width'], 'height': attribDict['height'], 'text': attribDict['text'], 'font': attribDict['Font'][0]}))
+    entity._Add_Component(components.Text_Line({'componentID': '0', 'x': attribDict['x'], 'y': attribDict['y'], 'width': attribDict['width'], 'height': attribDict['height'], 'text': attribDict['text'], 'font': attribDict['Font']["Asman"]}))
     entity._Add_Component(components.Flag({'componentID': '0', 'flag': False}))
 
     return entity
@@ -37,10 +37,23 @@ def Assemble_Player(sEntityName, sEntityType, attribDict):
 def Assemble_Chunk(sEntityName, sEntityType, attribDict):
     entity = Entity(sEntityName, sEntityType, {})
 
-    entity._Add_Component(components.Mesh({"componentID":"0"}))
+    dMeshData = {"componentID":"0"}
 
-    entity._Add_Component(components.Position({"componentID":"0", "WorldPos":attribDict['WorldPos'].split(',')}))
-    entity._Add_Component(components.Position({"componentID":"1", "WindowPos":attribDict['WindowPos'].split(',')}))
+    #Iterating through the attribDict items
+    for (attribName, attrib) in attribDict.items():
+        #This checks to see if the current item is
+        #   for the Mesh component.
+        if attribName[0:9] == "TileAtlas":
+            #This will add in the Texture objects
+            #   defined by SFMl. This Texture object
+            #   points to a Texture object within
+            #   the AssetManager.
+            dMeshData[attribName] = attrib
+
+    entity._Add_Component(components.Mesh(dMeshData))
+
+    entity._Add_Component(components.Position({"componentID":"WorldPos", "position":attribDict['WorldPos'].split(',')}))
+    entity._Add_Component(components.Position({"componentID":"WindowPos", "position":attribDict['WindowPos'].split(',')}))
 
     entity._Add_Component(components.Flag({"componentID":"IsEmpty", "flag":True}))
     entity._Add_Component(components.Flag({"componentID":"IsLoaded", "flag":False}))
@@ -53,11 +66,11 @@ def Assemble_Chunk(sEntityName, sEntityType, attribDict):
         
         for col in xrange(config.CHUNK_TILES_WIDE):
             #Adds in a list for each col of the tiles
-            tileList._Get(row)._Add(components.List({"componentID":"Tiles"}))
+            tileList[row]._Add(components.List({"componentID":"Tiles"}))
             for depth in xrange(config.CHUNK_LAYERS):
                 #Then adds in a tile, for each layer that exists, into
                 #   each 2d tile position in this chunk.
-                tileList[row][col][depth]._Add_To_List( components.Tile({"componentID":row+","+col+","+depth}) )
+                tileList[row][col]._Add( components.Tile({"componentID":str(row)+","+str(col)+","+str(depth)}) )
 
     entity._Add_Component(tileList)
 
@@ -71,8 +84,8 @@ def Assemble_Chunk_Manager(sEntityName, sEntityType, attribDict):
     taken care of.)"""
     entity = Entity(sEntityName, sEntityType, {})
 
-    entity._Add_Component(components.Position({"componentID":"0", "WorldPos":attribDict["WorldPos"].split(',')}))
-    entity._Add_Component(components.Position({"componentID":"1", "ChunksInWind":attribDict["ChunksInWind"].split(",")}))
+    entity._Add_Component(components.Position({"componentID":"WorldPos", "position":attribDict["WorldPos"].split(',')}))
+    entity._Add_Component(components.Position({"componentID":"ChunksInWind", "position":attribDict["ChunksInWind"].split(",")}))
     entity._Add_Component(components.Flag({"componentID":"VisibilityUpdate", "flag":False}))
 
     entity._Add_Component(components.Dictionary({"componentID":"ChunkDict"}))
@@ -81,51 +94,106 @@ def Assemble_Chunk_Manager(sEntityName, sEntityType, attribDict):
     entity._Add_Component(components.List({"componentID":"RebuildList"}))
     entity._Add_Component(components.List({"componentID":"UnloadList"}))
     entity._Add_Component(components.List({"componentID":"FlagList"}))
-    entity._Add_Component(components.List({"componentID":"RenderList"}))
+    entity._Add_Component(components.Render_List({"componentID":"RenderList"}))
+
+    lWorldPos = attribDict["WorldPos"].split(",")
+
+    lChunksInWindow = attribDict["ChunksInWind"].split(",")
+
 
     #This will strictly assemble the chunks around the outside of the chunks on the screen (the first items in the loadList get loaded last, so we add these first!)
     #This only will loop through the chunks to the left and right of the screen.
-    for i in xrange( lWorldPos[0]-1, lWorldPos[0] + lChunksInWindow[0]+1 ):
-        for j in xrange( lWorldPos[1]-1, lWorldPos[1] + lChunksInWindow[1]+1, lChunksInWindow[1]+1 ):
+    for i in xrange( int(lWorldPos[0])-1, int(lWorldPos[0]) + int(lChunksInWindow[0])+1 ):
+        for j in xrange( int(lWorldPos[1])-1, int(lWorldPos[1]) + int(lChunksInWindow[1])+1, int(lChunksInWindow[1])+1 ):
 
-            entity._Get_Component("List:chunkDict")._Add( i+","+j,
-                                                          Assemble_Chunk( "%d, %d" % (lWorldPos[0], lWorldPos[1]),
+            dChunkData = {"WorldPos":"%d,%d"%(i,j), \
+                          "WindowPos":str(i - int(lWorldPos[0]))+","+str(j - int(lWorldPos[1]))}
+
+            #Iterating through the dictionary of Texture items within
+            #   an element of the attribDict. These textures are
+            #   the tileAtlas' and are for the Chunks Mesh component.
+            for (attribName, attrib) in attribDict["RenderState"].items():
+                
+                #This checks to see if the current item is
+                #   for the Mesh component.
+                if attribName[0:9] == "TileAtlas":
+                    #This will add in the Texture objects
+                    #   defined by SFMl. This Texture object
+                    #   points to a Texture object within
+                    #   the AssetManager.
+                    dChunkData[attribName] = attrib
+
+
+            entity._Get_Component("DICT:ChunkDict")._Add( "%d,%d"%(i,j),
+                                                          Assemble_Chunk( "%s,%s" % (lWorldPos[0], lWorldPos[1]),
                                                                           "Chunk",
-                                                                          {"WorldPos":i+","+j,
-                                                                           "WindowPos":str(i - lWorldPos[0])+","+str(j - lWorldPos[1])} ) )
+                                                                          dChunkData ) )
 
-            pChunk = entity._Get_Component("List:chunkDict")._Get(i+","+j)
+            pChunk = entity._Get_Component("DICT:ChunkDict")._Get("%d,%d"%(i,j))
 
-            entity._Get_Component("List:loadList")._Add(pChunk)
+            entity._Get_Component("LIST:LoadList")._Add(pChunk)
 
     #This does the same thing as the previous loop, but with different chunks (above the screen and below the screen.)
-    for i in xrange( lWorldPos[0]-1, lWorldPos[0] + lChunksInWindow[0]+1, lChunksInWindow[0]+1 ):
-        for j in xrange( lWorldPos[1]-1, lWorldPos[1] + lChunksInWindow[1]+1):
+    for i in xrange( int(lWorldPos[0])-1, int(lWorldPos[0]) + int(lChunksInWindow[0])+1, int(lChunksInWindow[0])+1 ):
+        for j in xrange( int(lWorldPos[1])-1, int(lWorldPos[1]) + int(lChunksInWindow[1])+1):
 
-            entity._Get_Component("List:chunkDict")._Add( i+","+j,
-                                                          Assemble_Chunk( "%d, %d" % (lWorldPos[0], lWorldPos[1]),
+            dChunkData = {"WorldPos":"%d,%d"%(i,j), \
+                          "WindowPos":str(i - int(lWorldPos[0]))+","+str(j - int(lWorldPos[1]))}
+
+            #Iterating through the dictionary of Texture items within
+            #   an element of the attribDict. These textures are
+            #   the tileAtlas' and are for the Chunks Mesh component.
+            for (attribName, attrib) in attribDict["RenderState"].items():
+                #This checks to see if the current item is
+                #   for the Mesh component.
+                if attribName[0:9] == "TileAtlas":
+                    #This will add in the Texture objects
+                    #   defined by SFMl. This Texture object
+                    #   points to a Texture object within
+                    #   the AssetManager.
+                    dChunkData[attribName] = attrib
+
+
+            entity._Get_Component("DICT:ChunkDict")._Add( "%d,%d"%(i,j),
+                                                          Assemble_Chunk( "%s,%s" % (lWorldPos[0], lWorldPos[1]),
                                                                           "Chunk",
-                                                                          {"WorldPos":i+","+j,
-                                                                           "WindowPos":str(i - lWorldPos[0])+","+str(j - lWorldPos[1])} ) )
-            pChunk = entity._Get_Component("List:chunkDict")._Get(i+","+j)
+                                                                          dChunkData ) )
 
-            entity._Get_Component("List:loadList")._Add(pChunk)
+            pChunk = entity._Get_Component("DICT:ChunkDict")._Get("%d,%d"%(i,j))
+
+            entity._Get_Component("LIST:LoadList")._Add(pChunk)
 
     #This will assemble the chunks that are inside of the screen (these chunks need loaded first and their meshes built.)
-    for i in xrange(lWorldPos[0], lWorldPos[0] + lChunksInWindow[0]):
-        for j in xrange(lWorldPos[1], lWorldPos[1] + lChunksInWindow[1]):
+    for i in xrange(int(lWorldPos[0]), int(lWorldPos[0]) + int(lChunksInWindow[0])):
+        for j in xrange(int(lWorldPos[1]), int(lWorldPos[1]) + int(lChunksInWindow[1])):
 
-            entity._Get_Component("List:chunkDict")._Add( i+","+j,
-                                                          Assemble_Chunk( "%d, %d" % (lWorldPos[0], lWorldPos[1]),
+            dChunkData = {"WorldPos":"%d,%d"%(i,j), \
+                          "WindowPos":str(i - int(lWorldPos[0]))+","+str(j - int(lWorldPos[1]))}
+
+            #Iterating through the dictionary of Texture items within
+            #   an element of the attribDict. These textures are
+            #   the tileAtlas' and are for the Chunks Mesh component.
+            for (attribName, attrib) in attribDict["RenderState"].items():
+                #This checks to see if the current item is
+                #   for the Mesh component.
+                if attribName[0:9] == "TileAtlas":
+                    #This will add in the Texture objects
+                    #   defined by SFMl. This Texture object
+                    #   points to a Texture object within
+                    #   the AssetManager.
+                    dChunkData[attribName] = attrib
+
+
+            entity._Get_Component("DICT:ChunkDict")._Add( "%d,%d"%(i,j),
+                                                          Assemble_Chunk( "%s,%s" % (lWorldPos[0], lWorldPos[1]),
                                                                           "Chunk",
-                                                                          {"WorldPos":i+","+j,
-                                                                           "WindowPos":str(i - lWorldPos[0])+","+str(j - lWorldPos[1])} ) )
-            
-            pChunk = entity._Get_Component("List:chunkDict")._Get(i+","+j)
+                                                                          dChunkData ) )
 
-            entity._Get_Component("List:loadList")._Add(pChunk)
+            pChunk = entity._Get_Component("DICT:ChunkDict")._Get("%d,%d"%(i,j))
 
-            entity._Get_Component("List:rebuildList")._Add(pChunk)
+            entity._Get_Component("LIST:LoadList")._Add(pChunk)
+
+            entity._Get_Component("LIST:RebuildList")._Add(pChunk)
 
 
     return entity

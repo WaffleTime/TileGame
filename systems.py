@@ -313,26 +313,26 @@ def Update(dEntities):
     """This will initiate all of the different updates that need done for
     the Chunk Manager Entity."""
     
-    Update_Load_List({"LoadList":dEntities["chunkManager"]._Get_Component("LIST:LoadList")})
+    Update_Load_List({"LoadList":dEntities["ChunkMan"]._Get_Component("LIST:LoadList")})
 
-    Update_Rebuild_List({"RebuildList":dEntities["chunkManager"]._Get_Component("LIST:RebuildList"),    \
-                        "FlagList":dEntities["chunkManager"]._Get_Component("LIST:FlagList"),           \
-                        "VisibilityUpdate":dEntities["chunkManager"]._Get_Component("FLAG:VisibilityUpdate")})
+    Update_Rebuild_List({"RebuildList":dEntities["ChunkMan"]._Get_Component("LIST:RebuildList"),    \
+                        "FlagList":dEntities["ChunkMan"]._Get_Component("LIST:FlagList"),           \
+                        "VisibilityUpdate":dEntities["ChunkMan"]._Get_Component("FLAG:VisibilityUpdate")})
 
-    Update_Unload_List({"UnloadList":dEntities["chunkManager"]._Get_Component("LIST:UnloadList"),     \
-                       "ChunkDict":dEntities["chunkManager"]._Get_Component("DICT:ChunkDict")})
+    Update_Unload_List({"UnloadList":dEntities["ChunkMan"]._Get_Component("LIST:UnloadList"),     \
+                       "ChunkDict":dEntities["ChunkMan"]._Get_Component("DICT:ChunkDict")})
 
-    if dEntities["chunkManager"]._Get_Component("FLAG:VisibilityUpdate")._Get_Flag():
+    if dEntities["ChunkMan"]._Get_Component("FLAG:VisibilityUpdate")._Get_Flag():
 
-        Update_Flag_List({"FlagList":dEntities["chunkManager"]._Get_Component("LIST:FlagList")})
+        Update_Flag_List({"FlagList":dEntities["ChunkMan"]._Get_Component("LIST:FlagList")})
 
         #Update the render list if the camera's Position has changed
-        Update_Render_List({"ChunkDict":dEntities["chunkManager"]._Get_Component("DICT:ChunkDict"),
-                           "WorldPos":dEntities["chunkManager"]._Get_Component("POS:WorldPos"),
-                           "ChunksInWind":dEntities["chunkManager"]._Get_Component("POS:ChunksInWind"),
-                           "RenderList":dEntities["chunkManager"]._Get_Component("LIST:RenderList")})
+        Update_Render_List({"ChunkDict":dEntities["ChunkMan"]._Get_Component("DICT:ChunkDict"),
+                           "WorldPos":dEntities["ChunkMan"]._Get_Component("POS:WorldPos"),
+                           "ChunksInWind":dEntities["ChunkMan"]._Get_Component("POS:ChunksInWind"),
+                           "RenderList":dEntities["ChunkMan"]._Get_Component("RLIST:RenderList")})
 
-        dEntities["chunkManager"]._Get_Component("FLAG:VisibilityUpdate")._Set_Flag(False)
+        dEntities["ChunkMan"]._Get_Component("FLAG:VisibilityUpdate")._Set_Flag(False)
 
 
 
@@ -343,14 +343,14 @@ def Update_Load_List(dEntities):
     for iChunk in xrange(len(dEntities["LoadList"])-1,-1,-1):
 
         #Checks to see if the chunk has been loaded yet
-        if dEntities["LoadList"]._Get(iChunk)._Get_Component("FLAG:IsLoaded")._Get_Flag() == False:
+        if dEntities["LoadList"][iChunk]._Get_Component("FLAG:IsLoaded")._Get_Flag() == False:
 
             #This limits chunk loading for a single tick
             if iNumberOfChunksLoaded != 4:
 
                 #Loads the tile data from its file
-                Load_Data({"chunk":dEntities["LoadList"]._Get(iChunk)})
-                dEntities["LoadList"]._Get(iChunk)._Get_Component("FLAG:IsLoaded")._Set_Flag(True)
+                Load_Data({"chunk":dEntities["LoadList"][iChunk]})
+                dEntities["LoadList"][iChunk]._Get_Component("FLAG:IsLoaded")._Set_Flag(True)
 
                 dEntities["LoadList"]._Remove(iChunk)
 
@@ -366,12 +366,12 @@ def Update_Rebuild_List(dEntities):
     for iChunk in xrange(len(dEntities["RebuildList"])-1,-1,-1):
 
         #Checking to see if the chunk has been loaded yet
-        if dEntities["RebuildList"]._Get(iChunk)._Get_Component(IS_LOADED)._Get_Flag():
+        if dEntities["RebuildList"][iChunk]._Get_Component("FLAG:IsLoaded")._Get_Flag():
 
             #This limits our chunk rebuilds to 3
             if iNumberOfChunksRebuilt != 4:
                 print "Building a mesh..."
-                Build_Meshes(dEntities["RebuildList"]._Get(iChunk))
+                Build_Meshes({"chunk":dEntities["RebuildList"][iChunk]})
 
                 iNumberOfChunksRebuilt += 1
 
@@ -393,15 +393,15 @@ def Update_Unload_List(dEntities):
     for iChunk in xrange(len(dEntities["UnloadList"])-1,-1,-1):
 
         if iNumberOfChunksUnloaded < 3  \
-           and dEntities["UnloadList"]._Get(iChunk)._Get_Component("FLAG:IsLoaded")._Get_Flag():
+           and dEntities["UnloadList"][iChunk]._Get_Component("FLAG:IsLoaded")._Get_Flag():
 
-            Unload(dEntities["UnloadList"]._Get(iChunk))    #This will save the contents of our chunk to a file (so we can free our memory.)
+            Unload(dEntities["UnloadList"][iChunk])    #This will save the contents of our chunk to a file (so we can free our memory.)
 
             #print dEntities["UnloadList"]._Get(iChunk)._Get_Component(CWORLD_POS)._Get_Position()
 
             #Now we take the chunk and chunk pointer variables outside of the lists because they aren't needed anymore.
-            chunkDict.pop(dEntities["UnloadList"]._Get(iChunk)._Get_Component("POS:WorldPos")._Get_X()  \
-                          + "," + dEntities["UnloadList"]._Get(iChunk)._Get_Component("POS:WorldPos")._Get_Y())
+            chunkDict.pop(str(dEntities["UnloadList"][iChunk]._Get_Component("POS:WorldPos")._Get_X())  \
+                          + "," + str(dEntities["UnloadList"][iChunk]._Get_Component("POS:WorldPos")._Get_Y()))
 
             dEntities["UnloadList"]._Remove(iChunk)
 
@@ -414,7 +414,7 @@ def Update_Flag_List(dEntities):
     #This computation is quite small, so I haven't limited the updates.
     for iChunk in xrange(len(dEntities["FlagList"])-1,-1,-1):
         #This will tell the chunk to determine if it is empty or not
-        Flag_Update(dEntities["FlagList"]._Get(iChunk))
+        Flag_Update({"chunk":dEntities["FlagList"][iChunk]})
 
         print "updating flagList!"
 
@@ -437,12 +437,12 @@ def Update_Render_List(dEntities):
             print i, j
 
             #Check to see if the chunk is loaded and not empty!
-            if dEntities["ChunkDict"]._Get(i+","+j)._Get_Component("FLAG:IsLoaded")._Get_Flag() \
-               and not dEntities["ChunkDict"]._Get(i+","+j)._Get_Component("FLAG:IsEmpty")._Get_Flag():
+            if dEntities["ChunkDict"]["%d,%d"%(i,j)]._Get_Component("FLAG:IsLoaded")._Get_Flag() \
+               and not dEntities["ChunkDict"]["%d,%d"%(i,j)]._Get_Component("FLAG:IsEmpty")._Get_Flag():
 
                 print "A chunk is being added to the render List!"
 
-                pChunk = dEntities["ChunkDict"]._Get(i+","+j)
+                pChunk = dEntities["ChunkDict"]["%d,%d"%(i,j)]
 
                 #Put the chunk pointer into the render list!
                 dEntities["RenderList"]._Add(pChunk)
@@ -452,9 +452,9 @@ def Load_Data(dEntities):
     """From the data within the chunk's file, we then give this list of lists as an argument for the Chunk's _Load_Data().
     So from here we'll update the self._tiles list of lists with a list of lists of similar size (the data.)"""
 
-    fileName = config.Saved_Game_Directory + "/ChunkData" \
-                + str(dEntities["chunk"]._Get_Component("POS:0")._Get_X()) \
-                + " " + str(dEntities["chunk"]._Get_Component("POS:0")._Get_Y()) + ".txt"
+    fileName = os.getcwd() + "\\ChunkData\\" \
+                + str(dEntities["chunk"]._Get_Component("POS:WorldPos")._Get_X()) \
+                + " " + str(dEntities["chunk"]._Get_Component("POS:WorldPos")._Get_Y()) + ".txt"
 
     failureFlag = False
 
@@ -489,7 +489,7 @@ def Load_Data(dEntities):
             for col in xrange(config.CHUNK_TILES_WIDE):
                 for depth in xrange(config.CHUNK_LAYERS):
 
-                    tiles[row][col][depth]._Set_Tile_ID(0)
+                    tiles[row][col][depth]._Set_TileID(0)
 
 def Unload(dEntities):
     """This is where we'll be saving the contents of a chunk to a file."""
@@ -532,9 +532,13 @@ def Build_Meshes(dEntities):
     """We create a mesh here using a VertexArray for a chunk that's on the screen. This only is meant to be for chunk's in relation to their position on the screen.
     Chunks off the screen don't need to have their meshes updated for no reason, but they can still have their data loaded before getting onto the screen."""
     #Makes sure that we have an empty vertex array to add to
+
     dEntities["chunk"]._Get_Component("MESH:0")._Clear_Meshes()
 
     windowPos = dEntities["chunk"]._Get_Component("POS:WindowPos")._Get_Position()
+
+    windowPos[0] = int(windowPos[0])
+    windowPos[1] = int(windowPos[1])
     
     #Handles the building of the tiles within the chunk
     for j in xrange(config.VIEW_TILE_HEIGHT):
@@ -549,27 +553,21 @@ def Build_Meshes(dEntities):
                     tileYPos = (windowPos[1]+j)*config.TILE_SIZE
 
                     #Determine the coordinates of the tileType for our tile atlas (TILE_ATLAS_SIZE^2 possible tileTypes) (not working with pixel coords yet)
-                    textXPos = (dEntities["chunk"]._Get_Component("LIST:Tiles")[j][i][k]._Get_Tile_ID()-1) % config.TILE_ATLAS_SIZE
-                    textYPos = (dEntities["chunk"]._Get_Component("LIST:Tiles")[j][i][k]._Get_Tile_ID()-1-textXPos) / config.TILE_ATLAS_SIZE
+                    textXPos = (dEntities["chunk"]._Get_Component("LIST:Tiles")[j][i][k]._Get_TileID()-1) % config.TILE_ATLAS_SIZE
+                    textYPos = (dEntities["chunk"]._Get_Component("LIST:Tiles")[j][i][k]._Get_TileID()-1-textXPos) / config.TILE_ATLAS_SIZE
 
                     #Normalize the texture positions!
                     textXPos *= config.TILE_SIZE
                     textYPos *= config.TILE_SIZE
 
-                    dEntities["chunk"]._Get_Component("MESH:0")._Add_To_Mesh(k, [sf.Vertex( (tileXPos, tileYPos), sf.Color.WHITE, (textXPos, textYPos) ),  \
-                                                                      sf.Vertex( (tileXPos, tileYPos+config.TILE_SIZE), sf.Color.WHITE, (textXPos, textYPos+config.TILE_SIZE) ),    \
-                                                                      sf.Vertex( (tileXPos+config.TILE_SIZE, tileYPos+config.TILE_SIZE), sf.Color.WHITE, (textXPos+config.TILE_SIZE, textYPos+config.TILE_SIZE) ),  \
-                                                                      sf.Vertex( (tileXPos+config.TILE_SIZE, tileYPos), sf.Color.WHITE, (textXPos+config.TILE_SIZE, textYPos) )])
+                    dEntities["chunk"]._Get_Component("MESH:0")._Add_To_Mesh( k, [ sf.Vertex( (tileXPos, tileYPos), sf.Color.WHITE, (textXPos, textYPos) ),  \
+                                                                                   sf.Vertex( (tileXPos, tileYPos+config.TILE_SIZE), sf.Color.WHITE, (textXPos, textYPos+config.TILE_SIZE) ),    \
+                                                                                   sf.Vertex( (tileXPos+config.TILE_SIZE, tileYPos+config.TILE_SIZE), sf.Color.WHITE, (textXPos+config.TILE_SIZE, textYPos+config.TILE_SIZE) ),  \
+                                                                                   sf.Vertex( (tileXPos+config.TILE_SIZE, tileYPos), sf.Color.WHITE, (textXPos+config.TILE_SIZE, textYPos) ) ] )
 
-##                    #Puts the four vertices inside of our vertex Array (represents a single tile quad.)
-##                    chunkEntity._Get_Component(MESH)._Add_To_Mesh(k, [sf.Vertex( (tileXPos, tileYPos), sf.Color.WHITE), \
-##                                                                      sf.Vertex( (tileXPos, tileYPos+config.TILE_SIZE), sf.Color.WHITE),    \
-##                                                                      sf.Vertex( (tileXPos+config.TILE_SIZE, tileYPos+config.TILE_SIZE), sf.Color.WHITE),   \
-##                                                                      sf.Vertex( (tileXPos+config.TILE_SIZE, tileYPos), sf.Color.WHITE)])
-##
                     print "ActiveTile!", tileXPos, tileYPos
                     #If this tile isn't partially see-through, then all tiles behind it are occluded and we don't need to add them to their meshes.
-                    if dEntities["chunk"]._Get_Component("LIST:Tiles")[j][i][k]._Get_Is_Solid():
+                    if dEntities["chunk"]._Get_Component("LIST:Tiles")[j][i][k]._Get_Is_Transparent() != True:
                         #This is confirmed to correctly break out of ONLY the CHUNK_LAYERS loop and still allow the other loops to continue.
                         break
 

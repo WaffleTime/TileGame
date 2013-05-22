@@ -42,6 +42,14 @@ class Entity_Manager(object):
         if self._dEntities.get(sEntityTypeName,None) != None:
             self._dEntities[sEntityTypeName].pop(sEntityName)
 
+    def _Get_Entity(self, sEntityTypeName, sEntityName):
+        """This is for retrieving entities from the dictionary. It so far
+        is only used for the System functions in the ChangeState() function."""
+
+        if self._dEntities.get(sEntityTypeName,None) != None:
+            
+            return self._dEntities[sEntityTypeName][sEntityName]
+
     def _Call_System_Func(self, sSystemFuncName, lEntities):
         """This will call a system function from the systems.py file. And it will provide the appropriate entities that are needed to be passed to the function.
         This will also return a variable from the system function.
@@ -214,38 +222,49 @@ def ChangeState(lCurState, lNxtState, windView, EntManager, AstManager):
                 if attrib.tag == 'Sound':
                     #THis will start a new list of Sounds if we haven't already loaded a sound into this entity's attributes.
                     if dEntityAttribs.get(attrib.tag, None) == None:
-                        dEntityAttribs[attrib.tag] = []
+                        dEntityAttribs[attrib.tag] = {}
 
                     #Query the AssetManager for a sound that is associated with this entity, then throw that into the dictionary of attributes!
-                    dEntityAttribs[attrib.tag].append(AstManager._Get_Sound(attrib.attrib['name']))
+                    dEntityAttribs[attrib.tag][attrib.attrib["name"]] = AstManager._Get_Sound(attrib.attrib['name'], attrib.text)
 
                 elif attrib.tag == 'Music':
 
                     #THis will start a new list of Musics if we haven't already loaded a sound into this entity's attributes.
                     if dEntityAttribs.get(attrib.tag, None) == None:
-                        dEntityAttribs[attrib.tag] = []
+                        dEntityAttribs[attrib.tag] = {}
 
-                    dEntityAttribs[attrib.tag].append(AstManager._Get_Music(attrib.attrib['name']))
+                    dEntityAttribs[attrib.tag][attrib.attrib["name"]] = AstManager._Get_Music(attrib.attrib['name'], attrib.text)
 
                 #Check to see if this is a texture for the entitititity.
                 elif attrib.tag == 'Texture':
 
                     #THis will start a new list of Textures if we haven't already loaded a sound into this entity's attributes.
                     if dEntityAttribs.get(attrib.tag, None) == None:
-                        dEntityAttribs[attrib.tag] = []
+                        dEntityAttribs[attrib.tag] = {}
 
                     #Query the AssetManager for a texture that is associated with this entity, then throw that into the dictionary of attributes!
-                    dEntityAttribs[attrib.tag].append(AstManager._Get_Texture(attrib.attrib['name']))
+                    dEntityAttribs[attrib.tag][attrib.attrib["name"]] = AstManager._Get_Texture(attrib.attrib['name'], attrib.text)
+
+                #Check to see if this is a RenderState for the entitititity.
+                elif attrib.tag == 'RenderState':
+
+                    #THis will start a new list of sf.RenderStates if we haven't already loaded a sound into this entity's attributes.
+                    if dEntityAttribs.get(attrib.tag, None) == None:
+                        dEntityAttribs[attrib.tag] = {}
+
+                    #Query the AssetManager for a sf.RenderState that is associated with this entity, then throw that into the dictionary of attributes!
+                    dEntityAttribs[attrib.tag][attrib.attrib["name"]] = AstManager._Get_Render_State(attrib.attrib['name'], attrib.text)
+
 
                 #Check to see if this is a font for the entitititity.
                 elif attrib.tag == 'Font':
 
                     #THis will start a new list of Fonts if we haven't already loaded a sound into this entity's attributes.
                     if dEntityAttribs.get(attrib.tag, None) == None:
-                        dEntityAttribs[attrib.tag] = []
+                        dEntityAttribs[attrib.tag] = {}
 
                     #Query the AssetManager for a font that is associated with this entity, then throw that into the dictionary of attributes!
-                    dEntityAttribs[attrib.tag].append(AstManager._Get_Font(attrib.attrib['name']))
+                    dEntityAttribs[attrib.tag][attrib.attrib["name"]] = AstManager._Get_Font(attrib.attrib['name'], attrib.text)
 
                 else:
                     #Anything else will just be put in the dictionary as an attribute
@@ -311,8 +330,14 @@ def ChangeState(lCurState, lNxtState, windView, EntManager, AstManager):
     #These are the systems that are relevant to this state and they will be added into the System_Queue class.
     for system in root.findall("System"):
 
+        #dEntities = {}
+
+        #for entity in system.findall("entity"):
+
+            #dEntities[entity.find("componentName")] = EntManager._Get_Entity(entity.find("entityType"), entity.find("entityName"))
+
         #This will load a system into the System_Queue and then it will be activated next update.
-        systems.System_Queue._Add_System(system.find("type").text, system.find("system").text, AssembleEntityInfo(root))
+        System_Manager._Add_System(system.find("type").text, system.find("systemFunc").text,  AssembleEntityInfo(system))
         
             
     #Now we gotta update the state variables so that we aren't signaling to change states anymore

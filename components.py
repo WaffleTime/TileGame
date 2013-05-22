@@ -18,10 +18,18 @@ class Component(object):
         """For checking to see if this component is updatable."""
         return self._bUpdatable
 
+    def _Set_Updatable(self, bUpdatable):
+        """For the entities that need to change updatable ability."""
+        self._bUpdatable = bUpdatable
+
     def _Get_Drawable(self):
         """For checking to see if this component is drawable."""
         return self._bDrawable
-        
+
+    def _Set_Drawable(self, bDrawable):
+        """For the entities that need to change drawable ability."""
+        self._bDrawable = bDrawable
+
 class Animated_Sprite(Component):
     #This will be a sprite that can switch its sprite animation according to the state that the parent Entity is in.
     def __init__(self, dData):      #sComponentID, iFrameWidth, iFrameHeight, dTextureStripData):
@@ -47,7 +55,7 @@ class Animated_Sprite(Component):
         #The list will include [sprite, iFramesWide]    ##only the width is needed because this is a one-dimensional strip (I think this is all we need... Unless we're dealing with LARGE frame dimensions...)
         #self._dAnimated_Sprites = {sAnimation:[sf.Sprite(texture), texture.width/iFrameWidth] for sAnimation, texture in dTextureStripData.items()}
 
-        #Each animation strip gets 
+        #Each animation strip gets
         #for key in self._dAnimated_Sprites.keys():
             #self._dAnimation_Sprites[key][0].set_texture_rect(sf.IntRect(0,0,self._iFrame_Width,self._iFrame_Height))
 
@@ -92,8 +100,8 @@ class Animation_Sprite(Component):
 
         #The current frame on the texture grid (top-left)
         self._iCurrent_Frame = [0,0]
-        
-        #The texture grid details 
+
+        #The texture grid details
         self._iFrame_Width = dData['frameWidth']
         self._iFrame_Height = dData['frameHeight']
         self._iFrames_Wide = dData['framesWide']
@@ -103,7 +111,7 @@ class Animation_Sprite(Component):
         self._Animation_Sprite = sf.Sprite(dData['Texture'][0])
 
         self._Animation_Sprite.set_texture_rect(sf.IntRect(0,0,self._iFrame_Width, self._iFrame_Height))
-        
+
     def _Activate(self):
         """This will trigger the animation to be played once."""
         self._bActive = True
@@ -123,7 +131,7 @@ class Animation_Sprite(Component):
                                                         self._iCurrent_Frame[1]*self._iFrame_Height,    \
                                                         self._iFrame_Width,                             \
                                                         self._iFrame_Height))
-        
+
     def _Update(self, timeElapsed):
 
         if self._bActive:
@@ -153,7 +161,7 @@ class Animation_Sprite(Component):
 
                     #This will update the frame based off of the information we just altered.
                     self._Update_Frame()
-                
+
             else:
                 #The animation is over in term of the time...
                 self._Deactivate()
@@ -188,7 +196,7 @@ class Box(Component):
 
     def _Render(self, renderWindow):
         renderWindow.draw(self._box)
-        
+
 
 class Text_Line(Component):
     def __init__(self, dData):  # sComponentID, xPos, yPos, width, height, text, font):
@@ -206,12 +214,17 @@ class Tile(Component):
     """Denotes a single tile within a chunk."""
     def __init__( self, dData ):
         Component.__init__(self, "Tile:%s"%(dData['componentID']), False, False)
-        self._is_Active = False    #Tells whether or not the tile is visible or not
-        self._tileID = 0           #Identifies the type of tile that is drawn (denotes tile IDs on the tile_atlas.)
+        #Tells whether or not the tile is visible or not
+        self._is_Active = False
+
+        #Identifies the type of tile that is drawn (denotes tile IDs on the tile_atlas.)
+        self._tileID = 0
+
+        self._isTransparanent = True
 
     def _Get_TileID(self):
         return self._tileID
-    
+
     def _Set_TileID(self, iTileID):
         self._tileID = iTileID
 
@@ -230,6 +243,9 @@ class Tile(Component):
     def _Get_Is_Active( self ):
          return self._is_Active
 
+    def _Get_Is_Transparent(self):
+        return self._isTransparanent
+
     def __str__( self ):
         """This is the tile's string representation for when it is saved to a file."""
         offset = self._tileID%10    #This will get the first digit for our tileID
@@ -243,16 +259,17 @@ class Mesh(Component):
         self._mesh = [ [] for layer in xrange(config.CHUNK_LAYERS) ]
 
         #This is for linking this mesh with a texture within the Asset_Manager.
-        self._lTileAtlasNames = []
-        
-        for i in config.CHUNK_LAYERS:
+        self._lTileAtlas = []
 
-            self._lTileAtlasNames.append(dData["tileAtlas"+i])
+        print "MeshData", dData
+
+        for i in xrange(config.CHUNK_LAYERS):
+            self._lTileAtlas.append(dData.get("TileAtlas"+str(i), None))
 
     def _Clear_Meshes(self):
         #Clears the mesh lists
         for i in xrange(len(self._mesh)):
-            self.mesh[i] = []
+            self._mesh[i] = []
 
     def _Add_To_Mesh(self, layer, lVertices):
         """This will concatenate a list of Vertices with the Vertex Array for the given layer index."""
@@ -262,23 +279,35 @@ class Mesh(Component):
         return self._mesh
 
     def _Render(self, renderWindow):
-        
-        for layer in xrange(config.CHUNK_LAYERS-1, -1, -1):
-            
-            renderWindow.draw(chunkEntity._Get_Component(MESH)._Get_Meshes()[layer], sf.QUADS, Asset_Manager._Get_Texture(self._lTileAtlasNames[layer]))
+        """The mesh at the beginning of the mesh list will
+        be the mesh drawn on the front."""
 
-class List(Component):
-    """This is for containing Components as well as Entities."""
+        for layer in xrange(config.CHUNK_LAYERS-1, -1, -1):
+
+            #print self._lTileAtlas[layer]
+
+            #This if is meant to prevent a mesh that doesn't have
+            #   a tileAtlas from being able to be rendered.
+            #   It's partially for debuging and partially for
+            #   preventing exceptions.
+            if self._lTileAtlas[layer] != None:
+                
+                renderWindow.draw(self._mesh[layer], sf.QUADS)#, self._lTileAtlas[layer])
+
+
+class Render_List(Component):
+    """This is meant for containing Chunk Entities."""
     def __init__(self, dData):
-        Component.__init__(self, "LIST:%s"%(dData['componentID']), False, False)
-        #Tjos cam also hold entities.
+        Component.__init__(self, "RLIST:%s"%(dData['componentID']), False, True)
+        #This can also hold entities.
         self._lComponents = []
 
     def _Add(self, item):
         self._lComponents.append(item)
 
     def _Clear(self):
-        del self._lComponents
+        for i in xrange(len(self._lComponents)):
+            del self._lComponents[i]
 
     def _Remove(self, indx):
         del self._lComponents[indx]
@@ -286,14 +315,47 @@ class List(Component):
     def _Pop(self, indx):
         return self._lComponents.pop(indx)
 
-    def __getattr__(self, indx):
+    def __getitem__(self, indx):
+        return self._lComponents[indx]
+
+    def __len__(self):
+        return len(self._lComponents)
+
+    def _Render(self, renderWindow):
+
+        for i in xrange(len(self._lComponents)):
+
+            self._lComponents[i]._Get_Component("MESH:0")._Render(renderWindow)
+
+
+class List(Component):
+    """This is for containing Components as well as Entities."""
+    def __init__(self, dData):
+        Component.__init__(self, "LIST:%s"%(dData['componentID']), False, False)
+        #This can also hold entities.
+        self._lComponents = []
+
+    def _Add(self, item):
+        self._lComponents.append(item)
+
+    def _Clear(self):
+        for key in self._lComponents.keys():
+            self._lComponents.pop(key)
+
+    def _Remove(self, indx):
+        del self._lComponents[indx]
+
+    def _Pop(self, indx):
+        return self._lComponents.pop(indx)
+
+    def __getitem__(self, indx):
         return self._lComponents[indx]
 
     def __len__(self):
         return len(self._lComponents)
 
 class Dictionary(Component):
-    """This is for containing Components as well as Entities."""
+    """This is for containing Chunks."""
     def __init__(self, dData):
         Component.__init__(self, "DICT:%s"%(dData['componentID']), False, False)
         #This can also hold entities
@@ -305,10 +367,10 @@ class Dictionary(Component):
     def _Remove(self, itemName):
         del self._dComponents[itemName]
 
-    def __getattr__(self, key):
+    def __getitem__(self, key):
         return self._dComponents[key]
 
-    def __setattr(self, key, value):
+    def __setitem(self, key, value):
         self._dComponents[key] = value
 
     def _Clear(self):
@@ -344,6 +406,9 @@ class Position(Component):
     def __init__(self, dData):
         Component.__init__(self, "POS:%s"%(dData['componentID']), False, False)
         self._position = dData['position']
+
+        self._position[0] = int(self._position[0])
+        self._position[1] = int(self._position[1])
 
     def _Get_Position(self):
         return self._position
