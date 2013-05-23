@@ -261,8 +261,6 @@ class Mesh(Component):
         #This is for linking this mesh with a texture within the Asset_Manager.
         self._lTileAtlas = []
 
-        print "MeshData", dData
-
         for i in xrange(config.CHUNK_LAYERS):
             self._lTileAtlas.append(dData.get("TileAtlas"+str(i), None))
 
@@ -292,7 +290,7 @@ class Mesh(Component):
             #   preventing exceptions.
             if self._lTileAtlas[layer] != None:
                 
-                renderWindow.draw(self._mesh[layer], sf.QUADS)#, self._lTileAtlas[layer])
+                renderWindow.draw(self._mesh[layer], sf.QUADS, self._lTileAtlas[layer])
 
 
 class Render_List(Component):

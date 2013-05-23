@@ -90,6 +90,27 @@
 		<MainMenu>
 			<viewWidth>1024</viewWidth>
 			<viewHeight>768</viewHeight>
+			<Entity name='MenuDecor' type='View'>
+				<assembleFunc>Assemble_Chunk_Manager</assembleFunc>
+				<Attributes>
+					<ChunkDataDir>\Resources\ChunkData\MainMenu\</ChunkDataDir>
+					<WorldPos>0,0</WorldPos>
+					<ChunksInWind>2,2</ChunksInWind>
+					<RenderState name='TileAtlas0'>itemAtlas.png</RenderState>
+					<RenderState name='TileAtlas1'>groundAtlas.png</RenderState>
+				</Attributes>
+			</Entity>
+			<System>
+				<type>state</type>
+				<systemFunc>Update</systemFunc>
+				<entity>
+					<entityType>View</entityType>
+					<entitytName>MenuDecor</entitytName>
+					<componentName>ChunkMan</componentName>
+				</entity>
+			</System>
+			
+			
 			<Entity name='StartGame' type='Button'>
 				<assembleFunc>Assemble_Button</assembleFunc>
 				<Attributes>
@@ -340,27 +361,7 @@
 					<state>Menu,MainMenu</state>
 				</Component>
 			</Entity>
-			
-			<Entity name='PlayerChunkMan' type='View'>
-				<assembleFunc>Assemble_Chunk_Manager</assembleFunc>
-				<Attributes>
-					<WorldPos>0,0</WorldPos>
-					<ChunksInWind>2,2</ChunksInWind>
-					<RenderState name='TileAtlas0'>itemAtlas.png</RenderState>
-					<RenderState name='TileAtlas1'>groundAtlas.png</RenderState>
-				</Attributes>
-			</Entity>
-			
-			<System>
-				<type>action</type>
-				<systemFunc>Update</systemFunc>
-				<entity>
-					<entityType>View</entityType>
-					<entitytName>PlayerChunkMan</entitytName>
-					<componentName>ChunkMan</componentName>
-				</entity>
-			</System>
-			
+
 			<Input type='hotspot'>
 				<x>50</x>
 				<y>600</y>

@@ -1,3 +1,4 @@
+import os
 import sfml as sf
 import components
 import config
@@ -83,6 +84,9 @@ def Assemble_Chunk_Manager(sEntityName, sEntityType, attribDict):
     needed in order to manager a chunks of tiles (except for the textures, those are already
     taken care of.)"""
     entity = Entity(sEntityName, sEntityType, {})
+
+    #Notice that the ChunkDataDir is prefixed by the directory that this file is in.
+    entity._Add_Component(components.Misc({"componentID":"ChunkDataDir", "storage":os.getcwd()+attribDict["ChunkDataDir"]}))
 
     entity._Add_Component(components.Position({"componentID":"WorldPos", "position":attribDict["WorldPos"].split(',')}))
     entity._Add_Component(components.Position({"componentID":"ChunksInWind", "position":attribDict["ChunksInWind"].split(",")}))
