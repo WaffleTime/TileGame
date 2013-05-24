@@ -1,6 +1,6 @@
 import os
 import errno
-#import pdb
+import pdb
 import sfml as sf
 import config
 
@@ -65,9 +65,6 @@ class Chunk(object):
         else:
             self._tiles[y][x][z]._is_Solid = False
 
-    def _Get_Tile_Type(self, x, y, z):
-        """This is for retrieving the tile IDs from the Tile objects."""
-        return self._tiles[y][x][z]._tileID 
 
     def _Load_Data( self ):
         """From the data within the chunk's file, we then give this list of lists as an argument for the Chunk's _Load_Data().
@@ -184,27 +181,18 @@ class Chunk(object):
         self._mesh[layer].append(sf.Vertex( (tileXPos+config.TILE_SIZE, tileYPos+config.TILE_SIZE), sf.Color.WHITE, (textXPos+config.TILE_SIZE, textYPos+config.TILE_SIZE) ))
         self._mesh[layer].append(sf.Vertex( (tileXPos+config.TILE_SIZE, tileYPos), sf.Color.WHITE, (textXPos+config.TILE_SIZE, textYPos) ))
 
-class Chunk_Manager(Entity):
+class Chunk_Manager(object):
     """Handles the chunks on the screen. Determines which chunks need their meshes updates, which chunks aren't empty.
     which chunks are on the screen, etc. And this will also be very important within the game state, as the game state will need to
     get tile data for the chunks within the window."""
-    def __init__( self, sName, sType, attribDict):
-        Entity.__init__(self, sName, sType)
+    def __init__( self, chunkPosition, chunkInWindow ):
         #viewCoords is a tuple of integers containing the world chunk position for the top left chunk on the window
-        self._Add_Component(attribDict['XChunkPosition'])
-        self._y_World_Chunk_Position = attribDict['YChunkPosition']
+        self._x_World_Chunk_Position = chunkPosition[0]
+        self._y_World_Chunk_Position = chunkPosition[1]
 
-        self._chunks_In_Window_X = attribDict['XChunksInWindow']
-        self._chunks_In_Window_Y = attribDict['YChunksInWindow']
+        self._chunks_In_Window_X = chunkInWindow[0]
+        self._chunks_In_Window_Y = chunkInWindow[1]
 
-        config.CHUNK_LAYERS = attribDict['ChunkLayers']
-
-        self._tile_Atlas_List = []
-
-        for i in xrange(config.CHUNK_LAYERS):
-            self._tile_Atlas_List.append(attribDict['TileAtlas'+str(i)])
-
-        #This should be replaced by the components dictionary in the base class
         self._chunk_Dict = {}   #This stores all of the chunks (even outside of the wndow) around the area in the world the window's position is.
 
         #These will all contain chunk pointers to the _chunk_Dict's chunks that apply
@@ -217,17 +205,12 @@ class Chunk_Manager(Entity):
         #This tells us whether or not a chunk's contents  have rebuilt or loaded
         self._force_Visibility_Update = False
 
-        try:
-            os.makedirs(config.Chunk_Directory)
-        except OSError as e:
-            if e.errno != errno.EEXIST:
-                raise
 
         #Here we must add in the chunks that are visible to the screen into our chunk dictionary (along with our buffer of chunks outside of the screen.)
         for i in xrange( self._x_World_Chunk_Position-1, self._x_World_Chunk_Position + self._chunks_In_Window_X+1 ):
             for j in xrange( self._y_World_Chunk_Position-1, self._y_World_Chunk_Position + self._chunks_In_Window_Y+1 ):
                 #This will initialize us a new chunk to use
-                self._chunk_Dict[(i,j)] = tileEngine.Chunk()
+                self._chunk_Dict[(i,j)] = Chunk()
 
                 pChunk = self._chunk_Dict[(i,j)]    #This creates a pointer to our chunk in the chunk dictionary
 
@@ -237,43 +220,28 @@ class Chunk_Manager(Entity):
 
                 self._load_List.append(pChunk)      #Here we store our pointer in the load list, so that the chunk can have its data loaded
 
-
-        #This will strictly assemble the chunks around the outside of the chunks on the screen (the first items in the loadList get loaded last, so we add these first!)
-
-        #This only will loop through the chunks to the left and right of the screen.
-        for i in xrange( lWorldPos[0]-1, lWorldPos[0] + lChunksInWindow[0]+1 ):
-            for j in xrange( lWorldPos[1]-1, lWorldPos[1] + lChunksInWindow[1]+1, lChunksInWindow[1]+1 ):
-
-                print (i,j)
-
-                chunkDict[(i,j)] = Assemble_Chunk("Chunk at (%d, %d)"%(lWorldPos[0], lWorldPos[1]),[i - lWorldPos[0], j - lWorldPos[1]], (i,j))
-
-                pChunk = chunkDict[(i,j)]
-
-                loadList.append(pChunk)
-
-        #This does the same thing as the previous loop, but with different chunks (above the screen and below the screen.)
-        for i in xrange( lWorldPos[0]-1, lWorldPos[0] + lChunksInWindow[0]+1, lChunksInWindow[0]+1 ):
-            for j in xrange( lWorldPos[1]-1, lWorldPos[1] + lChunksInWindow[1]+1):
-
-                print (i,j)
-
-                chunkDict[(i,j)] = Assemble_Chunk("Chunk at (%d, %d)"%(lWorldPos[0], lWorldPos[1]),[i - lWorldPos[0], j - lWorldPos[1]], (i,j))
-
-                pChunk = chunkDict[(i,j)]
-
-                loadList.append(pChunk)
-
-        #This will assemble the chunks that are inside of the screen (these chunks need loaded first and their meshes built.)
-        for i in xrange(lWorldPos[0], lWorldPos[0] + lChunksInWindow[0]):
-            for j in xrange(lWorldPos[1], lWorldPos[1] + lChunksInWindow[1]):
+        self._tile_Atlas_List = []
+        
+        #This updates our global tile_Atlas_List variable to contain the textures for the tile atlases of each chunk layer
+        for layer in xrange(config.CHUNK_LAYERS):
+            try:
+                self._tile_Atlas_List.append(sf.RenderStates(-1, None, sf.Texture.load_from_file('Resources/tileAtlas'+str(layer)+'.png'), None))
                 
-                chunkDict[(i,j)] = Assemble_Chunk("Chunk at (%d, %d)"%(lWorldPos[0], lWorldPos[1]),[i - lWorldPos[0], j - lWorldPos[1]], (i,j))
+            except sf.PySFMLException:
+                print "The tileAtlasX.png doesn't exist yet!\nConverting .jpg version to .png now!"
+                
+                oldImg = sf.Image.load_from_file('Resources/tileAtlas'+str(layer)+'.bmp')
+      
+                newImg = sf.Image.load_from_pixels(oldImg.width, oldImg.height, oldImg.get_pixels())
 
-                pChunk = chunkDict[(i,j)]
+                newImg.create_mask_from_color(sf.Color(255,0,255), 0)
 
-                loadList.append(pChunk)
-                rebuildList.append(pChunk)
+                print newImg[70,0]
+
+                newImg.save_to_file('Resources/tileAtlas'+str(layer)+'.png')
+
+                self._tile_Atlas_List.append(sf.RenderStates(-1, None, sf.Texture.load_from_file('Resources/tileAtlas'+str(layer)+'.png'), None))
+        
 
     def _Update( self ):
         """This handles the updating of the chunks and will be done each main loop through the program (which will likely be more often than the game ticks or in some cases the same.)"""
@@ -291,26 +259,6 @@ class Chunk_Manager(Entity):
             self._Update_Render_List()
 
             self._force_Visibility_Update = False
-
-    def _Get_Tile_IDs(self, listOfTiles):
-        """The listOfTiles will just be a list of tuples containing
-        the coordinates of the tiles that are being queried for tile IDs."""
-
-        tileIDs = []
-
-        #This assumes we take a list of tuples as an argument.
-        for (x, y, z) in listOfTiles:
-
-            #Fill the variables we're going to be using to find the tile and chunk we're altering.
-            xTileOffset = x % config.CHUNK_TILES_WIDE                                                           #This represents the tile position within the chunk it belongs to
-            xChunkOffset = int((x-xTileOffset) / config.CHUNK_TILES_WIDE) + self._x_World_Chunk_Position        #This represents the chunk position (of the chunk the tile is inside of) within the window!
-
-            yTileOffset = y %config.CHUNK_TILES_HIGH
-            yChunkOffset = int((y-yTileOffset) / config.CHUNK_TILES_HIGH) + self._y_World_Chunk_Position
-
-            tileIDs.append(self._chunk_Dict[(xChunkOffset, yChunkOffset)]._Get_Tile_Type(xTileOffset, yTileOffset, z))
-
-        return tileIDs
 
     def _Alter_Tiles( self, listOfTiles ):
         """This method will be what alters the tiles inside of our model.
@@ -537,7 +485,7 @@ class Chunk_Manager(Entity):
                     self._render_List.append(self._chunk_Dict[(i,j)])   #Put the chunk pointer into the render list!
 
 
-    def _Render( self, renderWindow ):
+    def _Render_Chunks( self, renderWindow ):
         """This renders the chunks that are within the render list."""
 
         #print self._render_List
@@ -546,4 +494,14 @@ class Chunk_Manager(Entity):
             for layer in xrange(config.CHUNK_LAYERS-1, -1, -1):
                 
                 renderWindow.draw(pChunk._mesh[layer], sf.QUADS, self._tile_Atlas_List[layer])
+
+
+
+
+
+
+
+
+
+
 

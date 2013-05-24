@@ -110,15 +110,41 @@
 				</entity>
 			</System>
 			
+			<Entity name='Title' type='TextBox'>
+				<assembleFunc>Assemble_Text_Box</assembleFunc>
+				<Attributes>
+					<x>350</x>
+					<y>100</y>
+					<width>250</width>
+					<height>50</height>
+					<text>The God of Gods</text>
+					<Font name='Asman'>ASMAN.ttf</Font>
+				</Attributes>
+			</Entity>
 			
-			<Entity name='StartGame' type='Button'>
+			<Entity name='NewGame' type='Button'>
+				<assembleFunc>Assemble_Button</assembleFunc>
+				<Attributes>
+					<x>400</x>
+					<y>200</y>
+					<width>150</width>
+					<height>50</height>
+					<text>New Game</text>
+					<Font name='Asman'>ASMAN.ttf</Font>
+				</Attributes>
+				<Component name='State'>
+					<componentID>0</componentID>
+					<state>Game,NewGame</state>
+				</Component>
+			</Entity>
+			<Entity name='SavedGame' type='Button'>
 				<assembleFunc>Assemble_Button</assembleFunc>
 				<Attributes>
 					<x>400</x>
 					<y>300</y>
 					<width>150</width>
 					<height>50</height>
-					<text>Start Game</text>
+					<text>Saved Game</text>
 					<Font name='Asman'>ASMAN.ttf</Font>
 				</Attributes>
 				<Component name='State'>
@@ -173,14 +199,14 @@
 			</Entity>
 			<Input type='hotspot'>
 				<x>400</x>
-				<y>300</y>
+				<y>200</y>
 				<width>150</width>
 				<height>50</height>
 				<OnSelected>
 					<system>Oscillate_Box_Colors</system>
 					<entity>
 						<entityType>Button</entityType>
-						<entitytName>StartGame</entitytName>
+						<entitytName>NewGame</entitytName>
 						<componentName>box</componentName>
 					</entity>
 				</OnSelected>
@@ -188,7 +214,7 @@
 					<system>Oscillate_Box_Colors</system>
 					<entity>
 						<entityType>Button</entityType>
-						<entitytName>StartGame</entitytName>
+						<entitytName>NewGame</entitytName>
 						<componentName>box</componentName>
 					</entity>
 				</OnDeselected>
@@ -196,7 +222,37 @@
 					<system>Change_State</system>
 					<entity>
 						<entityType>Button</entityType>
-						<entitytName>StartGame</entitytName>
+						<entitytName>NewGame</entitytName>
+						<componentName>state</componentName>
+					</entity>
+				</OnReleased>
+			</Input>
+			<Input type='hotspot'>
+				<x>400</x>
+				<y>300</y>
+				<width>150</width>
+				<height>50</height>
+				<OnSelected>
+					<system>Oscillate_Box_Colors</system>
+					<entity>
+						<entityType>Button</entityType>
+						<entitytName>SavedGame</entitytName>
+						<componentName>box</componentName>
+					</entity>
+				</OnSelected>
+				<OnDeselected>
+					<system>Oscillate_Box_Colors</system>
+					<entity>
+						<entityType>Button</entityType>
+						<entitytName>SavedGame</entitytName>
+						<componentName>box</componentName>
+					</entity>
+				</OnDeselected>
+				<OnReleased>
+					<system>Change_State</system>
+					<entity>
+						<entityType>Button</entityType>
+						<entitytName>SavedGame</entitytName>
 						<componentName>state</componentName>
 					</entity>
 				</OnReleased>
@@ -296,11 +352,30 @@
 		<Options>
 			<viewWidth>1024</viewWidth>
 			<viewHeight>768</viewHeight>
+			<Entity name='MenuDecor' type='View'>
+				<assembleFunc>Assemble_Chunk_Manager</assembleFunc>
+				<Attributes>
+					<ChunkDataDir>\Resources\ChunkData\MainMenu\</ChunkDataDir>
+					<WorldPos>0,0</WorldPos>
+					<ChunksInWind>2,2</ChunksInWind>
+					<RenderState name='TileAtlas0'>itemAtlas.png</RenderState>
+					<RenderState name='TileAtlas1'>groundAtlas.png</RenderState>
+				</Attributes>
+			</Entity>
+			<System>
+				<type>state</type>
+				<systemFunc>Update</systemFunc>
+				<entity>
+					<entityType>View</entityType>
+					<entitytName>MenuDecor</entitytName>
+					<componentName>ChunkMan</componentName>
+				</entity>
+			</System>
 			<Entity name='GoBack' type='Button'>
 				<assembleFunc>Assemble_Button</assembleFunc>
 				<Attributes>
-					<x>50</x>
-					<y>600</y>
+					<x>150</x>
+					<y>550</y>
 					<width>150</width>
 					<height>50</height>
 					<text>Go Back</text>
@@ -312,8 +387,8 @@
 				</Component>
 			</Entity>
 			<Input type='hotspot'>
-				<x>50</x>
-				<y>600</y>
+				<x>150</x>
+				<y>550</y>
 				<width>150</width>
 				<height>50</height>
 				<OnSelected>
@@ -346,11 +421,30 @@
 		<Instructions>
 			<viewWidth>1024</viewWidth>
 			<viewHeight>768</viewHeight>
+			<Entity name='MenuDecor' type='View'>
+				<assembleFunc>Assemble_Chunk_Manager</assembleFunc>
+				<Attributes>
+					<ChunkDataDir>\Resources\ChunkData\MainMenu\</ChunkDataDir>
+					<WorldPos>0,0</WorldPos>
+					<ChunksInWind>2,2</ChunksInWind>
+					<RenderState name='TileAtlas0'>itemAtlas.png</RenderState>
+					<RenderState name='TileAtlas1'>groundAtlas.png</RenderState>
+				</Attributes>
+			</Entity>
+			<System>
+				<type>state</type>
+				<systemFunc>Update</systemFunc>
+				<entity>
+					<entityType>View</entityType>
+					<entitytName>MenuDecor</entitytName>
+					<componentName>ChunkMan</componentName>
+				</entity>
+			</System>
 			<Entity name='GoBack' type='Button'>
 				<assembleFunc>Assemble_Button</assembleFunc>
 				<Attributes>
-					<x>50</x>
-					<y>600</y>
+					<x>150</x>
+					<y>550</y>
 					<width>150</width>
 					<height>50</height>
 					<text>Go Back</text>
@@ -363,8 +457,8 @@
 			</Entity>
 
 			<Input type='hotspot'>
-				<x>50</x>
-				<y>600</y>
+				<x>150</x>
+				<y>550</y>
 				<width>150</width>
 				<height>50</height>
 				<OnSelected>
@@ -396,89 +490,10 @@
 
 	</Menu>
 
-	<Game>
-		<Pause>
-			<viewWidth>1024</viewWidth>
-			<viewHeight>512</viewHeight>
-			<Entity name='Continue' type='Button'>
-				<assembleFunc>Assemble_Button</assembleFunc>
-				<Attributes>
-					<x>400</x>
-					<y>300</y>
-					<width>150</width>
-					<height>50</height>
-					<text>Continue</text>
-					<Font name='Asman'>ASMAN.ttf</Font>
-				</Attributes>
-				<Component name='State'>
-					<componentID>0</componentID>
-					<state>Game,PauseContinue</state>
-				</Component>
-			</Entity>
-			<Entity name='Quit' type='Button'>
-				<assembleFunc>Assemble_Button</assembleFunc>
-				<Attributes>
-					<x>400</x>
-					<y>500</y>
-					<width>150</width>
-					<height>50</height>
-					<text>Quit</text>
-					<Font name='Asman'>ASMAN.ttf</Font>
-				</Attributes>
-				<Component name='State'>
-					<componentID>0</componentID>
-					<state>QUIT,QUIT</state>
-				</Component>
-			</Entity>
-			<Input type='hotspot'>
-				<x>400</x>
-				<y>300</y>
-				<width>150</width>
-				<height>50</height>
-				<OnSelected>
-				</OnSelected>
-				<OnDeselected>
-				</OnDeselected>
-				<OnPressed>
-					<type>state</type>
-					qweqwe
-				</OnPressed>
-				<OnReleased>
-					<system>Change_State</system>
-					<entity>
-						<entityType>Button</entityType>
-						<entitytName>Continue</entitytName>
-						<componentName>state</componentName>
-					</entity>
-				</OnReleased>
-			</Input>
-			<Input type='hotspot'>
-				<x>400</x>
-				<y>500</y>
-				<width>150</width>
-				<height>50</height>
-				<OnSelected>
-				</OnSelected>
-				<OnDeselected>
-				</OnDeselected>
-				<OnPressed>
-					<type>state</type>
-					qweqwe
-				</OnPressed>
-				<OnReleased>
-					<system>Change_State</system>
-					<entity>
-						<entityType>Button</entityType>
-						<entitytName>Quit</entitytName>
-						<componentName>state</componentName>
-					</entity>
-				</OnReleased>
-			</Input>
-		</Pause>
-		
+	<Game>	
 		<NewGame>
 			<viewWidth>1024</viewWidth>
-			<viewHeight>512</viewHeight>
+			<viewHeight>768</viewHeight>
 			<Entity name='TutorialState' type='State'>
 				<Component name='State'>
 					<componentID>0</componentID>
@@ -500,54 +515,54 @@
 				</entity>
 			</System>
 		</NewGame>
-
-		<PauseContinue>
-			<viewWidth>1024</viewWidth>
-			<viewHeight>512</viewHeight>
-			<Entity name='OnScreenEntities' type='Manager'>
-				<assembleFunc>Entity_List</assembleFunc>
-				<Attributes>
-				</Attributes>			
-			</Entity>
-			<Entity name='ChunkManager' type='Manager'>
-				<assembleFunc>Chunk_Manager</assembleFunc>
-				<Attributes>
-					<XChunkPosition>0</XChunkPosition>
-					<YChunkPosition>0</YChunkPosition>
-					<XChunksInWindow>2</XChunksInWindow>
-					<YChunksInWindow>2</YChunksInWindow>
-					<ChunkLayers>2</ChunkLayers>
-					<Texture name='TileAtlas0'>TestAtlas0</Texture>
-					<Texture name='TileAtlas1'>TestAtlas1</Texture>
-				</Attributes>
-			</Entity>
-		</PauseContinue>
 		
 		<Continue>
-			<viewWidth>1024</viewWidth>
-			<viewHeight>512</viewHeight>
-			<Entity name='OnScreenEntities' type='Manager'>
-				<assembleFunc>Entity_List</assembleFunc>
+			<viewWidth>512</viewWidth>
+			<viewHeight>384</viewHeight>
+			<Entity name='PlayerScreen' type='View'>
+				<assembleFunc>Assemble_Chunk_Manager</assembleFunc>
 				<Attributes>
-				</Attributes>			
-			</Entity>
-			<Entity name='ChunkManager' type='Manager'>
-				<assembleFunc>Chunk_Manager</assembleFunc>
-				<Attributes>
-					<XChunkPosition>0</XChunkPosition>
-					<YChunkPosition>0</YChunkPosition>
-					<XChunksInWindow>2</XChunksInWindow>
-					<YChunksInWindow>2</YChunksInWindow>
-					<ChunkLayers>2</ChunkLayers>
-					<Texture name='TileAtlas0'>TestAtlas0</Texture>
-					<Texture name='TileAtlas1'>TestAtlas1</Texture>
+					<ChunkDataDir>SavedGame</ChunkDataDir>
+					<WorldPos>0,0</WorldPos>
+					<ChunksInWind>2,2</ChunksInWind>
+					<RenderState name='TileAtlas0'>itemAtlas.png</RenderState>
+					<RenderState name='TileAtlas1'>groundAtlas.png</RenderState>
 				</Attributes>
 			</Entity>
+			<System>
+				<type>state</type>
+				<systemFunc>Update</systemFunc>
+				<entity>
+					<entityType>View</entityType>
+					<entitytName>PlayerScreen</entitytName>
+					<componentName>ChunkMan</componentName>
+				</entity>
+			</System>
+			
 		</Continue>
 
 		<ChooseSavedGame>
 			<viewWidth>1024</viewWidth>
-			<viewHeight>512</viewHeight>
+			<viewHeight>768</viewHeight>
+			<Entity name='MenuDecor' type='View'>
+				<assembleFunc>Assemble_Chunk_Manager</assembleFunc>
+				<Attributes>
+					<ChunkDataDir>\Resources\ChunkData\MainMenu\</ChunkDataDir>
+					<WorldPos>0,0</WorldPos>
+					<ChunksInWind>2,2</ChunksInWind>
+					<RenderState name='TileAtlas0'>itemAtlas.png</RenderState>
+					<RenderState name='TileAtlas1'>groundAtlas.png</RenderState>
+				</Attributes>
+			</Entity>
+			<System>
+				<type>state</type>
+				<systemFunc>Update</systemFunc>
+				<entity>
+					<entityType>View</entityType>
+					<entitytName>MenuDecor</entitytName>
+					<componentName>ChunkMan</componentName>
+				</entity>
+			</System>
 			<Entity name='Save1' type='Button'>
 				<assembleFunc>Assemble_Button</assembleFunc>
 				<Attributes>
@@ -562,14 +577,40 @@
 					<componentID>0</componentID>
 					<state>Game,Continue</state>
 				</Component>
+				<Component name='Misc'>
+					<componentID>SaveDir</componentID>
+					<storage>\SavedGames\Save0\ChunkData\</storage>
+				</Component>
 			</Entity>
 			<Input type='hotspot'>
 				<x>400</x>
 				<y>300</y>
 				<width>150</width>
 				<height>50</height>
+				<OnSelected>
+					<system>Oscillate_Box_Colors</system>
+					<entity>
+						<entityType>Button</entityType>
+						<entitytName>Save1</entitytName>
+						<componentName>box</componentName>
+					</entity>
+				</OnSelected>
+				<OnDeselected>
+					<system>Oscillate_Box_Colors</system>
+					<entity>
+						<entityType>Button</entityType>
+						<entitytName>Save1</entitytName>
+						<componentName>box</componentName>
+					</entity>
+				</OnDeselected>
 				<OnPressed>
-					<system>Change_Player_Dir</system>
+					<type>action</type>
+					<system>Change_Save_Dir</system>
+					<entity>
+						<entityType>Button</entityType>
+						<entitytName>Save1</entitytName>
+						<componentName>button</componentName>						
+					</entity>
 				</OnPressed>
 				<OnReleased>
 					<system>Change_State</system>
@@ -580,70 +621,111 @@
 					</entity>
 				</OnReleased>
 			</Input>
-		</ChooseSavedGame>
-		
-		<ChooseLevel>
-			<viewWidth>1024</viewWidth>
-			<viewHeight>512</viewHeight>
-			<Entity name='Tutorial' type='Button'>
+			<Entity name='TestSave' type='Button'>
 				<assembleFunc>Assemble_Button</assembleFunc>
 				<Attributes>
 					<x>400</x>
-					<y>300</y>
+					<y>400</y>
 					<width>150</width>
 					<height>50</height>
-					<text>Tutorial</text>
+					<text>TestSave</text>
 					<Font name='Asman'>ASMAN.ttf</Font>
 				</Attributes>
 				<Component name='State'>
 					<componentID>0</componentID>
 					<state>Game,Continue</state>
 				</Component>
+				<Component name='Misc'>
+					<componentID>SaveDir</componentID>
+					<storage>\SavedGames\TestSave\ChunkData\</storage>
+				</Component>
 			</Entity>
 			<Input type='hotspot'>
 				<x>400</x>
-				<y>300</y>
+				<y>400</y>
 				<width>150</width>
 				<height>50</height>
 				<OnSelected>
+					<system>Oscillate_Box_Colors</system>
+					<entity>
+						<entityType>Button</entityType>
+						<entitytName>TestSave</entitytName>
+						<componentName>box</componentName>
+					</entity>
 				</OnSelected>
 				<OnDeselected>
+					<system>Oscillate_Box_Colors</system>
+					<entity>
+						<entityType>Button</entityType>
+						<entitytName>TestSave</entitytName>
+						<componentName>box</componentName>
+					</entity>
 				</OnDeselected>
 				<OnPressed>
-					<type>state</type>
-					qweqwe
+					<type>action</type>
+					<system>Change_Save_Dir</system>
+					<entity>
+						<entityType>Button</entityType>
+						<entitytName>TestSave</entitytName>
+						<componentName>button</componentName>						
+					</entity>
 				</OnPressed>
 				<OnReleased>
 					<system>Change_State</system>
 					<entity>
 						<entityType>Button</entityType>
-						<entitytName>Tutorial</entitytName>
+						<entitytName>TestSave</entitytName>
+						<componentName>state</componentName>						
+					</entity>
+				</OnReleased>
+			</Input>
+			
+			<Entity name='GoBack' type='Button'>
+				<assembleFunc>Assemble_Button</assembleFunc>
+				<Attributes>
+					<x>150</x>
+					<y>550</y>
+					<width>150</width>
+					<height>50</height>
+					<text>Go Back</text>
+					<Font name='Asman'>ASMAN.ttf</Font>
+				</Attributes>
+				<Component name='State'>
+					<componentID>0</componentID>
+					<state>Menu,MainMenu</state>
+				</Component>
+			</Entity>
+			<Input type='hotspot'>
+				<x>150</x>
+				<y>550</y>
+				<width>150</width>
+				<height>50</height>
+				<OnSelected>
+					<system>Oscillate_Box_Colors</system>
+					<entity>
+						<entityType>Button</entityType>
+						<entitytName>GoBack</entitytName>
+						<componentName>box</componentName>
+					</entity>
+				</OnSelected>
+				<OnDeselected>
+					<system>Oscillate_Box_Colors</system>
+					<entity>
+						<entityType>Button</entityType>
+						<entitytName>GoBack</entitytName>
+						<componentName>box</componentName>
+					</entity>
+				</OnDeselected>
+				<OnReleased>
+					<system>Change_State</system>
+					<entity>
+						<entityType>Button</entityType>
+						<entitytName>GoBack</entitytName>
 						<componentName>state</componentName>
 					</entity>
 				</OnReleased>
 			</Input>
-		</ChooseLevel>
-		
-		<TestLevel>
-			<viewWidth>512</viewWidth>
-			<viewHeight>384</viewHeight>
-			<Entity name='OnScreenEntities' type='Manager'>
-				<assembleFunc>Entity_List</assembleFunc>
-				<Attributes>
-				</Attributes>			
-			</Entity>
-			<Entity name='ChunkManager' type='Manager'>
-				<assembleFunc>Chunk_Manager</assembleFunc>
-				<Attributes>
-					<XChunkPosition>0</XChunkPosition>
-					<YChunkPosition>0</YChunkPosition>
-					<XChunksInWindow>2</XChunksInWindow>
-					<YChunksInWindow>2</YChunksInWindow>
-					<ChunkLayers>2</ChunkLayers>
-					<Texture name='TextAtlas0'>TestAtlas0.bmp</Texture>
-				</Attributes>
-			</Entity>
-		</TestLevel>
+		</ChooseSavedGame>
 	</Game>
 
 </States>

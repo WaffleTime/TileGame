@@ -11,8 +11,8 @@ def Assemble_Text_Box(sEntityName, sEntityType, attribDict):
     entity = Entity(sEntityName, sEntityType, {})
 
     #The first argument represents the ID of the component with respect to its type (multiple components of a single type need to have different IDs.)
-    entity._Add_Component(components.Text_Line({'componentID': attrib, 'x': attribDict['x'], 'y': attribDict['y'], 'width': attribDict['width'], 'height': attribDict['height'], 'text': attribDict['text'], 'font': attribDict["Font"]["Asman"]}))
     entity._Add_Component(components.Box({'componentID': '0', 'x': attribDict['x'], 'y': attribDict['y'], 'width': attribDict['width'], 'height': attribDict['height']}))
+    entity._Add_Component(components.Text_Line({'componentID': "0", 'x': attribDict['x'], 'y': attribDict['y'], 'width': attribDict['width'], 'height': attribDict['height'], 'text': attribDict['text'], 'font': attribDict["Font"]["Asman"]}))
 
     return entity
 
@@ -129,7 +129,7 @@ def Assemble_Chunk_Manager(sEntityName, sEntityType, attribDict):
 
 
             entity._Get_Component("DICT:ChunkDict")._Add( "%d,%d"%(i,j),
-                                                          Assemble_Chunk( "%s,%s" % (lWorldPos[0], lWorldPos[1]),
+                                                          Assemble_Chunk( "%s,%s" % (i, j),
                                                                           "Chunk",
                                                                           dChunkData ) )
 
@@ -159,7 +159,7 @@ def Assemble_Chunk_Manager(sEntityName, sEntityType, attribDict):
 
 
             entity._Get_Component("DICT:ChunkDict")._Add( "%d,%d"%(i,j),
-                                                          Assemble_Chunk( "%s,%s" % (lWorldPos[0], lWorldPos[1]),
+                                                          Assemble_Chunk( "%s,%s" % (i, j),
                                                                           "Chunk",
                                                                           dChunkData ) )
 
@@ -189,7 +189,7 @@ def Assemble_Chunk_Manager(sEntityName, sEntityType, attribDict):
 
 
             entity._Get_Component("DICT:ChunkDict")._Add( "%d,%d"%(i,j),
-                                                          Assemble_Chunk( "%s,%s" % (lWorldPos[0], lWorldPos[1]),
+                                                          Assemble_Chunk( "%s,%s" % (i, j),
                                                                           "Chunk",
                                                                           dChunkData ) )
 

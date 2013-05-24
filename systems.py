@@ -1,4 +1,5 @@
 import os
+import shutil
 import sfml as sf
 import xml.etree.ElementTree as ET
 import config
@@ -82,15 +83,26 @@ def Move_Player_Left(dEntities):
 
         #If it is, then we can signal the System function to execute a function that loads/removes in Chunk entities for the Chunk_Manager and loads in Inhabitant entities for the Inhabitant_Manager.
 
+def Change_Save_Dir(dEntities):
+    """This is for switching the directory that is looked in for saved game
+    information. That directory contains chunk data, player data and
+    entity data."""
+    
+    config.Saved_Game_Directory = dEntities["button"]._Get_Component("MISC:SaveDir")._Get_Storage()
+
+    return "NULL,NULL"
+
 def New_Save(dEntities):
     """This will setup a new saved game directory along with the player's
     xml data. Along with this system there should be other functions
     that will move the chunk data into this directory and also
     fetch the entity xml data for the beginning level."""
 
+    previousDirectory = os.getcwd()
+
     #Create a new saved game directory (non-optional directory name, whatever isn't already taken.)
     #Directory will be added to config.Game_Directory + "\\SavedGames"
-    os.chdir(config.Game_Directory + "\\SavedGames")
+    os.chdir(os.getcwd() + "\\SavedGames")
     
     lyst = os.listdir(os.getcwd())
 
@@ -108,9 +120,9 @@ def New_Save(dEntities):
     counter += 1
 
     #This is the new saved game's folder
-    os.mkdir(os.getcwd() + "\\Save" + str(counter))
+    os.mkdir(os.getcwd() + "\\SavedGames\\Save" + str(counter))
 
-    os.chdir(os.getcwd() + "\\Save" + str(counter))
+    os.chdir(os.getcwd() + "\\SavedGames\\Save" + str(counter))
 
     #Returns an ELement object that can be modified and
     #   and saved as an xml file. This will be the player's
@@ -144,15 +156,92 @@ def New_Save(dEntities):
 
     #This should save the xml we just created
     #   into the new saved directory
-    ET.ElementTree(playerStats).write("Save" + str(counter))
+    ET.ElementTree(playerStats).write("\\SavedGames\\Save" + str(counter))
     
     #Select this new saved game.
-    config.Saved_Game_Directory = os.getcwd() + "\\Save" + str(counter)
+    config.Saved_Game_Directory = "\\SavedGames\\Save" + str(counter)
 
-def Load_Level_Data(dEntities):
-    """This will be for copying chunk and entity data about a certain level into the current saved game's directory."""
+    #This will change the directory back to what it was originally.
+    os.chdir(previousDirectory)
 
+def Generate_World_Data(dEntities):
+    """This will generate level data for the current saved game. And the ChunkData will be
+    saved inside the saved game's directory.
+
+    My Idea for generating the levels so far is:
+
+    1. Copy four generic chunks into the \\ChunkData\\. It only needs a platform for the
+    player to spawn on.
+
+    2. (optional) Copy in empty Chunks to stop the generationg of levels to get too crazy. The empty
+    chunks should be exist Y chunks above the player and make a horizontal line X chunks in width.
+
+    2. Generate Chunks around the first chunks that were copied in. There should be a separate system
+    function that will take in chunks"""
+
+    os.mkdir("%s\\%s\\ChunkData"%(os.getcwd(), config.Saved_Game_Directory))
+
+    shutil.copy2("%s\\Resources\\ChunkData\\NewSave\\0 0.txt"%os.getcwd(),
+                 "%s\\%s\\ChunkData"%(os.getcwd(), config.Saved_Game_Directory))
+    
+    shutil.copy2("%s\\Resources\\ChunkData\\NewSave\\0 1.txt"%os.getcwd(),
+                 "%s\\%s\\ChunkData"%(os.getcwd(), config.Saved_Game_Directory))
+
+    shutil.copy2("%s\\Resources\\ChunkData\\NewSave\\1 0.txt"%os.getcwd(),
+                 "%s\\%s\\ChunkData"%(os.getcwd(), config.Saved_Game_Directory))
+
+    shutil.copy2("%s\\Resources\\ChunkData\\NewSave\\1 1.txt"%os.getcwd(),
+                 "%s\\%s\\ChunkData"%(os.getcwd(), config.Saved_Game_Directory))
+
+
+    #Depending on the chunk that will be generated, there will be different chunks
+    #   that are able to be used for determining the new tiles. So we need a way
+    #   to gather up the chunks that are already built.
+
+    #The Chunk that needs to be generated should be one of the four chunks in the center
+    #   of the chunk manager's view. That way, there is a ring of chunks around it
+    #   and they can be used for generating the data. That means that we won't have to watch
+    #   out for chunks that don't exist within the Chunk Manager's ChunkDict when getting
+    #   the chunk data for the chunk to be generated. But some of those chunks will turn out
+    #   to be empty.
+
+
+def Generate_Chunk_Data(dEntities):
+    """This should take in a chunk entity that is going to be filled. And all the rest
+    of the chunk entities are going to be Chunks that have a relationship with the
+    chunk that is to be filled."""
+
+    #The tiles that are generated first should be determined
+    #  based off of the non-empty chunks in the chunk manager.
     pass
+
+def Determine_Majority_TileType(lTileTypes):
+    """This should sort through the different tileTypes
+    that were generated from the different Markov Chains
+    for a particular tile and determine the tileType that
+    should  be chosen for the tile to be generated.
+    @param lTileTypes This is the list of tileTypes that
+        will be used to determine the Majority tileType.
+    @return A tileType integer that represents the
+        new tileType."""
+    pass
+
+def Calc_New_TileType_For_Relation(sTileRelation, iOldTileType):
+    """This is for calculating the new tileType
+    with the Markov Chain data that was for a particular
+    relationship between tile positions.
+    @param sTileRelation This is a string that will be
+        used to find the Markov Chain data in the Game's directory.
+        It refers to the position relation between the previous tile
+        and the tile that is to be generated.
+    @param iOldTileType This is the tileType of the previous tile
+        in the Markov Chain. Te Markov Chain's states are
+        represented by tileTypes and the Markov Chain that is
+        used represents the tile position relation.
+    @return A tileType integer that represents
+        the new tileType."""
+    pass
+
 
 def Load_Chunk_Entities(dEntities):
     """This will load in some Entities for the Chunk_"""
@@ -454,10 +543,20 @@ def Load_Data(dEntities):
     """From the data within the chunk's file, we then give this list of lists as an argument for the Chunk's _Load_Data().
     So from here we'll update the self._tiles list of lists with a list of lists of similar size (the data.)"""
 
-    fileName = dEntities["ChunkDataDir"]._Get_Storage()   \
-                + str(dEntities["chunk"]._Get_Component("POS:WorldPos")._Get_X()) \
-                + " " + str(dEntities["chunk"]._Get_Component("POS:WorldPos")._Get_Y()) + ".txt"
+    fileName = ""
+    
+    #This checks to see if the chunks that are being loaded in
+    #   are linked with a saved game.
+    if dEntities["ChunkDataDir"]._Get_Storage()[-9:] != "SavedGame":
+        fileName = dEntities["ChunkDataDir"]._Get_Storage()   \
+                    + str(dEntities["chunk"]._Get_Component("POS:WorldPos")._Get_X()) \
+                    + " " + str(dEntities["chunk"]._Get_Component("POS:WorldPos")._Get_Y()) + ".txt"
 
+    else:
+        fileName = os.getcwd() + config.Saved_Game_Directory    \
+                   + str(dEntities["chunk"]._Get_Component("POS:WorldPos")._Get_X()) \
+                   + " " + str(dEntities["chunk"]._Get_Component("POS:WorldPos")._Get_Y()) + ".txt"
+        
     failureFlag = False
 
     tiles = dEntities["chunk"]._Get_Component("LIST:Tiles")
@@ -496,10 +595,17 @@ def Load_Data(dEntities):
 def Unload(dEntities):
     """This is where we'll be saving the contents of a chunk to a file."""
 
-    fileName = config.Saved_Game_Directory + "/ChunkData"   \
-               + str(dEntities["chunk"]._Get_Component("POS:WorldPos")._Get_X()) \
-               + " " + str(dEntities["chunk"]._Get_Component("POS:WorldPos")._Get_Y()) + ".txt"
+    #This checks to see if the chunks that are being loaded in
+    #   are linked with a saved game.
+    if dEntities["ChunkDataDir"]._Get_Storage()[-9:] != "SavedGame":
+        fileName = dEntities["ChunkDataDir"]._Get_Storage()   \
+                    + str(dEntities["chunk"]._Get_Component("POS:WorldPos")._Get_X()) \
+                    + " " + str(dEntities["chunk"]._Get_Component("POS:WorldPos")._Get_Y()) + ".txt"
 
+    else:
+        fileName = os.getcwd() + config.Saved_Game_Directory    \
+                   + str(dEntities["chunk"]._Get_Component("POS:WorldPos")._Get_X()) \
+                   + " " + str(dEntities["chunk"]._Get_Component("POS:WorldPos")._Get_Y()) + ".txt"
     #try:
     fileObj = open(fileName, "w")       #This won't provoke errors, because the file will either be created or overwritten.
 

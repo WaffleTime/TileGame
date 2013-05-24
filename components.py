@@ -208,6 +208,7 @@ class Text_Line(Component):
         self._text.y = int(dData['y']) + int(dData['height']) / 2.0 - self._text.global_bounds.height / 2.0
 
     def _Render(self, renderWindow):
+        
         renderWindow.draw(self._text)
 
 class Tile(Component):
