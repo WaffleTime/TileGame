@@ -391,50 +391,48 @@ def main():
     bQuit = False
     while not bQuit:
 
-        #This makes the program so that it basically pauses all of its game updates when a user clicks outside of the window. And it waits until the user clicks on the window.
-        if windowIsActive:
-        
-            #This will loop through all of the events that have been triggered by player input
-            for event in window.iter_events():
+        #This will loop through all of the events that have been triggered by player input
+        for event in window.iter_events():
 
-                if event.type == sf.Event.MOUSE_MOVED:
-                    Input_Manager._Mouse_Has_Moved(window.convert_coords(event.x,event.y))
+            if event.type == sf.Event.MOUSE_MOVED:
+                Input_Manager._Mouse_Has_Moved(window.convert_coords(event.x,event.y))
 
-                elif event.type == sf.Event.TEXT_ENTERED:
-                    Input_Manager._Key_Input(event.unicode, True, timer.elapsed_time)
-                
-                elif event.type == sf.Event.KEY_PRESSED:
-                    Input_Manager._Key_Input(event.code, True, timer.elapsed_time)
-                    
-                elif event.type == sf.Event.KEY_RELEASED:
-                    Input_Manager._Key_Input(event.code, False, timer.elapsed_time)
-                
-                elif event.type == sf.Event.MOUSE_BUTTON_PRESSED:
-                    Input_Manager._Mouse_Input(event.button, True)
-                
-                elif event.type == sf.Event.MOUSE_BUTTON_RELEASED:
-                    Input_Manager._Mouse_Input(event.button,False)
-
-                elif event.type == sf.Event.CLOSED:
-                    for stateIndx in xrange(len(lNextState)):                     
-                        lNextState[stateIndx] = "QUIT"
-                    bQuit = True
-                    
-                elif event.type == sf.Event.LOST_FOCUS:
-                    windowIsActive = False
-
-                elif event.type == sf.Event.GAINED_FOCUS:
-                    windowIsActive = True
-
-
-            iLoops = 0  #A counter for the amount of game update loops that are made in sucession whilst skipping rendering updates.
+            elif event.type == sf.Event.TEXT_ENTERED:
+                Input_Manager._Key_Input(event.unicode, True, timer.elapsed_time)
             
-            #This loop will start if it is time to commence the next update and will keep going if we are behind schedule and need to catch up.
-            while timer.elapsed_time > fNextGameTick and iLoops < MAX_FRAMESKIP:
-        
-                #We don't want to change lNextState if the game has been set to QUIT
-                if not bQuit:
+            elif event.type == sf.Event.KEY_PRESSED:
+                Input_Manager._Key_Input(event.code, True, timer.elapsed_time)
                 
+            elif event.type == sf.Event.KEY_RELEASED:
+                Input_Manager._Key_Input(event.code, False, timer.elapsed_time)
+            
+            elif event.type == sf.Event.MOUSE_BUTTON_PRESSED:
+                Input_Manager._Mouse_Input(event.button, True)
+            
+            elif event.type == sf.Event.MOUSE_BUTTON_RELEASED:
+                Input_Manager._Mouse_Input(event.button,False)
+
+            elif event.type == sf.Event.CLOSED:
+                for stateIndx in xrange(len(lNextState)):                     
+                    lNextState[stateIndx] = "QUIT"
+                bQuit = True
+                
+            elif event.type == sf.Event.LOST_FOCUS:
+                windowIsActive = False
+
+            elif event.type == sf.Event.GAINED_FOCUS:
+                windowIsActive = True
+
+
+        iLoops = 0  #A counter for the amount of game update loops that are made in sucession whilst skipping rendering updates.
+        
+        #This loop will start if it is time to commence the next update and will keep going if we are behind schedule and need to catch up.
+        while timer.elapsed_time > fNextGameTick and iLoops < MAX_FRAMESKIP:
+
+            #This makes the program so that it basically pauses all of its game updates when a user clicks outside of the window. And it waits until the user clicks on the window.
+            if windowIsActive:
+                #We don't want to change lNextState if the game has been set to QUIT
+                if not bQuit:                
                     #lNextState will contain "NULL"s when no state change is signaled
                     #lNextState will have all of its elements change when switching to a new state.
                     lNextState = EntityManager._Input_Update()
@@ -447,17 +445,17 @@ def main():
                     if lNextState[0] != "NULL" and lNextState[0] != "QUIT":
                         ChangeState(lCurrentState, lNextState, windowView, EntityManager, AssetManager)
 
-                #Finally after we've handled input and have correctly adjusted to the nextState (in most cases it won't happen,)
-                #we can then update our game's model with stuff that will happen in the respective state with each game update.
-                if not bQuit:
+                    #Finally after we've handled input and have correctly adjusted to the nextState (in most cases it won't happen,)
+                    #we can then update our game's model with stuff that will happen in the respective state with each game update.
+                        
                     EntityManager._Logic_Update(timer.elapsed_time - fNextGameTick)           #This updates our model depending on what is going on in the current state
 
-                #If we have received a quit signal, we should stop our loop and quit the game!
-                if bQuit:
-                    break
-                    
-                iLoops += 1
-                fNextGameTick += sf.Time(seconds=SKIP_TICKS)
+            #If we have received a quit signal, we should stop our loop and quit the game!
+            if bQuit:
+                break
+                
+            iLoops += 1
+            fNextGameTick += sf.Time(seconds=SKIP_TICKS)
 
         EntityManager._Render_Update(window, windowView)
         window.display()
