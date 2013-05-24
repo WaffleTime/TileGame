@@ -99,10 +99,6 @@ def New_Save(dEntities):
     fetch the entity xml data for the beginning level."""
 
     previousDirectory = os.getcwd()
-
-    #Create a new saved game directory (non-optional directory name, whatever isn't already taken.)
-    #Directory will be added to config.Game_Directory + "\\SavedGames"
-    os.chdir(os.getcwd() + "\\SavedGames")
     
     lyst = os.listdir(os.getcwd())
 
@@ -112,7 +108,7 @@ def New_Save(dEntities):
     for i in lyst:
         #Checks if the current item
         #   is a Saved Game dir.
-        if (i[0:3] == "Save"):
+        if (i[0:4] == "Save"):
             counter += 1
 
     #This is so that the counter is one more than the total
@@ -156,7 +152,7 @@ def New_Save(dEntities):
 
     #This should save the xml we just created
     #   into the new saved directory
-    ET.ElementTree(playerStats).write("\\SavedGames\\Save" + str(counter))
+    ET.ElementTree(playerStats).write("PlayerData.xml")
     
     #Select this new saved game.
     config.Saved_Game_Directory = "\\SavedGames\\Save" + str(counter)
@@ -205,6 +201,47 @@ def Generate_World_Data(dEntities):
     #   the chunk data for the chunk to be generated. But some of those chunks will turn out
     #   to be empty.
 
+    #Right, down, left, up
+    lOrderOfOffsetsX = [1, 0, -1, 0]
+    lOrderOfOffsetsY = [0, -1, 0, 1]
+
+    #This offset loops says how many tiles over the
+    #   Chunk Manager can go before it needs to change
+    #   directions.
+    #Since the spiral we do around the chunk that was copied in
+    #   is predictable. We're incrementing the offset by 2 each time.
+    #   But for each offset given, the ChunkManager must move twice.
+    for offset in xrange(2,100,2):
+
+        #These two moves will move the chunk manager over four new chunks.
+        Move_Chunk_Position( {"ChunkMan":dEntities["ChunkMan"],
+                              "xOffset":lOrderOfOffsetsX[(offset/2-1)%4],
+                              "yOffset":lOrderOfOffsetsY[(offset/2-1)%4]} )
+
+        Move_Chunk_Position( {"ChunkMan":dEntities["ChunkMan"],
+                              "xOffset":lOrderOfOffsetsX[(offset/2-1)%4],
+                              "yOffset":lOrderOfOffsetsY[(offset/2-1)%4]} )
+
+        #This is just for cleaning up the below part.
+        lWorldPos = dEntities["ChunkMan"]._Get_Component("POS:WorldPos")._Get_Position()
+
+        dChunkDict = dEntities["ChunkMan"]._Get_Component("DICT:ChunkDict")
+
+        #Now we have to call Generate_Chunk_Data for each of the four middle
+        #   chunks.
+        for yChunk in xrange(2):
+            for xChunk in xrange(2):
+
+                Generate_Chunk_Data( {"TargetChunk":dChunkDict["%d,%d"%(lWorldPos[0]+xChunk, lWorldPos[1]+yChunk)],
+                                      "RChunk":dChunkDict["%d,%d"%(lWorldPos[0]+xChunk+1, lWorldPos[1]+yChunk)],
+                                      "DChunk":dChunkDict["%d,%d"%(lWorldPos[0]+xChunk, lWorldPos[1]+yChunk-1)],
+                                      "LChunk":dChunkDict["%d,%d"%(lWorldPos[0]+xChunk-1, lWorldPos[1]+yChunk)],
+                                      "UChunk":dChunkDict["%d,%d"%(lWorldPos[0]+xChunk, lWorldPos[1]+yChunk+1)],
+                                      "URChunk":dChunkDict["%d,%d"%(lWorldPos[0]+xChunk+1, lWorldPos[1]+yChunk+1)],
+                                      "ULChunk":dChunkDict["%d,%d"%(lWorldPos[0]+xChunk-1, lWorldPos[1]+yChunk+1)],
+                                      "DRChunk":dChunkDict["%d,%d"%(lWorldPos[0]+xChunk+1, lWorldPos[1]+yChunk-1)],
+                                      "DLChunk":dChunkDict["%d,%d"%(lWorldPos[0]+xChunk-1, lWorldPos[1]+yChunk-1)]} )
+
 
 def Generate_Chunk_Data(dEntities):
     """This should take in a chunk entity that is going to be filled. And all the rest
@@ -213,7 +250,172 @@ def Generate_Chunk_Data(dEntities):
 
     #The tiles that are generated first should be determined
     #  based off of the non-empty chunks in the chunk manager.
-    pass
+    #Check to see if the Right chunk is not empty.
+    if (not dEntities["LChunk"]._Get_Component("FLAG:IsEmpty")._Get_Flag()):
+
+        #Check to see if the upper chunk is not empty.
+        if (not dEntities["UChunk"]._Get_Component("FLAG:IsEmpty")._Get_Flag()):
+
+            #Since the left and upper chunks aren't empty
+            #We will start the generation from the left and upper corner.
+            iStartX = 0
+            iEndX = config.CHUNK_TILES_WIDE
+            iStepX = 1
+            
+
+            iStartY = 0
+            iEndY = config.CHUNK_TILES_HIGH
+            iStepY = 1
+
+        elif (not dEntities["DChunk"]._Get_Component("FLAG:IsEmpty")._Get_Flag()):
+
+            #Since the left and down chunks aren't empty
+            #We will start the generation from the left and down corner.
+            iStartX = 0
+            iEndX = config.CHUNK_TILES_WIDE
+            iStepX = 1
+
+            iStartY = config.CHUNK_TILES_HIGH-1
+            iEndY = -1
+            iStepX = -1
+
+    if (not dEntities["RChunk"]._Get_Component("FLAG:IsEmpty")._Get_Flag()):
+
+        #Check to see if the upper chunk is not empty.
+        if (not dEntities["UChunk"]._Get_Component("FLAG:IsEmpty")._Get_Flag()):
+
+            #Since the right and upper chunks aren't empty
+            #We will start the generation from the right and upper corner.
+            iStartX = config.CHUNK_TILES_WIDE-1
+            iEndX = -1
+            iStepX = -1
+            
+
+            iStartY = 0
+            iEndY = config.CHUNK_TILES_HIGH
+            iStepY = 1
+
+        elif (not dEntities["DChunk"]._Get_Component("FLAG:IsEmpty")._Get_Flag()):
+
+            #Since the right and down chunks aren't empty
+            #We will start the generation from the right and down corner.
+            iStartX = config.CHUNK_TILES_WIDE-1
+            iEndX = -1
+            iStepX = -1
+
+            iStartY = config.CHUNK_TILES_HIGH-1
+            iEndY = -1
+            iStepX = -1
+
+    #Then iterate through the tiles within the Chunk accordingly.
+    #The tiles don't need their world position in order to
+    #   access the tiles.
+    for y in xrange(iStartY, iEndY, iStepY):
+        for x in xrange(iStartX, iEndX, iStepX):
+
+            #This will hold all the tileTypes that
+            #   were generated.
+            lTileTypes = []
+            
+            #Now we'll iterate through the compatible position
+            #   relations for the Markov Chains.
+            for yRelation in xrange(y-12, y+12):
+                for xRelation in xrange(x-16, x+16):
+
+                    #To see if the tile in relation exists, we
+                    #   must know the chunk that it is on.
+                    #This checks to see if the relation is within the Chunk that is being
+                    #   generated.
+                    if (yRelation >= 0 and yRelation < config.CHUNK_TILES_HIGH) \
+                        and (xRelation >= 0 and xRelation < config.CHUNK_TILES_WIDE):
+
+                        #So then we can check to see if the tile in this relation has
+                        #   been generated yet.
+                        #This checks to see if the yRelation shows that the tile may have
+                        #    been generated already.
+                        #If it hasn't already been generated, we'll ignore it.
+                        if ( (y - yRelation)*iStepY >= 0 ):
+                            #This checks to see if the xRelation shows that the tile may have
+                            #    been generated already.
+                            if ( (x - xRelation)*iStepX >= 0 ):
+                    
+                                #This should only execute when we know the tile exists for
+                                #   the particular relation.
+                                #Here we get a random (weighted by markov chain) tileType
+                                #   that will be added to a list of tileTypes
+                                lTileTypes.append( Calc_New_TileType_For_Relation([xRelation, yRelation],
+                                                                                  dEntities["TargetChunk"]._Get_Component("LIST:Tiles")[yRelation][xRelation][1]) )
+
+
+                    #If the relation isn't within the chunk, then it must be within a neighboring chunk.
+                    #So we'll first check to see if the right chunk has the relation position.
+                    elif (yRelation >= 0 and yRelation < config.CHUNK_TILES_HIGH)   \
+                        and (xRelation >= config.CHUNK_TILES_WIDE):
+
+                        if not dEntities["RChunk"]._Get_Component("FLAG:IsEmpty")._Get_Flag():
+                            lTileTypes.append( Calc_New_TileType_For_Relation([xRelation, yRelation],
+                                                                              dEntities["RChunk"]._Get_Component("LIST:Tiles")[yRelation][xRelation-config.CHUNK_TILES_WIDE][1]) )
+
+                    #Then we'll check to see if the down chunk has the relation position.
+                    elif (yRelation >= config.CHUNK_TILES_HIGH) \
+                        and (xRelation >= 0 and xRelation < config.CHUNK_TILES_WIDE):
+
+                        if not dEntities["DChunk"]._Get_Component("FLAG:IsEmpty")._Get_Flag():
+                            lTileTypes.append( Calc_New_TileType_For_Relation([xRelation, yRelation],
+                                                                              dEntities["DChunk"]._Get_Component("LIST:Tiles")[yRelation-config.CHUNK_TILES_HIGH][xRelation][1]) )
+
+                    #Then we'll check to see if the left chunk has the relation position.
+                    elif (yRelation >= 0 and yRelation < config.CHUNK_TILES_HIGH)   \
+                        and (xRelation < 0):
+
+                        if not dEntities["LChunk"]._Get_Component("FLAG:IsEmpty")._Get_Flag():
+                            lTileTypes.append( Calc_New_TileType_For_Relation([xRelation, yRelation],
+                                                                              dEntities["LChunk"]._Get_Component("LIST:Tiles")[yRelation][(-1*xRelation)-1][1]) )
+
+                    #Then we'll check to see if the up chunk has the relation position.
+                    elif (yRelation < 0)    \
+                        and (xRelation >= 0 and xRelation < config.CHUNK_TILES_WIDE):
+
+                        if not dEntities["UChunk"]._Get_Component("FLAG:IsEmpty")._Get_Flag():
+                            lTileTypes.append( Calc_New_TileType_For_Relation([xRelation, yRelation],
+                                                                              dEntities["UChunk"]._Get_Component("LIST:Tiles")[(-1*yRelation)-1][xRelation][1]) )
+
+                    #Then we'll check to see if the up right chunk has the relation position.
+                    elif (yRelation < 0)    \
+                        and (xRelation >= config.CHUNK_TILES_WIDE):
+
+                        if not dEntities["URChunk"]._Get_Component("FLAG:IsEmpty")._Get_Flag():
+                            lTileTypes.append( Calc_New_TileType_For_Relation([xRelation, yRelation],
+                                                                              dEntities["URChunk"]._Get_Component("LIST:Tiles")[(-1*yRelation)-1][xRelation-config.CHUNK_TILES_WIDE][1]) )
+
+                    #Then we'll check to see if the up left chunk has the relation position.
+                    elif (yRelation < 0)    \
+                        and (xRelation < 0):
+
+                        if not dEntities["ULChunk"]._Get_Component("FLAG:IsEmpty")._Get_Flag():
+                            lTileTypes.append( Calc_New_TileType_For_Relation([xRelation, yRelation],
+                                                                              dEntities["ULChunk"]._Get_Component("LIST:Tiles")[(-1*yRelation)-1][(-1*yRelation)-1][1]) )
+
+                    #Then we'll check to see if the down right chunk has the relation position.
+                    elif (yRelation >= config.CHUNK_TILES_HIGH) \
+                        and (xRelation >= config.CHUNK_TILES_WIDE):
+
+                        if not dEntities["DRChunk"]._Get_Component("FLAG:IsEmpty")._Get_Flag():
+                            lTileTypes.append( Calc_New_TileType_For_Relation([xRelation, yRelation],
+                                                                              dEntities["DRChunk"]._Get_Component("LIST:Tiles")[yRelation-config.CHUNK_TILES_HIGH][xRelation-config.CHUNK_TILES_WIDE][1]) )
+
+                    #Then we'll check to see if the down left chunk has the relation position.
+                    elif (yRelation >= config.CHUNK_TILES_HIGH) \
+                        and (xRelation < 0):
+
+                        if not dEntities["DLChunk"]._Get_Component("FLAG:IsEmpty")._Get_Flag():
+                            lTileTypes.append( Calc_New_TileType_For_Relation([xRelation, yRelation],
+                                                                              dEntities["DLChunk"]._Get_Component("LIST:Tiles")[yRelation-config.CHUNK_TILES_HIGH][(-1*yRelation)-1][1]) )
+
+            newTileType = Determine_Majority_TileType(lTileTypes)
+
+            dEntities["TargetChunk"]._Get_Component("LIST:Tiles")[yRelation][xRelation][1]
+
 
 def Determine_Majority_TileType(lTileTypes):
     """This should sort through the different tileTypes
@@ -224,7 +426,32 @@ def Determine_Majority_TileType(lTileTypes):
         will be used to determine the Majority tileType.
     @return A tileType integer that represents the
         new tileType."""
-    pass
+
+    dDetectedTileTypes = {}
+
+    for tileType in lTileTypes:
+
+        if (dDetectedTileTypes.get(tileType, None) == None):
+
+            dDetectedTileTypes[tileType] = 0
+
+        else:
+
+            dDetectedTileTypes[tileType] += 1
+
+    iMostProminentTileType = 0
+
+    iTileTypeOccurrences = 0
+
+    for (iTileType, iOccurrences) in dDetectedTileTypes.items():
+
+        if (iOccurrences > iTileTypeOccurrences):
+
+            iMostProminentTileType = iTileType
+
+            iTileTypeOccurrences = iOccurrences
+
+    return iMostProminentTileType
 
 def Calc_New_TileType_For_Relation(sTileRelation, iOldTileType):
     """This is for calculating the new tileType
@@ -240,7 +467,13 @@ def Calc_New_TileType_For_Relation(sTileRelation, iOldTileType):
         used represents the tile position relation.
     @return A tileType integer that represents
         the new tileType."""
-    pass
+
+    #Get the data for the tile relation
+
+
+    #Randomly pick a tileType based off of the Markov Chain data.
+
+    #Return the tileType that was picked.
 
 
 def Load_Chunk_Entities(dEntities):

@@ -98,6 +98,7 @@
 					<ChunksInWind>2,2</ChunksInWind>
 					<RenderState name='TileAtlas0'>itemAtlas.png</RenderState>
 					<RenderState name='TileAtlas1'>groundAtlas.png</RenderState>
+					<RenderState name='TileAtlas2'>backgroundAtlas.png</RenderState>
 				</Attributes>
 			</Entity>
 			<System>
@@ -360,6 +361,7 @@
 					<ChunksInWind>2,2</ChunksInWind>
 					<RenderState name='TileAtlas0'>itemAtlas.png</RenderState>
 					<RenderState name='TileAtlas1'>groundAtlas.png</RenderState>
+					<RenderState name='TileAtlas2'>backgroundAtlas.png</RenderState>
 				</Attributes>
 			</Entity>
 			<System>
@@ -429,6 +431,7 @@
 					<ChunksInWind>2,2</ChunksInWind>
 					<RenderState name='TileAtlas0'>itemAtlas.png</RenderState>
 					<RenderState name='TileAtlas1'>groundAtlas.png</RenderState>
+					<RenderState name='TileAtlas2'>backgroundAtlas.png</RenderState>
 				</Attributes>
 			</Entity>
 			<System>
@@ -494,24 +497,33 @@
 		<NewGame>
 			<viewWidth>1024</viewWidth>
 			<viewHeight>768</viewHeight>
-			<Entity name='TutorialState' type='State'>
-				<Component name='State'>
-					<componentID>0</componentID>
-					<state>Game,TestLevel</state>
-				</Component>
+			<Entity name='MapCrawler' type='View'>
+				<assembleFunc>Assemble_Chunk_Manager</assembleFunc>
+				<Attributes>
+					<ChunkDataDir>SavedGame</ChunkDataDir>
+					<WorldPos>0,0</WorldPos>
+					<ChunksInWind>2,2</ChunksInWind>
+					<RenderState name='TileAtlas0'>itemAtlas.png</RenderState>
+					<RenderState name='TileAtlas1'>groundAtlas.png</RenderState>
+					<RenderState name='TileAtlas2'>backgroundAtlas.png</RenderState>
+				</Attributes>
 			</Entity>
-			<System type='action'>
-				<system>New_Game</system>
-			</System>
-			<System type='action'>
-				<system>Load_Level_Data</system>
-			</System>
-			<System type='action'>
-				<system>Change_State</system>				
+			<System>
+				<type>state</type>
+				<systemFunc>New_Save</systemFunc>
 				<entity>
-					<entityType>State</entityType>
-					<entitytName>TutorialState</entitytName>
-					<componentName>State</componentName>
+					<entityType>View</entityType>
+					<entitytName>MapCrawler</entitytName>
+					<componentName>ChunkMan</componentName>
+				</entity>
+			</System>
+			<System>
+				<type>state</type>
+				<systemFunc>Generate_World_Data</systemFunc>
+				<entity>
+					<entityType>View</entityType>
+					<entitytName>MapCrawler</entitytName>
+					<componentName>ChunkMan</componentName>
 				</entity>
 			</System>
 		</NewGame>
@@ -527,6 +539,7 @@
 					<ChunksInWind>2,2</ChunksInWind>
 					<RenderState name='TileAtlas0'>itemAtlas.png</RenderState>
 					<RenderState name='TileAtlas1'>groundAtlas.png</RenderState>
+					<RenderState name='TileAtlas2'>backgroundAtlas.png</RenderState>
 				</Attributes>
 			</Entity>
 			<System>
@@ -552,6 +565,7 @@
 					<ChunksInWind>2,2</ChunksInWind>
 					<RenderState name='TileAtlas0'>itemAtlas.png</RenderState>
 					<RenderState name='TileAtlas1'>groundAtlas.png</RenderState>
+					<RenderState name='TileAtlas2'>backgroundAtlas.png</RenderState>
 				</Attributes>
 			</Entity>
 			<System>

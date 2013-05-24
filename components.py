@@ -360,6 +360,9 @@ class List(Component):
     def __getitem__(self, indx):
         return self._lComponents[indx]
 
+    def __setitem__(self, indx, item):
+        self._lComponents[indx] = item
+
     def __len__(self):
         return len(self._lComponents)
 
