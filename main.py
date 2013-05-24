@@ -161,7 +161,7 @@ def AssembleEntityInfo(root, sSystemRoot=None):
     return lEntities
 
 
-def ChangeState(lCurState, lNxtState, windView, EntManager, AstManager):
+def ChangeState(lCurState, lNxtState, window, windView, EntManager, AstManager):
     """This function is passed a couple lists representing the info on the different levels of this game's
     hierarchical finite state machine. This function essentially generically sets up the Entity and Asset Managers
     based off of data that can be retreived from xml files.
@@ -194,10 +194,10 @@ def ChangeState(lCurState, lNxtState, windView, EntManager, AstManager):
         print "There was a problem finding %s in the StateInit.xml file."%(lNxtState[0])
 
     #This will reset the windowView's dimensions within the actual window with respect to the new state
-    windView.reset(sf.FloatRect(int(int(root.find('viewWidth').text)//4), \
-                int(int(root.find('viewHeight').text)//4),   \
-                int(int(root.find('viewWidth').text)//2),    \
-                int(int(root.find('viewHeight').text)//2)))
+    windView.reset(sf.FloatRect(window.width - int(root.find('viewWidth').text), \
+                window.height - int(root.find('viewHeight').text),   \
+                int(root.find('viewWidth').text),    \
+                int(root.find('viewHeight').text)))
 
     #This clears all of the things that in the game since the last state
     EntManager._Empty_Entity_Containers()
@@ -375,7 +375,7 @@ def main():
     #The AssetManager will be used by ChangeState in order to retrieve sounds/textures for a particular type of entity.
     AssetManager = assets.Asset_Manager()
 
-    ChangeState(lCurrentState, lNextState, windowView, EntityManager, AssetManager)
+    ChangeState(lCurrentState, lNextState, window, windowView, EntityManager, AssetManager)
 
     timer = sf.Clock()
     
@@ -443,7 +443,7 @@ def main():
 
                     #If one of the lNextState elements is changed, they all are (just how it goes.)
                     if lNextState[0] != "NULL" and lNextState[0] != "QUIT":
-                        ChangeState(lCurrentState, lNextState, windowView, EntityManager, AssetManager)
+                        ChangeState(lCurrentState, lNextState, window, windowView, EntityManager, AssetManager)
 
                     #Finally after we've handled input and have correctly adjusted to the nextState (in most cases it won't happen,)
                     #we can then update our game's model with stuff that will happen in the respective state with each game update.

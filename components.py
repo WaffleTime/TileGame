@@ -2,12 +2,18 @@ import sfml as sf
 import config
 
 class Component(object):
-    def __init__(self, sComponentName, bUpdatable, bDrawable):
+    def __init__(self, sComponentName, bUpdatable, iDrawableType):
         #This is here to adapt to the dictionary of components within the Entity instances.
         #This name will be used as the Key for this component.
         self._sName = sComponentName
         self._bUpdatable = bUpdatable
-        self._bDrawable = bDrawable
+
+        #This integer can be either
+        #   0, 1, or 2.
+        #   0 - Not Drawable
+        #   1 - Screen Drawable
+        #   2 - View Drawable
+        self._iDrawableType = iDrawableType
 
     def _Get_Name(self):
         """This is primarily used for letting the Entity class determine
@@ -22,18 +28,22 @@ class Component(object):
         """For the entities that need to change updatable ability."""
         self._bUpdatable = bUpdatable
 
-    def _Get_Drawable(self):
+    def _Get_View_Drawable(self):
         """For checking to see if this component is drawable."""
-        return self._bDrawable
+        return (self._iDrawableType == 2)
 
-    def _Set_Drawable(self, bDrawable):
+    def _Get_Screen_Drawable(self):
+        """For checking to see if this component is drawable."""
+        return (self._iDrawableType == 1)
+
+    def _Set_Drawable(self, iDrawableType):
         """For the entities that need to change drawable ability."""
-        self._bDrawable = bDrawable
+        self._iDrawableType = iDrawableType
 
 class Animated_Sprite(Component):
     #This will be a sprite that can switch its sprite animation according to the state that the parent Entity is in.
     def __init__(self, dData):      #sComponentID, iFrameWidth, iFrameHeight, dTextureStripData):
-        Component.__init__(self, "ADSPRITE:%s"%(dData['componentID']), False, True)
+        Component.__init__(self, "ADSPRITE:%s"%(dData['componentID']), False, 2)
 
         self._bActive = False
 
@@ -87,7 +97,7 @@ class Animation_Sprite(Component):
     #this sprite when triggered will become active (at inactive there isn't an image at all) and render one big animation before becoming inactive again.
     #The idea behind it is that it will be able to play a pretty flexible animation because of the fact that it has no limits on the frames horizontally AND vertically.
     def __init__(self, dData):   #sComponentID, textureGrid, fDelay, iFrameWidth, iFrameHeight, iFramesWide, iFramesHigh):
-        Component.__init__(self, "ANSPRITE:%s"%(dData['componentID']), True, True)
+        Component.__init__(self, "ANSPRITE:%s"%(dData['componentID']), True, 2)
 
         #This animation starts off as inactive and will await a trigger from a system function
         self._bActive = False
@@ -172,7 +182,7 @@ class Animation_Sprite(Component):
 
 class Box(Component):
     def __init__(self, dData):  #sComponentID, xPos, yPos, width, height):
-        Component.__init__(self, "BOX:%s"%(dData['componentID']), False, True)
+        Component.__init__(self, "BOX:%s"%(dData['componentID']), False, 1)
         self._box = sf.RectangleShape((int(dData['width']),int(dData['height'])))
         self._box.position = (int(dData['x']),int(dData['y']))
         self._box.fill_color = sf.Color.WHITE
@@ -200,7 +210,7 @@ class Box(Component):
 
 class Text_Line(Component):
     def __init__(self, dData):  # sComponentID, xPos, yPos, width, height, text, font):
-        Component.__init__(self, "TEXTLINE:%s"%(dData['componentID']), False, True)
+        Component.__init__(self, "TEXTLINE:%s"%(dData['componentID']), False, 1)
         self._text = sf.Text(dData['text'], dData['font'])
         self._text.color = sf.Color.BLACK
         self._text.style = sf.Text.UNDERLINED
@@ -214,7 +224,7 @@ class Text_Line(Component):
 class Tile(Component):
     """Denotes a single tile within a chunk."""
     def __init__( self, dData ):
-        Component.__init__(self, "Tile:%s"%(dData['componentID']), False, False)
+        Component.__init__(self, "Tile:%s"%(dData['componentID']), False, 0)
         #Tells whether or not the tile is visible or not
         self._is_Active = False
 
@@ -256,7 +266,7 @@ class Tile(Component):
 class Mesh(Component):
     """This is for drawing with the gpu!"""
     def __init__(self, dData):
-        Component.__init__(self, "MESH:%s"%(dData["componentID"]), False, True)
+        Component.__init__(self, "MESH:%s"%(dData["componentID"]), False, 0)
         self._mesh = [ [] for layer in xrange(config.CHUNK_LAYERS) ]
 
         #This is for linking this mesh with a texture within the Asset_Manager.
@@ -297,7 +307,7 @@ class Mesh(Component):
 class Render_List(Component):
     """This is meant for containing Chunk Entities."""
     def __init__(self, dData):
-        Component.__init__(self, "RLIST:%s"%(dData['componentID']), False, True)
+        Component.__init__(self, "RLIST:%s"%(dData['componentID']), False, 2)
         #This can also hold entities.
         self._lComponents = []
 
@@ -330,7 +340,7 @@ class Render_List(Component):
 class List(Component):
     """This is for containing Components as well as Entities."""
     def __init__(self, dData):
-        Component.__init__(self, "LIST:%s"%(dData['componentID']), False, False)
+        Component.__init__(self, "LIST:%s"%(dData['componentID']), False, 0)
         #This can also hold entities.
         self._lComponents = []
 
@@ -356,7 +366,7 @@ class List(Component):
 class Dictionary(Component):
     """This is for containing Chunks."""
     def __init__(self, dData):
-        Component.__init__(self, "DICT:%s"%(dData['componentID']), False, False)
+        Component.__init__(self, "DICT:%s"%(dData['componentID']), False, 0)
         #This can also hold entities
         self._dComponents = {}
 
@@ -383,7 +393,7 @@ class Flag(Component):
     """This is a piece of logic for Buttons and will tell the button's _box object
     to oscillate its color scheme whenever collisions occur with the mouse and the button."""
     def __init__(self, dData):
-        Component.__init__(self, "FLAG:%s"%(dData['componentID']), False, False)
+        Component.__init__(self, "FLAG:%s"%(dData['componentID']), False, 0)
         self._flag = dData['flag']
 
     def _Set_Flag(self, isActive):
@@ -395,7 +405,7 @@ class Flag(Component):
 
 class State(Component):
     def __init__(self, dData):          #sComponentID, sState):
-        Component.__init__(self, "STATE:%s"%(dData['componentID']), False, False)
+        Component.__init__(self, "STATE:%s"%(dData['componentID']), False, 0)
         self._sState = dData['state']
 
     def _Get_State(self):
@@ -403,7 +413,7 @@ class State(Component):
 
 class Position(Component):
     def __init__(self, dData):
-        Component.__init__(self, "POS:%s"%(dData['componentID']), False, False)
+        Component.__init__(self, "POS:%s"%(dData['componentID']), False, 0)
         self._position = dData['position']
 
         self._position[0] = int(self._position[0])
@@ -430,7 +440,7 @@ class Position(Component):
 
 class Misc(Component):
     def __init__(self, dData):
-        Component.__init__(self, "MISC:%s"%(dData['componentID']), False, False)
+        Component.__init__(self, "MISC:%s"%(dData['componentID']), False, 0)
         self._storage = dData['storage']
 
     def _Set_Storage(self, variable):

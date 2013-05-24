@@ -209,8 +209,16 @@ class Entity(object):
         self._sType = sEntityType
 
         #componentName:component
-        self._dComponents = {}        #Drawable components that are in the dComponents dictionary will have a pointer to them in this list.
-        self._lDrawables = []
+        #Drawable components that are in the dComponents dictionary will have a pointer to them in this list.
+        self._dComponents = {}
+
+        #These drawable components will be drawn with respect to the
+        #   view of the game.
+        self._lViewDrawables = []
+        
+        #These drawable components will be drawn with respect to the
+        #   screen, the view is independent.
+        self._lScreenDrawables = []
 
         #Updatable components that hold pointer variables that point to the updatable components in the dComponents dictionary.
         self._lUpdatables = []
@@ -235,8 +243,12 @@ class Entity(object):
         if componentInstance._Get_Updatable():
             self._lUpdatables.append(componentInstance)
 
-        if componentInstance._Get_Drawable():
-            self._lDrawables.append(componentInstance)
+        if componentInstance._Get_View_Drawable():
+            print "Adding a component to the viewDrawables in the Entity class."
+            self._lViewDrawables.append(componentInstance)
+
+        elif componentInstance._Get_Screen_Drawable():
+            self._lScreenDrawables.append(componentInstance)
 
     def _Remove_Component(self, sCompName):
         """This searches through our list of components for the component with
@@ -269,10 +281,20 @@ class Entity(object):
 
     def _Render(self, renderWindow, windowView):
         """This will render the drawable components within the dCOmponents dictionary by indirectly rendering the pointer variables within lDrawables."""
-        for i in xrange(len(self._lDrawables)):
+
+        renderWindow.view = windowView
+        
+        for i in xrange(len(self._lViewDrawables)):
 
             #This calls the Drawable component's _Render() method.
-            self._lDrawables[i]._Render(renderWindow)
+            self._lViewDrawables[i]._Render(renderWindow)
+
+        renderWindow.view = renderWindow.default_view
+
+        for i in xrange(len(self._lScreenDrawables)):
+
+            #This calls the Drawable component's _Render() method.
+            self._lScreenDrawables[i]._Render(renderWindow)
 
     def _Set_Expired(self, bExpired):
         """This is for signaling an entity to be removed from the Entity_Manager's dictionary of entities."""
