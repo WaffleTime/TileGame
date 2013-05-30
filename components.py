@@ -1,4 +1,5 @@
 import sfml as sf
+import pymunk._chipmunk as pymunk
 import config
 
 class Component(object):
@@ -111,7 +112,10 @@ class Animated_Sprite(Component):
                                                                                         self._iFrame_Height))
 
     def _Update(self, timeElapsed):
-        
+        """This will update the frame of the animation based off of the timeElapsed and the current time in
+        the animation.
+        @param timeElapsed """
+
         if self._bActive:
             
             #print self._anim_Time + timeElapsed, sf.Time(self._dAnimated_Sprites[self._lCurrent_Frame[0]][1]*self._fDelay)
@@ -237,8 +241,28 @@ class Animation_Sprite(Component):
 
         renderWindow.draw(self._Animation_Sprite)
 
+class Collision_Space(Component):
+    def __init__(self, dData):
+        Component.__init__(self, "SPACE:%s"%(dData['componentID']), True, 0)
+
+        self._PyMunk_Space = pymunk.cpShape()
+
+    def _Update(self, timeElapsed):
+        """This should tell pymunk to step forward in time
+        a certain amount.
+        @param timeElapsed This is a sf.Time object I think...
+            This needs to be known if this message is seen."""
+
+
+class Collision_Body(Component):
+    def __init__(self, dData):
+        Component.__init__(self, "BODY:%s"%(dData['componentID']), False, 0)
+
+        
+
+        
 class Box(Component):
-    def __init__(self, dData):  #sComponentID, xPos, yPos, width, height):
+    def __init__(self, dData):
         Component.__init__(self, "BOX:%s"%(dData['componentID']), False, 1)
         self._box = sf.RectangleShape((int(dData['width']),int(dData['height'])))
         self._box.position = (int(dData['x']),int(dData['y']))

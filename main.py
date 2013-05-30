@@ -68,9 +68,29 @@ class Entity_Manager(object):
         """This is for retrieving entities from the dictionary. It so far
         is only used for the System functions in the ChangeState() function."""
 
-        if self._dEntities.get(sEntityTypeName,None) != None:
-            
+        if self._dEntities.get(sEntityTypeName,None) != None    \
+           and self._dEntities[sEntityTypeName].get(sEntityName,None) != None:
+
             return self._dEntities[sEntityTypeName][sEntityName]
+
+        #If the entity wasn't found, we'll look for it within the
+        #   containers of entities.
+        elif self._dEntities.get("EntityManager") != None:
+
+            for key in self._dEntities["EntityManager"].keys():
+
+                tmp = self._dEntities["EntityManager"][key]._Get_Entity(sEntityTypeName, sEntityName)
+
+                #This checks to see if the entity was in that container
+                if tmp != None:
+
+                    return tmp
+
+        #If the entity still wasn't found, then it doesn't exist at this point in time
+        else:
+            print "EntityType: %s, EntityName: %s doesn't exist in the EntityManager's container of entities!" % (sEntityTypeName, sEntityName)
+
+        return None
 
     def _Call_System_Func(self, sSystemFuncName, lEntities):
         """This will call a system function from the systems.py file. And it will provide the appropriate entities that are needed to be passed to the function.
@@ -98,14 +118,9 @@ class Entity_Manager(object):
             dEntities = {}
 
             for indx in xrange(len(lEntities)):
-                
-                #Test to see if this sEntityType and sEntityID even exists.
-                if self._dEntities.get(lEntities[indx][0],None) != None and self._dEntities[lEntities[indx][0]].get(lEntities[indx][1], None) != None:
 
-                    #This grabs the entity and stores it into the new dictionary we just made
-                    dEntities[lEntities[indx][2]] = self._dEntities[lEntities[indx][0]][lEntities[indx][1]]
-                else:
-                    print "EntityType: %s, EntityName: %s doesn't exist in the EntityManager's container of entities!" % (lEntities[indx][0], lEntities[indx][1])
+                #This grabs the entity and stores it into the new dictionary we just made
+                dEntities[lEntities[indx][2]] = self._Get_Entity(lEntities[indx][0], lEntities[indx][1])
 
             return systemFunc(dEntities)        
 
@@ -492,6 +507,7 @@ def main():
                     #we can then update our game's model with stuff that will happen in the respective state with each game update.
                         
                     EntityManager._Logic_Update(timer.elapsed_time - fNextGameTick)           #This updates our model depending on what is going on in the current state
+
 
             #If we have received a quit signal, we should stop our loop and quit the game!
             if bQuit:

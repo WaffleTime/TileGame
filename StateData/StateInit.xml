@@ -555,10 +555,11 @@
 		<Continue>
 			<viewWidth>512</viewWidth>
 			<viewHeight>384</viewHeight>
-			<Entity name='OnScreenEntities' type='Manager'>
+			<Entity name='OnScreenEntities' type='EntityManager'>
 				<assembleFunc>Entity_PQueue</assembleFunc>
 				<drawPriority>3</drawPriority>
 				<Attributes>
+					
 					<entity name='Player' type='Human'>
 						<assembleFunc>Assemble_Player</assembleFunc>
 						<drawPriority>7</drawPriority>
@@ -572,19 +573,18 @@
 							<Texture name='jump'>playerJump.png</Texture>
 						</Attributes>
 					</entity>
-				</Attributes>
-						
-			</Entity>
-			<Entity name='PlayerScreen' type='View'>
-				<assembleFunc>Assemble_Chunk_Manager</assembleFunc>
-				<drawPriority>1</drawPriority>
-				<Attributes>
-					<ChunkDataDir>SavedGame</ChunkDataDir>
-					<WorldPos>0,0</WorldPos>
-					<ChunksInWind>2,2</ChunksInWind>
-					<RenderState name='TileAtlas0'>itemAtlas.png</RenderState>
-					<RenderState name='TileAtlas1'>groundAtlas.png</RenderState>
-					<RenderState name='TileAtlas2'>backgroundAtlas.png</RenderState>
+					<entity name='PlayerScreen' type='View'>
+						<assembleFunc>Assemble_Chunk_Manager</assembleFunc>
+						<drawPriority>1</drawPriority>
+						<Attributes>
+							<ChunkDataDir>SavedGame</ChunkDataDir>
+							<WorldPos>0,0</WorldPos>
+							<ChunksInWind>2,2</ChunksInWind>
+							<RenderState name='TileAtlas0'>itemAtlas.png</RenderState>
+							<RenderState name='TileAtlas1'>groundAtlas.png</RenderState>
+							<RenderState name='TileAtlas2'>backgroundAtlas.png</RenderState>
+						</Attributes>
+					</entity>
 				</Attributes>
 			</Entity>
 			<System>

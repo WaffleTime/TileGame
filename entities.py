@@ -215,7 +215,7 @@ def Assemble_Chunk_Manager(sEntityName, sEntityType, iDrawPriority, attribDict):
 
 
 class Entity(object):
-    def __init__(self, sEntityName, sEntityType, iDrawPriority, dComponents):
+    def __init__(self, sEntityName, sEntityType, iDrawPriority, dAttribs):
         #The id is mostly for debugging purposes.
         self._sName = sEntityName
         self._sType = sEntityType
@@ -239,8 +239,8 @@ class Entity(object):
 
         self._bExpired = False
 
-        for key in dComponents.keys():
-            self._Add_Component(dComponents.pop(key))
+        for key in dAttribs.keys():
+            self._Add_Component(dAttribs.pop(key))
 
 
     def _Add_Component(self, componentInstance):
@@ -336,19 +336,23 @@ class Entity(object):
 
 class Entity_PQueue(Entity):
     """Like the name says, this will store Entities. And it will update/render those entities accordingly."""
-    def __init__(self, sName, sType, iDrawPriority, dComponents):
+    def __init__(self, sName, sType, iDrawPriority, dAttribs):
+
+        Entity.__init__(self, sName, sType, iDrawPriority, {})
 
         #This takes all of the entities out of the dComponents
-        dEntities = dComponents.pop("entity", {})
+        dEntities = dAttribs.pop("entity", {})
 
-        print "These are the entities that are being loaded into the Entity_PQueue"
-        print dEntities
-        
-        Entity.__init__(self, sName, sType, iDrawPriority, dComponents)
+        #"These are the entities that are being loaded into the Entity_PQueue"
+        #print dEntities
 
         #This orders the entities so that the ones with the highest draw
         #   priority will be first in the list (highest priority is 0.)
         self._pqEntities = PQ(dEntities.values())
+
+        #This is Pymunk's Space() class basically. But it's in a component.
+        #   It will contain the collidable object for Entities.
+        Entity._Add_Component(self, components.Collision_Space({"componentID":"EntityPool"}))
 
     def _Add_Entity(self, entity):
         """This will add entities into our dictionary of lists of entities.
