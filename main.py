@@ -414,8 +414,6 @@ def Init():
     #This makes the background of the screen Black.
     wind.clear(sf.Color.BLACK)
 
-    wind.framerate_limit = 50
-
     windView = sf.View()
 
     return wind, windView
@@ -435,19 +433,35 @@ def main():
 
     ChangeState(lCurrentState, lNextState, window, windowView, EntityManager)
 
+    t = sf.Time(0.0)
+    dt = sf.Time(1./config.TICKS_PER_SEC)
+
+    accumulator = sf.Time(0.0)
+    
+    MAX_FRAMESKIP = 7
+
     timer = sf.Clock()
-    
-    SKIP_TICKS = 1/config.TICKS_PER_SEC
-    MAX_FRAMESKIP = 5
-    
-    iLoops = None
-    fNextGameTick = timer.elapsed_time
 
     #This will be False if the player clicks outside of the program's window and "pause" the program
     windowIsActive = True
     
     bQuit = False
     while not bQuit:
+
+        frameTime = timer.elapsed_time
+
+        timer.restart()
+
+        #This caps the time inbetween frames to
+        #   prevent a spiral of death (which happens when the computer
+        #   can't keep up.)
+        if frameTime > sf.Time(0.25):
+
+            print "preventing spiral of death"
+            frameTime = sf.Time(0.25)
+
+        accumulator += frameTime
+
 
         #This will loop through all of the events that have been triggered by player input
         for event in window.iter_events():
@@ -485,7 +499,7 @@ def main():
         iLoops = 0  #A counter for the amount of game update loops that are made in sucession whilst skipping rendering updates.
         
         #This loop will start if it is time to commence the next update and will keep going if we are behind schedule and need to catch up.
-        while timer.elapsed_time > fNextGameTick and iLoops < MAX_FRAMESKIP:
+        while accumulator >= dt and iLoops < MAX_FRAMESKIP:
 
             #This makes the program so that it basically pauses all of its game updates when a user clicks outside of the window. And it waits until the user clicks on the window.
             if windowIsActive:
@@ -506,7 +520,7 @@ def main():
                     #Finally after we've handled input and have correctly adjusted to the nextState (in most cases it won't happen,)
                     #we can then update our game's model with stuff that will happen in the respective state with each game update.
                         
-                    EntityManager._Logic_Update(timer.elapsed_time - fNextGameTick)           #This updates our model depending on what is going on in the current state
+                    EntityManager._Logic_Update(dt)           #This updates our model depending on what is going on in the current state
 
 
             #If we have received a quit signal, we should stop our loop and quit the game!
@@ -514,7 +528,6 @@ def main():
                 break
                 
             iLoops += 1
-            fNextGameTick += sf.Time(seconds=SKIP_TICKS)
 
         EntityManager._Render_Update(window, windowView)
         window.display()

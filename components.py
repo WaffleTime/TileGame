@@ -120,26 +120,37 @@ class Animated_Sprite(Component):
             
             #print self._anim_Time + timeElapsed, sf.Time(self._dAnimated_Sprites[self._lCurrent_Frame[0]][1]*self._fDelay)
 
-            #Check to see if the time counter won't reach the end of the animation this update.
-            if self._anim_Time + timeElapsed < sf.Time(self._dAnimated_Sprites[self._lCurrent_Frame[0]][1]*self._fDelay):
+            #Check to see if the time counter will reach the end of the animation this update.
+            if self._anim_Time + timeElapsed >= sf.Time((self._dAnimated_Sprites[self._lCurrent_Frame[0]][1])*self._fDelay):
+
+                #Since we reached the end of the animation, we
+                #   must rrest the animation time and the frame number.
+                self._anim_Time = self._anim_Time + timeElapsed - sf.Time((self._dAnimated_Sprites[self._lCurrent_Frame[0]][1]-1)*self._fDelay)
+                
+                self._lCurrent_Frame[1] = 0
+
+                #Then we can update the sprite so that
+                #   it shows the updated position in the animation.
+                self._Update_Frame()
+
+            #Check to see if the animation is due to switch it's frame.
+            elif self._anim_Time + timeElapsed >= sf.Time((self._lCurrent_Frame[1]+1)*self._fDelay):
+
                 #We update our timecounter variable!
                 self._anim_Time += timeElapsed
 
                 #Else, just update the frame
                 self._lCurrent_Frame[1] += 1
 
+                #Then we can update the sprite so that
+                #   it shows the updated position in the animation.
+                self._Update_Frame()
+
 
             else:
 
-                #Since we reached the end of the animation, we
-                #   must rrest the animation time and the frame number.
-                self._anim_Time = sf.Time(0.0)
-                
-                self._lCurrent_Frame[1] = 0
-
-            #Then we can update the sprite so that
-            #   it shows the updated position in the animation.
-            self._Update_Frame()
+                #We update our timecounter variable!
+                self._anim_Time += timeElapsed
 
     def _Render(self, renderWindow):
         """

@@ -97,7 +97,7 @@
 					<WindPos>400,400</WindPos>
 					<FrameWidth>32</FrameWidth>
 					<FrameHeight>48</FrameHeight>
-					<Delay>0.25</Delay>
+					<Delay>5.5</Delay>
 					<Texture name='DEFAULT'>playerDefault.png</Texture>
 					<Texture name='walk'>playerWalk.png</Texture>
 					<Texture name='jump'>playerJump.png</Texture>
@@ -567,7 +567,7 @@
 							<WindPos>400,450</WindPos>
 							<FrameWidth>32</FrameWidth>
 							<FrameHeight>48</FrameHeight>
-							<Delay>0.25</Delay>
+							<Delay>1.5</Delay>
 							<Texture name='DEFAULT'>playerDefault.png</Texture>
 							<Texture name='walk'>playerWalk.png</Texture>
 							<Texture name='jump'>playerJump.png</Texture>

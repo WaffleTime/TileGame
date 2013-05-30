@@ -1,6 +1,6 @@
 #These are Global variables for the program
 
-TICKS_PER_SEC = 15          #Game updates per second
+TICKS_PER_SEC = 42          #Game updates per second
 
 VIEW_TILE_WIDTH = 16      #Tiles along the x-axis of the visible screen
 VIEW_TILE_HEIGHT = 12     #Tiles along the y-axis of the visible screen
