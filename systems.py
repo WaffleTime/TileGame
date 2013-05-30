@@ -70,7 +70,6 @@ def Move_Player_Right(dEntities):
 
         #If it is, then we can signal the System function to execute a function that loads/removes in Chunk entities for the Chunk_Manager and loads in Inhabitant entities for the Inhabitant_Manager.
 
-
 def Move_Player_Left(dEntities):
     """This will move the player to the left and checking to see if a chunk border was crossed.
     If the chunk border was crossed, then we'd have to signal for the Chunk_Manager and Inhabitant_Manager
@@ -433,7 +432,7 @@ def Determine_Majority_TileType(lTileTypes):
 
         if (dDetectedTileTypes.get(tileType, None) == None):
 
-            dDetectedTileTypes[tileType] = 0
+            dDetectedTileTypes[tileType] = 1
 
         else:
 

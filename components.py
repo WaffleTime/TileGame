@@ -43,31 +43,46 @@ class Component(object):
 class Animated_Sprite(Component):
     #This will be a sprite that can switch its sprite animation according to the state that the parent Entity is in.
     def __init__(self, dData):      #sComponentID, iFrameWidth, iFrameHeight, dTextureStripData):
-        Component.__init__(self, "ADSPRITE:%s"%(dData['componentID']), False, 2)
+        Component.__init__(self, "STATE_ANIMATIONS:%s"%(dData['componentID']), True, 2)
 
-        self._bActive = False
+        self._bActive = True
 
         #This will denote the time in-between each frame of the animation in the textures
-        self._fDelay = dData['delay']
+        self._fDelay = float(dData['Delay'])
 
         #This will tell us when it is time to update the frame.
-        self._fAnim_Time = 0.0
+        self._anim_Time = sf.Time(0.0)
 
         #The current animation is set to its default (which there should be...)
-        self._iCurrent_Frame = [0,'DEFAULT']
+        #   The first item is the animation, the second is the frame.
+        self._lCurrent_Frame = ['DEFAULT',0]
 
-        self._iFrame_Width = dData['frameWidth']
-        self._iFrame_Height = dData['frameHeight']
+        self._iFrame_Width = int(dData['FrameWidth'])
+        self._iFrame_Height = int(dData['FrameHeight'])
 
-        #This holds the textures for the animations!
-        #It being in a dictionary allows systems to switch to animations easier.
-        #Each sAnimation will have a list of the sprite and some data for flexible lengthed animations to be allowed.
-        #The list will include [sprite, iFramesWide]    ##only the width is needed because this is a one-dimensional strip (I think this is all we need... Unless we're dealing with LARGE frame dimensions...)
-        #self._dAnimated_Sprites = {sAnimation:[sf.Sprite(texture), texture.width/iFrameWidth] for sAnimation, texture in dTextureStripData.items()}
+        self._dAnimated_Sprites = {}
+
+
+        windPos = dData["WindPos"].split(",")
+
+
+        for sTextureName in dData["Texture"].keys():
+            
+            #This holds the textures for the animations!
+            #It being in a dictionary allows systems to switch to animations easier.
+            #Each sAnimation will have a list of the sprite and some data for flexible lengthed animations to be allowed.
+            #The list will include [sprite, iFramesWide]
+            ##only the width is needed because this is a one-dimensional strip (I think this is all we need... Unless we're dealing with LARGE frame dimensions...)
+            self._dAnimated_Sprites[sTextureName] = [sf.Sprite(dData["Texture"][sTextureName]),     \
+                                                     int(dData["Texture"][sTextureName].width)/self._iFrame_Width]
+
+            self._dAnimated_Sprites[sTextureName][0].x = float(windPos[0])
+            self._dAnimated_Sprites[sTextureName][0].y = float(windPos[1])
+
 
         #Each animation strip gets
-        #for key in self._dAnimated_Sprites.keys():
-            #self._dAnimation_Sprites[key][0].set_texture_rect(sf.IntRect(0,0,self._iFrame_Width,self._iFrame_Height))
+        for key in self._dAnimated_Sprites.keys():
+            self._dAnimated_Sprites[key][0].set_texture_rect(sf.IntRect(0,0,self._iFrame_Width,self._iFrame_Height))
 
     def _Activate(self, sStateKey):
         """This will activate a new animation to be played."""
@@ -78,26 +93,68 @@ class Animated_Sprite(Component):
         self._bActive = False
 
         #Reload the variables for another activation!
-        self._fAnim_Time = 0.0
-        self._iCurrent_Frame = [0,0]
+        self._anim_Time = sf.Time(0.0)
+        self._iCurrent_Frame = ["DEFAULT",0]
         self._Update_Frame()
 
-    def _Update_Frame(self, sAnimation):
+    def _Update_Frame(self):
         """This simply will be used to update the frame of the animation within the SFML sprite based off of the data in this class."""
-        self._dAnimation_Sprites.set_texture_rect(IntRect(self._iCurrent_Frame[0]*self._iFrame_Width,     \
-                                                        0,    \
-                                                        self._iFrame_Width,                             \
-                                                        self._iFrame_Height))
+
+        #print int(self._lCurrent_Frame[1])*self._iFrame_Width,     \
+                #0,                                                  \
+                #self._iFrame_Width,                                 \
+                #self._iFrame_Height
+        
+        self._dAnimated_Sprites[self._lCurrent_Frame[0]][0].set_texture_rect(sf.IntRect(int(self._lCurrent_Frame[1])*self._iFrame_Width,     \
+                                                                                        0,                                                  \
+                                                                                        self._iFrame_Width,                                 \
+                                                                                        self._iFrame_Height))
 
     def _Update(self, timeElapsed):
-        pass
+        
+        if self._bActive:
+            
+            #print self._anim_Time + timeElapsed, sf.Time(self._dAnimated_Sprites[self._lCurrent_Frame[0]][1]*self._fDelay)
+
+            #Check to see if the time counter won't reach the end of the animation this update.
+            if self._anim_Time + timeElapsed < sf.Time(self._dAnimated_Sprites[self._lCurrent_Frame[0]][1]*self._fDelay):
+                #We update our timecounter variable!
+                self._anim_Time += timeElapsed
+
+                #Else, just update the frame
+                self._lCurrent_Frame[1] += 1
+
+
+            else:
+
+                #Since we reached the end of the animation, we
+                #   must rrest the animation time and the frame number.
+                self._anim_Time = sf.Time(0.0)
+                
+                self._lCurrent_Frame[1] = 0
+
+            #Then we can update the sprite so that
+            #   it shows the updated position in the animation.
+            self._Update_Frame()
+
+    def _Render(self, renderWindow):
+        """
+        @param renderWindow This is SFML's Window object for the program.
+        @post the current frame of the animation will be drawn."""
+
+        if self._bActive:
+
+            #print "AnimatedSprite to be rendered"
+            #print self._dAnimated_Sprites[self._lCurrent_Frame[0]][0].x, self._dAnimated_Sprites[self._lCurrent_Frame[0]][0].y
+
+            renderWindow.draw(self._dAnimated_Sprites[self._lCurrent_Frame[0]][0])
 
 class Animation_Sprite(Component):
     #This unlike the Animated_Sprite is a one-shot deal. There will be a varying time until completion (because of differring delays and textureStrip sizes,) but
     #this sprite when triggered will become active (at inactive there isn't an image at all) and render one big animation before becoming inactive again.
     #The idea behind it is that it will be able to play a pretty flexible animation because of the fact that it has no limits on the frames horizontally AND vertically.
     def __init__(self, dData):   #sComponentID, textureGrid, fDelay, iFrameWidth, iFrameHeight, iFramesWide, iFramesHigh):
-        Component.__init__(self, "ANSPRITE:%s"%(dData['componentID']), True, 2)
+        Component.__init__(self, "ANIMATION:%s"%(dData['componentID']), True, 2)
 
         #This animation starts off as inactive and will await a trigger from a system function
         self._bActive = False

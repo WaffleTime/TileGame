@@ -2,13 +2,14 @@ import os
 import sfml as sf
 import components
 import config
+from PriorityQueue import PriorityQueue as PQ
 
 #Maybe we can include the Components file here and then have
 #assemblage functions for creating common entities.
 
-def Assemble_Text_Box(sEntityName, sEntityType, attribDict):
+def Assemble_Text_Box(sEntityName, sEntityType, iDrawPriority, attribDict):
     """This assembles a box with text in it!"""
-    entity = Entity(sEntityName, sEntityType, {})
+    entity = Entity(sEntityName, sEntityType, iDrawPriority, {})
 
     #The first argument represents the ID of the component with respect to its type (multiple components of a single type need to have different IDs.)
     entity._Add_Component(components.Box({'componentID': '0', 'x': attribDict['x'], 'y': attribDict['y'], 'width': attribDict['width'], 'height': attribDict['height']}))
@@ -16,10 +17,10 @@ def Assemble_Text_Box(sEntityName, sEntityType, attribDict):
 
     return entity
 
-def Assemble_Button(sEntityName, sEntityType, attribDict):
+def Assemble_Button(sEntityName, sEntityType, iDrawPriority, attribDict):
     """This assembles a box with text in it! And sets up some other
     components that'll store important information we might need later."""
-    entity = Entity(sEntityName, sEntityType, {})
+    entity = Entity(sEntityName, sEntityType, iDrawPriority, {})
     
     entity._Add_Component(components.Box({'componentID': '0', 'x': attribDict['x'], 'y': attribDict['y'], 'width': attribDict['width'], 'height': attribDict['height']}))
     entity._Add_Component(components.Text_Line({'componentID': '0', 'x': attribDict['x'], 'y': attribDict['y'], 'width': attribDict['width'], 'height': attribDict['height'], 'text': attribDict['text'], 'font': attribDict['Font']["Asman"]}))
@@ -27,16 +28,23 @@ def Assemble_Button(sEntityName, sEntityType, attribDict):
 
     return entity
 
-def Assemble_Player(sEntityName, sEntityType, attribDict):
-    entity = Entity(sEntityName, sEntityType, {})
+def Assemble_Player(sEntityName, sEntityType, iDrawPriority, attribDict):
+    entity = Entity(sEntityName, sEntityType, iDrawPriority, {})
 
-    entity._Add_Component(components.Animated_Sprite('0', iFrameWidth, iFrameHeight, {sAnimation: [texture for sAnimation, texture in dTextureStrips.items()]}))
-    entity._Add_Component(components.Position('0', (0,0)))
+    entity._Add_Component(components.Animated_Sprite({"componentID":"mainSprite",                \
+                                                      "FrameWidth":attribDict["FrameWidth"],     \
+                                                      "FrameHeight":attribDict["FrameHeight"],   \
+                                                      "Delay":attribDict["Delay"],               \
+                                                      "WindPos":attribDict["WindPos"],          \
+                                                      "Texture":attribDict["Texture"]}))
+
+    entity._Add_Component(components.Position({"componentID":"WindPos",        \
+                                               "position":attribDict["WindPos"].split(",")}))
 
     return entity
 
-def Assemble_Chunk(sEntityName, sEntityType, attribDict):
-    entity = Entity(sEntityName, sEntityType, {})
+def Assemble_Chunk(sEntityName, sEntityType, iDrawPriority, attribDict):
+    entity = Entity(sEntityName, sEntityType, iDrawPriority, {})
 
     dMeshData = {"componentID":"0"}
 
@@ -78,12 +86,12 @@ def Assemble_Chunk(sEntityName, sEntityType, attribDict):
     return entity
 
 
-def Assemble_Chunk_Manager(sEntityName, sEntityType, attribDict):
+def Assemble_Chunk_Manager(sEntityName, sEntityType, iDrawPriority, attribDict):
     """This will return an Entity object that contains a list of lists of lists of tiles,
     some world coordinates, the number of chunks in the screen, and all that stuff that is
     needed in order to manager a chunks of tiles (except for the textures, those are already
     taken care of.)"""
-    entity = Entity(sEntityName, sEntityType, {})
+    entity = Entity(sEntityName, sEntityType, iDrawPriority, {})
 
     #Notice that the ChunkDataDir is prefixed by the directory that this file is in.
     entity._Add_Component(components.Misc({"componentID":"ChunkDataDir", "storage":os.getcwd()+attribDict["ChunkDataDir"]}))
@@ -128,9 +136,10 @@ def Assemble_Chunk_Manager(sEntityName, sEntityType, attribDict):
                     dChunkData[attribName] = attrib
 
 
-            entity._Get_Component("DICT:ChunkDict")._Add( "%d,%d"%(i,j),
-                                                          Assemble_Chunk( "%s,%s" % (i, j),
-                                                                          "Chunk",
+            entity._Get_Component("DICT:ChunkDict")._Add( "%d,%d"%(i,j),                        \
+                                                          Assemble_Chunk( "%s,%s" % (i, j),     \
+                                                                          "Chunk",              \
+                                                                          iDrawPriority,        \
                                                                           dChunkData ) )
 
             pChunk = entity._Get_Component("DICT:ChunkDict")._Get("%d,%d"%(i,j))
@@ -158,9 +167,10 @@ def Assemble_Chunk_Manager(sEntityName, sEntityType, attribDict):
                     dChunkData[attribName] = attrib
 
 
-            entity._Get_Component("DICT:ChunkDict")._Add( "%d,%d"%(i,j),
-                                                          Assemble_Chunk( "%s,%s" % (i, j),
-                                                                          "Chunk",
+            entity._Get_Component("DICT:ChunkDict")._Add( "%d,%d"%(i,j),                        \
+                                                          Assemble_Chunk( "%s,%s" % (i, j),     \
+                                                                          "Chunk",              \
+                                                                          iDrawPriority,        \
                                                                           dChunkData ) )
 
             pChunk = entity._Get_Component("DICT:ChunkDict")._Get("%d,%d"%(i,j))
@@ -188,9 +198,10 @@ def Assemble_Chunk_Manager(sEntityName, sEntityType, attribDict):
                     dChunkData[attribName] = attrib
 
 
-            entity._Get_Component("DICT:ChunkDict")._Add( "%d,%d"%(i,j),
-                                                          Assemble_Chunk( "%s,%s" % (i, j),
-                                                                          "Chunk",
+            entity._Get_Component("DICT:ChunkDict")._Add( "%d,%d"%(i,j),                        \
+                                                          Assemble_Chunk( "%s,%s" % (i, j),     \
+                                                                          "Chunk",              \
+                                                                          iDrawPriority,        \
                                                                           dChunkData ) )
 
             pChunk = entity._Get_Component("DICT:ChunkDict")._Get("%d,%d"%(i,j))
@@ -202,11 +213,14 @@ def Assemble_Chunk_Manager(sEntityName, sEntityType, attribDict):
 
     return entity
 
+
 class Entity(object):
-    def __init__(self, sEntityName, sEntityType, dComponents):
+    def __init__(self, sEntityName, sEntityType, iDrawPriority, dComponents):
         #The id is mostly for debugging purposes.
         self._sName = sEntityName
         self._sType = sEntityType
+
+        self._iDrawPriority = iDrawPriority
 
         #componentName:component
         #Drawable components that are in the dComponents dictionary will have a pointer to them in this list.
@@ -228,14 +242,14 @@ class Entity(object):
         for key in dComponents.keys():
             self._Add_Component(dComponents.pop(key))
 
-        #What if there was to be different types of components
-        #Then we could have all self-contained drawable components draw one way
-        #And all RenderState dependent drawable components drawn another way.
-        #And we could also have sound components that will all be played at certain times.
 
     def _Add_Component(self, componentInstance):
         """This takes in an instance of a class that inherits from the Component class
         and then it adds that instance into the list of components for this particular entity."""
+
+        #print "Componet being added to %s entity."%(self._sName)
+        #print componentInstance
+        
         self._dComponents[componentInstance._Get_Name()] = componentInstance
 
         #These if statements will save a pointer of the same variable as in dComponents if True.
@@ -244,7 +258,6 @@ class Entity(object):
             self._lUpdatables.append(componentInstance)
 
         if componentInstance._Get_View_Drawable():
-            print "Adding a component to the viewDrawables in the Entity class."
             self._lViewDrawables.append(componentInstance)
 
         elif componentInstance._Get_Screen_Drawable():
@@ -258,6 +271,9 @@ class Entity(object):
     def __len__(self):
         return len(self._dComponents)
 
+    def _Get_Draw_Priority(self):
+        return self._iDrawPriority
+    
     def _Get_Name(self):
         """This is for accessing the names of the entities."""
         return self._sName
@@ -281,6 +297,10 @@ class Entity(object):
 
     def _Render(self, renderWindow, windowView):
         """This will render the drawable components within the dCOmponents dictionary by indirectly rendering the pointer variables within lDrawables."""
+
+        #print "These are the drawable components that are being drawn."
+        #print self._lViewDrawables
+        #print self._lScreenDrawables
 
         renderWindow.view = windowView
         
@@ -314,47 +334,74 @@ class Entity(object):
 
         
 
-class Entity_List(Entity):
+class Entity_PQueue(Entity):
     """Like the name says, this will store Entities. And it will update/render those entities accordingly."""
-    def __init__(self, sName, sType, dComponents, lEntities):
-        Entity.__init__(self, sName, sType, dComponents)
+    def __init__(self, sName, sType, iDrawPriority, dComponents):
 
-        self._lEntities = lEntities
+        #This takes all of the entities out of the dComponents
+        dEntities = dComponents.pop("entity", {})
 
-    def _Add_Entity(self, Entity):
-        """This allows system functions to be able to add in new entities into the game (during a state.)
-        (This could be used for when the player enters a new chunk (that has enemies in it.))"""
-        self._lEntities.append(Entity)
+        print "These are the entities that are being loaded into the Entity_PQueue"
+        print dEntities
+        
+        Entity.__init__(self, sName, sType, iDrawPriority, dComponents)
 
-    def _Remove_Entity(self, sEntityName):
-        """This will allow system functions to remove entities from the entity list.
-        (They could have been moved off of the screen?)"""
-        for i in xrange(len(self._lEntities)):
-            if self._lEntities[i]._Get_Name() == sEntitiyName:
-                self._lEntities.pop(i)
-                break
+        #This orders the entities so that the ones with the highest draw
+        #   priority will be first in the list (highest priority is 0.)
+        self._pqEntities = PQ(dEntities.values())
 
-    def _Get_Entity(self, sEntityName):
-        """This will allow system functions to get a specific entitiy from the list."""
-        for i in xrange(len(self._lEntities)):
-            if self._lEntities[i]._Get_Name() == sEntitiyName:
-                return self._lEntities[i]
+    def _Add_Entity(self, entity):
+        """This will add entities into our dictionary of lists of entities.
+        And it will also add the Entity to the PriorityQueue so that it can be drawn.
+        @param entity This should be an actual instance of the Entity class. So it
+            holds components and that's about it.
+        @param iPriority This is the draw priority for the Entity that it being
+            added. Zero is the highest draw priority (gets drawn first,) -1 means
+            the Entity doesn't need added to the PriorityQueue."""
+
+        self._pqEntities._Add_Entity(entity)
+
+        
+
+    def _Remove_Entity(self, sEntityTypeName, sEntityName):
+        """When an entity expires it will be removed with this."""
+
+        #Entities that aren't within the priority queue will be ignored.
+        self._pqDrawableEntities._Remove_Entity(sEntityTypeName, sEntityName)
+
+    def _Get_Entity(self, sEntityTypeName, sEntityName):
+        """This is for retrieving entities from the dictionary."""
+
+        for i in xrange(len(self._pqEntities)):
+
+            if self._pqEntities[i]._Get_Name() == sEntityName  \
+               and self._pqEntities[i]._Get_Type() == sEntityTypeName:
+
+                return self._pqEntities[i]
+
+        return None
 
     def _Update(self, timeElapsed):
         """This will be where we update all of the contained entities. (This happens once per game update!)"""
-        for indx in xrange(len(self._lEntities)):
+
+        Entity._Update(self, timeElapsed)
+        
+        for indx in xrange(len(self._pqEntities)):
             #This will check to see if the current Entity has signaled to be removed.
-            if self._lEntities[indx]._Is_Expired():
+            if self._pqEntities[indx]._Is_Expired():
                 #So we let the entity do its cleaning up, then we remove it from the Entity_List entirely.
-                self._lEntities[indx]._On_Expire()
-                self._Remove_Entity(self._lEntities[indx]._Get_Name())
+                self._pqEntities[indx]._On_Expire()
+                self._Remove_Entity(self._pqEntities[indx]._Get_Name())
                 #We won't need to update a removed entity!
                 break
 
             #Now since that this entity hasn't been removed, we'll update it.
-            self._lEntities._Update(timeElapsed)
+            self._pqEntities[indx]._Update(timeElapsed)
 
-    def _Render(self, renderWindow):
+    def _Render(self, renderWindow, windowView):
         """Here we render the contained entities onto the screen. (This happens once per program loop!)"""
-        for indx in xrange(len(self._lEntities)):
-            self._lEntities._Render(renderWindow)
+
+        Entity._Render(self, renderWindow, windowView)
+
+        for indx in xrange(len(self._pqEntities)):
+            self._pqEntities[indx]._Render(renderWindow, windowView)

@@ -7,12 +7,18 @@ import config
 import entities
 from staticInput import Input_Manager
 from systems import System_Manager
-import assets
+from assets import Asset_Manager as AstManager
+from PriorityQueue import PriorityQueue as PQ
 
 class Entity_Manager(object):
     def __init__(self):
+        #This allows access to specific entities
         #sEntityType:(sEntityName:entity)
         self._dEntities = {}
+
+        #This orders the entities so that the ones with the highest draw
+        #   priority will be first in the list (highest priority is 0.)
+        self._pqDrawableEntities = PQ()
 
     def _Empty_Entity_Containers(self):
         """This is for cleaning up the Entity Containers for when we need to change
@@ -24,10 +30,16 @@ class Entity_Manager(object):
         
         self._dEntities.clear()
 
+        self._pqDrawableEntities._Clear()
+
     def _Add_Entity(self, entity):
         """This will add entities into our dictionary of lists of entities.
+        And it will also add the Entity to the PriorityQueue so that it can be drawn.
         @param entity This should be an actual instance of the Entity class. So it
-            holds components and that's about it."""
+            holds components and that's about it.
+        @param iPriority This is the draw priority for the Entity that it being
+            added. Zero is the highest draw priority (gets drawn first,) -1 means
+            the Entity doesn't need added to the PriorityQueue."""
 
         if self._dEntities.get(entity._Get_Type(), None) == None:
             #If there wasn't already a dictionary, then we'll make one
@@ -36,11 +48,21 @@ class Entity_Manager(object):
         #This will overwrite or create a new entity of the given name.
         self._dEntities[entity._Get_Type()][entity._Get_Name()] = entity
 
+        #THis filters out the entities with -1 priorities to being added
+        #   To the list of drawable Entities.
+        if (entity._Get_Draw_Priority() != -1):
+            self._pqDrawableEntities._Add_Entity(entity)
+
+        
+
     def _Remove_Entity(self, sEntityTypeName, sEntityName):
         """When an entity expires it will be removed with this."""
         #This just prevents errors from occuring in the dictionary accessing.
         if self._dEntities.get(sEntityTypeName,None) != None:
             self._dEntities[sEntityTypeName].pop(sEntityName)
+
+        #Entities that aren't within the priority queue will be ignored.
+        self._pqDrawableEntities._Remove_Entity(entity._Get_Name(), entity._Get_Type())
 
     def _Get_Entity(self, sEntityTypeName, sEntityName):
         """This is for retrieving entities from the dictionary. It so far
@@ -134,10 +156,11 @@ class Entity_Manager(object):
 
         pWindow.clear(sf.Color.BLACK)
 
-        #This block iterates through all of the entities in our dictionary of dictionaries and signals each to update itself.
-        for (sEntityType, dEntities) in self._dEntities.items():
-            for (sEntityName, entity) in dEntities.items():
-                entity._Render(pWindow, pWindowView)
+        #This will iterate through all of the Entities
+        #   that exist within the PriorityQueue of
+        #   drawable entities.
+        for i in xrange(len(self._pqDrawableEntities)):
+            self._pqDrawableEntities[i]._Render(pWindow, pWindowView)
 
 def AssembleEntityInfo(root, sSystemRoot=None):
     """This will assemble the entity info for possibly several entities that are associated with a system call.
@@ -160,8 +183,126 @@ def AssembleEntityInfo(root, sSystemRoot=None):
 
     return lEntities
 
+def GetEntityBlueprints(entityRoot):
+    """This is separate from ChangeState() because this chunk needs to be able to be recursive.
+    This is necessary for the Entity_List entity to be able to hold entities (which may also
+    end up being Entity_Lists, Giants may work as a special Entity_List.)
+    This essentially just creates Entities recursively and stores them inside of its parent Entity
+    like it's an attribute.
+    @param entityRoot This is an ElementTree Node object and this is where we'll
+        be using to look for the attributes (which may be entities, and if so recursion is necessary.)
+    @return An Entity object that contains the attributes (which may have Entities within it) that
+        were specified within the main xml file for the game."""
 
-def ChangeState(lCurState, lNxtState, window, windView, EntManager, AstManager):
+    entity = None
+
+    iEntityDrawPriority = -1
+
+    if entityRoot.find("drawPriority") != None:
+        iEntityDrawPriority = int(entityRoot.find("drawPriority").text)
+    
+    #This checks to see if there is a function that exists that will assemble this entity.
+    if entityRoot.find("assembleFunc") != None:
+        #This will hold all of the attributes needed to assemble the entity (using the xml files to get the data later on.)
+        dEntityAttribs = {}
+
+        #This will loop through all of the attributes for the current entity
+        #   Note that this only iterates over the immediate children.
+        for attrib in entityRoot.find("Attributes"):
+
+            #Check to see if this is a sound for the entity!
+            if attrib.tag == 'Sound':
+                #THis will start a new list of Sounds if we haven't already loaded a sound into this entity's attributes.
+                if dEntityAttribs.get(attrib.tag, None) == None:
+                    dEntityAttribs[attrib.tag] = {}
+
+                #Query the AssetManager for a sound that is associated with this entity, then throw that into the dictionary of attributes!
+                dEntityAttribs[attrib.tag][attrib.attrib["name"]] = AstManager._Get_Sound(attrib.attrib["name"], attrib.text)
+
+            elif attrib.tag == 'Music':
+
+                #THis will start a new list of Musics if we haven't already loaded a sound into this entity's attributes.
+                if dEntityAttribs.get(attrib.tag, None) == None:
+                    dEntityAttribs[attrib.tag] = {}
+
+                dEntityAttribs[attrib.tag][attrib.attrib["name"]] = AstManager._Get_Music(attrib.attrib['name'], attrib.text)
+
+            #Check to see if this is a texture for the entitititity.
+            elif attrib.tag == 'Texture':
+
+                #THis will start a new list of Textures if we haven't already loaded a sound into this entity's attributes.
+                if dEntityAttribs.get(attrib.tag, None) == None:
+                    dEntityAttribs[attrib.tag] = {}
+
+                #Query the AssetManager for a texture that is associated with this entity, then throw that into the dictionary of attributes!
+                dEntityAttribs[attrib.tag][attrib.attrib["name"]] = AstManager._Get_Texture(attrib.attrib['name'], attrib.text)
+
+            #Check to see if this is a RenderState for the entitititity.
+            elif attrib.tag == 'RenderState':
+
+                #THis will start a new list of sf.RenderStates if we haven't already loaded a sound into this entity's attributes.
+                if dEntityAttribs.get(attrib.tag, None) == None:
+                    dEntityAttribs[attrib.tag] = {}
+
+                #Query the AssetManager for a sf.RenderState that is associated with this entity, then throw that into the dictionary of attributes!
+                dEntityAttribs[attrib.tag][attrib.attrib["name"]] = AstManager._Get_Render_State(attrib.attrib['name'], attrib.text)
+
+
+            #Check to see if this is a font for the entitititity.
+            elif attrib.tag == 'Font':
+
+                #THis will start a new list of Fonts if we haven't already loaded a sound into this entity's attributes.
+                if dEntityAttribs.get(attrib.tag, None) == None:
+                    dEntityAttribs[attrib.tag] = {}
+
+                #Query the AssetManager for a font that is associated with this entity, then throw that into the dictionary of attributes!
+                dEntityAttribs[attrib.tag][attrib.attrib["name"]] = AstManager._Get_Font(attrib.attrib['name'], attrib.text)
+
+            #Check to see if this is a entity for the entitititity.
+            elif attrib.tag == 'entity':
+
+                #THis will start a new list of Entities if we haven't already loaded a sound into this entity's attributes.
+                if dEntityAttribs.get(attrib.tag, None) == None:
+                    dEntityAttribs[attrib.tag] = {}
+
+                #Here's the one and only recursive call. The base case occurs
+                #   when there aren't anymore nested Entities.
+                dEntityAttribs[attrib.tag][attrib.attrib["name"]] = GetEntityBlueprints(attrib)
+
+            else:
+                #Anything else will just be put in the dictionary as an attribute
+                dEntityAttribs[attrib.tag] = attrib.text
+
+        module = importlib.import_module('entities')
+
+        assembleFunc = getattr(module, entityRoot.find('assembleFunc').text)
+           
+        #Here we're using the Assemble*() function associated with the name of this entity to assemble the entity so that
+        #we can add it to the EntityManager.
+        #And all Assemble*() functions will use the same arguments(using a dictionary to allow dynamic arguments.)
+        entity = assembleFunc(entityRoot.attrib['name'], entityRoot.attrib['type'], iEntityDrawPriority, dEntityAttribs)
+
+    else:
+        #Here we will add in a default entity instance.
+        entity = entities.Entity(entityRoot.attrib['name'], entityRoot.attrib['type'],{})
+
+    #THis adds in the components that exist in the xml file for this entity (it allows custom/variations of entities to exist.)
+    for component in entityRoot.findall('Component'):
+
+        #These are for getting the actual 
+        module = importlib.import_module('components')
+
+        componentClass = getattr(module, component.attrib['name'])
+
+        #This will add in a component into the entity we just created.
+        #And note that it is giving the component a dictionary of the data in the xml files.
+        entity._Add_Component(componentClass({DataTag.tag: DataTag.text for DataTag in component}))
+
+    return entity
+
+
+
+def ChangeState(lCurState, lNxtState, window, windView, EntManager):
     """This function is passed a couple lists representing the info on the different levels of this game's
     hierarchical finite state machine. This function essentially generically sets up the Entity and Asset Managers
     based off of data that can be retreived from xml files.
@@ -172,10 +313,7 @@ def ChangeState(lCurState, lNxtState, window, windView, EntManager, AstManager):
     @param windView This is SFML's View object and allows us to zoom in on the what would be shown in the window. This
         essentially just gives us the option to zoom in on the stuff visible for a certain state (can be specified in xml data.)
     @param EntManager This is the entity manager and is for loading entities into the game based on the state being switched to.
-        The xml data tells which entities need to be loaded for what state.
-    @param AstManager This is the asset manager and it is for loading in assets that are needed by entities. The xml data
-        specifies what assets are to be fetched and used for the assembling of each entity. Once an asset is fetched once,
-        it won't need to be loaded the second time because it's stored in the AstManager."""
+        The xml data tells which entities need to be loaded for what state."""
 
     print "NEW STATE!", lNxtState
     #The data will lie within the nextState[0]+".txt" file and the nextState[1] element within that elemthe ent.
@@ -194,8 +332,8 @@ def ChangeState(lCurState, lNxtState, window, windView, EntManager, AstManager):
         print "There was a problem finding %s in the StateInit.xml file."%(lNxtState[0])
 
     #This will reset the windowView's dimensions within the actual window with respect to the new state
-    windView.reset(sf.FloatRect(window.width - int(root.find('viewWidth').text), \
-                window.height - int(root.find('viewHeight').text),   \
+    windView.reset(sf.FloatRect((window.width - int(root.find('viewWidth').text))/2, \
+                (window.height - int(root.find('viewHeight').text))/2,   \
                 int(root.find('viewWidth').text),    \
                 int(root.find('viewHeight').text)))
 
@@ -207,93 +345,7 @@ def ChangeState(lCurState, lNxtState, window, windView, EntManager, AstManager):
 
     for entity in root.findall('Entity'):
 
-        entityInstance = None
-
-        #This checks to see if there is a function that exists that will assemble this entity.
-        if entity.find('assembleFunc') != None:
-
-            #This will hold all of the attributes needed to assemble the entity (using the xml files to get the data later on.)
-            dEntityAttribs = {}
-
-            #This will loop through all of the attribute names for each entity.
-            for attrib in entity.find('Attributes').getiterator():
-                
-                #Check to see if this is a sound for the entity!
-                if attrib.tag == 'Sound':
-                    #THis will start a new list of Sounds if we haven't already loaded a sound into this entity's attributes.
-                    if dEntityAttribs.get(attrib.tag, None) == None:
-                        dEntityAttribs[attrib.tag] = {}
-
-                    #Query the AssetManager for a sound that is associated with this entity, then throw that into the dictionary of attributes!
-                    dEntityAttribs[attrib.tag][attrib.attrib["name"]] = AstManager._Get_Sound(attrib.attrib['name'], attrib.text)
-
-                elif attrib.tag == 'Music':
-
-                    #THis will start a new list of Musics if we haven't already loaded a sound into this entity's attributes.
-                    if dEntityAttribs.get(attrib.tag, None) == None:
-                        dEntityAttribs[attrib.tag] = {}
-
-                    dEntityAttribs[attrib.tag][attrib.attrib["name"]] = AstManager._Get_Music(attrib.attrib['name'], attrib.text)
-
-                #Check to see if this is a texture for the entitititity.
-                elif attrib.tag == 'Texture':
-
-                    #THis will start a new list of Textures if we haven't already loaded a sound into this entity's attributes.
-                    if dEntityAttribs.get(attrib.tag, None) == None:
-                        dEntityAttribs[attrib.tag] = {}
-
-                    #Query the AssetManager for a texture that is associated with this entity, then throw that into the dictionary of attributes!
-                    dEntityAttribs[attrib.tag][attrib.attrib["name"]] = AstManager._Get_Texture(attrib.attrib['name'], attrib.text)
-
-                #Check to see if this is a RenderState for the entitititity.
-                elif attrib.tag == 'RenderState':
-
-                    #THis will start a new list of sf.RenderStates if we haven't already loaded a sound into this entity's attributes.
-                    if dEntityAttribs.get(attrib.tag, None) == None:
-                        dEntityAttribs[attrib.tag] = {}
-
-                    #Query the AssetManager for a sf.RenderState that is associated with this entity, then throw that into the dictionary of attributes!
-                    dEntityAttribs[attrib.tag][attrib.attrib["name"]] = AstManager._Get_Render_State(attrib.attrib['name'], attrib.text)
-
-
-                #Check to see if this is a font for the entitititity.
-                elif attrib.tag == 'Font':
-
-                    #THis will start a new list of Fonts if we haven't already loaded a sound into this entity's attributes.
-                    if dEntityAttribs.get(attrib.tag, None) == None:
-                        dEntityAttribs[attrib.tag] = {}
-
-                    #Query the AssetManager for a font that is associated with this entity, then throw that into the dictionary of attributes!
-                    dEntityAttribs[attrib.tag][attrib.attrib["name"]] = AstManager._Get_Font(attrib.attrib['name'], attrib.text)
-
-                else:
-                    #Anything else will just be put in the dictionary as an attribute
-                    dEntityAttribs[attrib.tag] = attrib.text
-
-            module = importlib.import_module('entities')
-
-            assembleFunc = getattr(module, entity.find('assembleFunc').text)
-               
-            #Here we're using the Assemble*() function associated with the name of this entity to assemble the entity so that
-            #we can add it to the EntityManager.
-            #And all Assemble*() functions will use the same arguments(using a dictionary to allow dynamic arguments.)
-            entityInstance = assembleFunc(entity.attrib['name'], entity.attrib['type'], dEntityAttribs)
-
-        else:
-            #Here we will add in a default entity instance.
-            entityInstance = entities.Entity(entity.attrib['name'], entity.attrib['type'],{})
-        
-        #THis adds in the components that exist in the xml file for this entity (it allows custom/variations of entities to exist.)
-        for component in entity.findall('Component'):
-
-            #These are for getting the actual 
-            module = importlib.import_module('components')
-
-            componentClass = getattr(module, component.attrib['name'])
-
-            #This will add in a component into the entity we just created.
-            #And note that it is giving the component a dictionary of the data in the xml files.
-            entityInstance._Add_Component(componentClass({DataTag.tag: DataTag.text for DataTag in component.getiterator()}))
+        entityInstance = GetEntityBlueprints(entity)
 
         EntManager._Add_Entity(entityInstance)
 
@@ -329,13 +381,7 @@ def ChangeState(lCurState, lNxtState, window, windView, EntManager, AstManager):
 
     #These are the systems that are relevant to this state and they will be added into the System_Queue class.
     for system in root.findall("System"):
-
-        #dEntities = {}
-
-        #for entity in system.findall("entity"):
-
-            #dEntities[entity.find("componentName")] = EntManager._Get_Entity(entity.find("entityType"), entity.find("entityName"))
-
+        
         #This will load a system into the System_Queue and then it will be activated next update.
         System_Manager._Add_System(system.find("type").text, system.find("systemFunc").text,  AssembleEntityInfo(system))
         
@@ -348,7 +394,7 @@ def ChangeState(lCurState, lNxtState, window, windView, EntManager, AstManager):
 
 def Init():
     """This will setup the window and whatever needs setup (just once) at the start of the program."""
-    wind = sf.RenderWindow( sf.VideoMode( config.WINDOW_WIDTH, config.WINDOW_HEIGHT ), "CS CLUB PROJECT!" )
+    wind = sf.RenderWindow( sf.VideoMode( config.WINDOW_WIDTH, config.WINDOW_HEIGHT ), "TileGame" )
 
     #This makes the background of the screen Black.
     wind.clear(sf.Color.BLACK)
@@ -372,10 +418,7 @@ def main():
     #This will be updated when we change to a state.
     EntityManager = Entity_Manager()
 
-    #The AssetManager will be used by ChangeState in order to retrieve sounds/textures for a particular type of entity.
-    AssetManager = assets.Asset_Manager()
-
-    ChangeState(lCurrentState, lNextState, window, windowView, EntityManager, AssetManager)
+    ChangeState(lCurrentState, lNextState, window, windowView, EntityManager)
 
     timer = sf.Clock()
     
@@ -443,7 +486,7 @@ def main():
 
                     #If one of the lNextState elements is changed, they all are (just how it goes.)
                     if lNextState[0] != "NULL" and lNextState[0] != "QUIT":
-                        ChangeState(lCurrentState, lNextState, window, windowView, EntityManager, AssetManager)
+                        ChangeState(lCurrentState, lNextState, window, windowView, EntityManager)
 
                     #Finally after we've handled input and have correctly adjusted to the nextState (in most cases it won't happen,)
                     #we can then update our game's model with stuff that will happen in the respective state with each game update.

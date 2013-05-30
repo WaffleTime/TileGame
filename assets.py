@@ -86,6 +86,7 @@ class Asset_Manager(object):
             #We can now just return the SFML object that is within the dictionary.
             return Asset_Manager.dSounds[sName]
 
+    @staticmethod
     def _Get_Music(sName, sFileName):
         """The Music object that is returned will stream the music as it plays."""
 

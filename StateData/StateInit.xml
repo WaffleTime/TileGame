@@ -90,8 +90,22 @@
 		<MainMenu>
 			<viewWidth>1024</viewWidth>
 			<viewHeight>768</viewHeight>
+			<Entity name='Player' type='Human'>
+				<assembleFunc>Assemble_Player</assembleFunc>
+				<drawPriority>7</drawPriority>
+				<Attributes>
+					<WindPos>400,400</WindPos>
+					<FrameWidth>32</FrameWidth>
+					<FrameHeight>48</FrameHeight>
+					<Delay>0.25</Delay>
+					<Texture name='DEFAULT'>playerDefault.png</Texture>
+					<Texture name='walk'>playerWalk.png</Texture>
+					<Texture name='jump'>playerJump.png</Texture>
+				</Attributes>
+			</Entity>
 			<Entity name='MenuDecor' type='View'>
 				<assembleFunc>Assemble_Chunk_Manager</assembleFunc>
+				<drawPriority>0</drawPriority>
 				<Attributes>
 					<ChunkDataDir>\Resources\ChunkData\MainMenu\</ChunkDataDir>
 					<WorldPos>0,0</WorldPos>
@@ -113,6 +127,7 @@
 			
 			<Entity name='Title' type='TextBox'>
 				<assembleFunc>Assemble_Text_Box</assembleFunc>
+				<drawPriority>1</drawPriority>
 				<Attributes>
 					<x>350</x>
 					<y>100</y>
@@ -125,6 +140,7 @@
 			
 			<Entity name='NewGame' type='Button'>
 				<assembleFunc>Assemble_Button</assembleFunc>
+				<drawPriority>1</drawPriority>
 				<Attributes>
 					<x>400</x>
 					<y>200</y>
@@ -140,6 +156,7 @@
 			</Entity>
 			<Entity name='SavedGame' type='Button'>
 				<assembleFunc>Assemble_Button</assembleFunc>
+				<drawPriority>1</drawPriority>
 				<Attributes>
 					<x>400</x>
 					<y>300</y>
@@ -155,6 +172,7 @@
 			</Entity>
 			<Entity name='Instructions' type='Button'>
 				<assembleFunc>Assemble_Button</assembleFunc>
+				<drawPriority>1</drawPriority>
 				<Attributes>
 					<x>400</x>
 					<y>400</y>
@@ -170,6 +188,7 @@
 			</Entity>
 			<Entity name='Options' type='Button'>
 				<assembleFunc>Assemble_Button</assembleFunc>
+				<drawPriority>1</drawPriority>
 				<Attributes>
 					<x>400</x>
 					<y>500</y>
@@ -185,6 +204,7 @@
 			</Entity>
 			<Entity name='QuitGame' type='Button'>
 				<assembleFunc>Assemble_Button</assembleFunc>
+				<drawPriority>1</drawPriority>
 				<Attributes>
 					<x>400</x>
 					<y>600</y>
@@ -355,6 +375,7 @@
 			<viewHeight>768</viewHeight>
 			<Entity name='MenuDecor' type='View'>
 				<assembleFunc>Assemble_Chunk_Manager</assembleFunc>
+				<drawPriority>1</drawPriority>
 				<Attributes>
 					<ChunkDataDir>\Resources\ChunkData\MainMenu\</ChunkDataDir>
 					<WorldPos>0,0</WorldPos>
@@ -375,6 +396,7 @@
 			</System>
 			<Entity name='GoBack' type='Button'>
 				<assembleFunc>Assemble_Button</assembleFunc>
+				<drawPriority>2</drawPriority>
 				<Attributes>
 					<x>150</x>
 					<y>550</y>
@@ -425,6 +447,7 @@
 			<viewHeight>768</viewHeight>
 			<Entity name='MenuDecor' type='View'>
 				<assembleFunc>Assemble_Chunk_Manager</assembleFunc>
+				<drawPriority>1</drawPriority>
 				<Attributes>
 					<ChunkDataDir>\Resources\ChunkData\MainMenu\</ChunkDataDir>
 					<WorldPos>0,0</WorldPos>
@@ -445,6 +468,7 @@
 			</System>
 			<Entity name='GoBack' type='Button'>
 				<assembleFunc>Assemble_Button</assembleFunc>
+				<drawPriority>2</drawPriority>
 				<Attributes>
 					<x>150</x>
 					<y>550</y>
@@ -499,6 +523,7 @@
 			<viewHeight>768</viewHeight>
 			<Entity name='MapCrawler' type='View'>
 				<assembleFunc>Assemble_Chunk_Manager</assembleFunc>
+				<drawPriority>1</drawPriority>
 				<Attributes>
 					<ChunkDataDir>SavedGame</ChunkDataDir>
 					<WorldPos>0,0</WorldPos>
@@ -527,12 +552,32 @@
 				</entity>
 			</System>
 		</NewGame>
-		
 		<Continue>
 			<viewWidth>512</viewWidth>
 			<viewHeight>384</viewHeight>
+			<Entity name='OnScreenEntities' type='Manager'>
+				<assembleFunc>Entity_PQueue</assembleFunc>
+				<drawPriority>3</drawPriority>
+				<Attributes>
+					<entity name='Player' type='Human'>
+						<assembleFunc>Assemble_Player</assembleFunc>
+						<drawPriority>7</drawPriority>
+						<Attributes>
+							<WindPos>400,450</WindPos>
+							<FrameWidth>32</FrameWidth>
+							<FrameHeight>48</FrameHeight>
+							<Delay>0.25</Delay>
+							<Texture name='DEFAULT'>playerDefault.png</Texture>
+							<Texture name='walk'>playerWalk.png</Texture>
+							<Texture name='jump'>playerJump.png</Texture>
+						</Attributes>
+					</entity>
+				</Attributes>
+						
+			</Entity>
 			<Entity name='PlayerScreen' type='View'>
 				<assembleFunc>Assemble_Chunk_Manager</assembleFunc>
+				<drawPriority>1</drawPriority>
 				<Attributes>
 					<ChunkDataDir>SavedGame</ChunkDataDir>
 					<WorldPos>0,0</WorldPos>
@@ -559,6 +604,7 @@
 			<viewHeight>768</viewHeight>
 			<Entity name='MenuDecor' type='View'>
 				<assembleFunc>Assemble_Chunk_Manager</assembleFunc>
+				<drawPriority>1</drawPriority>
 				<Attributes>
 					<ChunkDataDir>\Resources\ChunkData\MainMenu\</ChunkDataDir>
 					<WorldPos>0,0</WorldPos>
@@ -579,6 +625,7 @@
 			</System>
 			<Entity name='Save1' type='Button'>
 				<assembleFunc>Assemble_Button</assembleFunc>
+				<drawPriority>2</drawPriority>
 				<Attributes>
 					<x>400</x>
 					<y>300</y>
@@ -637,6 +684,7 @@
 			</Input>
 			<Entity name='TestSave' type='Button'>
 				<assembleFunc>Assemble_Button</assembleFunc>
+				<drawPriority>2</drawPriority>
 				<Attributes>
 					<x>400</x>
 					<y>400</y>
@@ -696,6 +744,7 @@
 			
 			<Entity name='GoBack' type='Button'>
 				<assembleFunc>Assemble_Button</assembleFunc>
+				<drawPriority>2</drawPriority>
 				<Attributes>
 					<x>150</x>
 					<y>550</y>
