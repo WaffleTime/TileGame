@@ -98,6 +98,16 @@ class Animated_Sprite(Component):
         self._iCurrent_Frame = ["DEFAULT",0]
         self._Update_Frame()
 
+    def _Update_Position(self, lPosition):
+        """This is for updating the position of the Sprite. It's crucial for when the physics shapes are queryed for the position
+        that their dependent components have a method that allows position updates. So this method WILL be redundant throughout the
+        drawable (and collidable) components."""
+
+        print "AnimatedSPrite position being updated to %d,%d!"%(lPosition[0],lPosition[1])
+
+        self._dAnimated_Sprites[self._lCurrent_Frame[0]][0].x = lPosition[0]
+        self._dAnimated_Sprites[self._lCurrent_Frame[0]][0].y = lPosition[1]
+
     def _Update_Frame(self):
         """This simply will be used to update the frame of the animation within the SFML sprite based off of the data in this class."""
 
@@ -260,6 +270,12 @@ class Collision_Space(Component):
 
         self._cSpace.gravity = (float(dData["gravity"][0]),float(dData["gravity"][1]))
 
+    def _Add_Shape(self, cBody, cShape):
+        """This is meants for adding in collision bodies into the collision space.
+        @param cBody This is a pymunk Body object. It represents an Entity's body."""
+
+        self._cSpace.add(cBody, cShape)
+
     def _Update(self, timeElapsed):
         """This should tell pymunk to step forward in time
         a certain amount.
@@ -300,15 +316,46 @@ class Collision_Body(Component):
         return self._cBody
 
 
-class Collision_Box(Component):
-    def __init__(self, dData):
-        Component.__init__(self, "CBOX:%s"%(dData['componentID']), False, 0)
+class Collision_Shape(Component):
+    def __init__(self, cShape, dData):
+        Component.__init__(self, "CSHAPE:%s"%(dData['componentID']), False, 0)
 
-        self._cBox = pymunk.Poly(dData["cBody"],                         \
+        self._sDependent_Comp_Name = dData["dependentComponentName"]
+
+        self._cShape = cShape
+
+    def _Get_Shape(self):
+        """This is for retrieving the collision shape. It's
+        important that all Collision Shape components have a method
+        with this exact name. It's used by Entity_PQueue to get the shapes
+        within Entities and load them into the collision space with their body (_Add_Entity() is
+        the method I speak of.)"""
+
+        return self._cShape
+
+    def _Get_Dependent_Comp_Name(self):
+        """This is for retrieving the name of the component
+        that this collision shape affects."""
+
+        return self._sDependent_Comp_Name
+
+
+class Collision_Box(Collision_Shape):
+    def __init__(self, dData):
+
+        cBox = pymunk.Poly(dData["cBody"],                         \
                                  [(0,config.TILE_SIZE), (0,0), (config.TILE_SIZE,0), (config.TILE_SIZE, config.TILE_SIZE)],  \
                                  (dData["xOffset"], dData["yOffset"]),   \
                                  True)
 
+        #This will load the Collision_Shape up with the Shape and data that it needs.
+        Collision_Shape.__init__(self,      \
+                                 cBox,      \
+                                 {"componentID":dData["componentID"],     \
+                                  "dependentComponentName":dData["dependentComponentName"]})
+
+
+    
         
 class Box(Component):
     def __init__(self, dData):
@@ -354,7 +401,7 @@ class Text_Line(Component):
 class Tile(Component):
     """Denotes a single tile within a chunk."""
     def __init__( self, dData ):
-        Component.__init__(self, "Tile:%s"%(dData['componentID']), False, 0)
+        Component.__init__(self, "TILE:%s"%(dData['componentID']), False, 0)
         #Tells whether or not the tile is visible or not
         self._is_Active = False
 

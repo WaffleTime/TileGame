@@ -31,21 +31,33 @@ def Assemble_Button(sEntityName, sEntityType, iDrawPriority, attribDict):
 def Assemble_Player(sEntityName, sEntityType, iDrawPriority, attribDict):
     entity = Entity(sEntityName, sEntityType, iDrawPriority, {})
 
-    entity._Add_Component(components.Animated_Sprite({"componentID":"mainSprite",                \
+    entity._Add_Component(components.Animated_Sprite({"componentID":"main",                      \
                                                       "FrameWidth":attribDict["FrameWidth"],     \
                                                       "FrameHeight":attribDict["FrameHeight"],   \
                                                       "Delay":attribDict["Delay"],               \
-                                                      "WindPos":attribDict["WindPos"],          \
+                                                      "WindPos":attribDict["WindPos"],           \
                                                       "Texture":attribDict["Texture"]}))
 
-    entity._Add_Component(components.Position({"componentID":"WindPos",        \
-                                               "position":attribDict["WindPos"].split(",")}))
+    lWindPos = attribDict["WindPos"].split(",")
 
-    collisionBody = components.Collision_Body({"componentID":attribDict['WorldPos'],    \
+    entity._Add_Component(components.Position({"componentID":"LastPos",                         \
+                                               "position":lWindPos}))
+
+    collisionBody = components.Collision_Body({"componentID":"main",                    \
                                                "MomentType":"box",                      \
                                                "width":attribDict["FrameWidth"],        \
                                                "height":attribDict["FrameHeight"],      \
                                                "mass":attribDict["mass"]})
+
+    
+
+    entity._Add_Component(components.Collision_Box({"componentID":"main",                             \
+                                                    "dependentComponentName":"STATE_ANIMATIONS:main", \
+                                                    "cBody":collisionBody._Get_Body(),                \
+                                                    "xOffset":lWindPos[0],                            \
+                                                    "yOffset":lWindPos[1]}))
+
+    entity._Add_Component(collisionBody)
 
     return entity
 
@@ -67,8 +79,11 @@ def Assemble_Chunk(sEntityName, sEntityType, iDrawPriority, attribDict):
 
     entity._Add_Component(components.Mesh(dMeshData))
 
-    entity._Add_Component(components.Position({"componentID":"WorldPos", "position":attribDict['WorldPos'].split(',')}))
-    entity._Add_Component(components.Position({"componentID":"WindowPos", "position":attribDict['WindowPos'].split(',')}))
+    entity._Add_Component(components.Position({"componentID":"WorldPos",    \
+                                               "position":attribDict['WorldPos'].split(',')}))
+    
+    entity._Add_Component(components.Position({"componentID":"WindowPos",   \
+                                               "position":attribDict['WindowPos'].split(',')}))
 
     entity._Add_Component(components.Flag({"componentID":"IsEmpty", "flag":True}))
     entity._Add_Component(components.Flag({"componentID":"IsLoaded", "flag":False}))
@@ -90,6 +105,7 @@ def Assemble_Chunk(sEntityName, sEntityType, iDrawPriority, attribDict):
                 tileList[row][col]._Add( components.Tile({"componentID":"%d,%d,%d"%(row,col,depth)}) )
 
                 entity._Add_Component(components.Collision_Box({"componentID":"%d,%d,%d"%(row,col,depth),   \
+                                                                "dependentComponentName":"TILE:%d,%d,%d"%(row,col,depth),\
                                                                 "cBody":collisionBody._Get_Body(),          \
                                                                 "xOffset":col,                              \
                                                                 "yOffset":row}))
@@ -237,6 +253,9 @@ class Entity(object):
 
         self._iDrawPriority = iDrawPriority
 
+        #All entities are uncollidable until they added into a Collision_Space.
+        self._bCollidable = False
+
         #componentName:component
         #Drawable components that are in the dComponents dictionary will have a pointer to them in this list.
         self._dComponents = {}
@@ -278,6 +297,7 @@ class Entity(object):
         elif componentInstance._Get_Screen_Drawable():
             self._lScreenDrawables.append(componentInstance)
 
+
     def _Remove_Component(self, sCompName):
         """This searches through our list of components for the component with
         the specified ID and then removes it from the list."""
@@ -285,6 +305,14 @@ class Entity(object):
 
     def __len__(self):
         return len(self._dComponents)
+
+    def _Set_Collidable(self, bCollidable):
+        """This is for making the Entity update its position over time
+        based on where the physics shapes are.
+        @param bCollidable A boolean that says whether this entity
+            uses physics or not."""
+
+        self._bCollidable = bCollidable
 
     def _Get_Draw_Priority(self):
         return self._iDrawPriority
@@ -300,7 +328,39 @@ class Entity(object):
     def _Get_Component(self, sCompName):
         """This will return the instance of a component that contains
         the specified ID."""
-        return self._dComponents[sCompName]
+        return self._dComponents.get(sCompName, None)
+
+    def _Get_All_Components(self, sSubName):
+        """This is meant for getting all components that contain a certain string within their name.
+        @return a list of components that have part of the string that was given in their name.
+        @param sSubName This is the string that will be looked for within the components."""
+
+        lComponents = []
+
+        for (sCompName, component) in self._dComponents.items():
+
+            if sCompName.startswith(sSubName):
+
+                lComponents.append(component)
+
+        return lComponents
+
+    def _Update_Collidable_Components(self):
+        """This is meant to update the position of a component
+        based on the collision shape that is connected to. The collision shape
+        is merely a representation of a component in a physics environment.
+        @post The position of some components will be altered based on the position
+            of its connect collision shape."""
+
+        #First we must iterate through each collision shape component.
+        for cShape in self._Get_All_Components("CSHAPE"):
+
+            #Then for each collison shape, we must grab its position and
+            #   update the dependent component of the collision shape.
+
+            self._Get_Component(cShape._Get_Dependent_Comp_Name())._Update_Position(cShape._Get_Shape().body.position)
+            
+        
 
     def _Update(self, timeElapsed):
         """This will update the updatable components within the dComponents dictionary by indirectly updating the pointer variables within lUpdatables."""
@@ -312,6 +372,16 @@ class Entity(object):
 
     def _Render(self, renderWindow, windowView):
         """This will render the drawable components within the dCOmponents dictionary by indirectly rendering the pointer variables within lDrawables."""
+
+        #Before rendering, we need to see if this entity exists within a COllision Space.
+        if self._bCollidable: 
+
+            #print "%s:%s entity needs its components updated for rendering"%(self._Get_Type(),self._Get_Name())
+
+            #If the entity does exist in the colllision space, then we need to update
+            #   the position of its components with respect to the Collision SHape positions
+
+            self._Update_Collidable_Components()
 
         #print "These are the drawable components that are being drawn."
         #print self._lViewDrawables
@@ -361,14 +431,21 @@ class Entity_PQueue(Entity):
         #"These are the entities that are being loaded into the Entity_PQueue"
         #print dEntities
 
-        #This orders the entities so that the ones with the highest draw
+        #This orders the entities so that the ones with the highes t draw
         #   priority will be first in the list (highest priority is 0.)
-        self._pqEntities = PQ(dEntities.values())
+        self._pqEntities = PQ()
 
         #This is Pymunk's Space() class basically. But it's in a component.
         #   It will contain the collidable object for Entities.
         Entity._Add_Component( self, components.Collision_Space( {"componentID":"EntityPool",     \
                                                                  "gravity":dAttribs["gravity"].split(",")} ) )
+
+        #This will insert the entities into the PriorityQueue through the proper method.
+        for entity in dEntities.values():
+
+            self._Add_Entity(entity)
+
+        
 
     def _Add_Entity(self, entity):
         """This will add entities into our dictionary of lists of entities.
@@ -379,7 +456,28 @@ class Entity_PQueue(Entity):
             added. Zero is the highest draw priority (gets drawn first,) -1 means
             the Entity doesn't need added to the PriorityQueue."""
 
+
+        print "%s:%sEntity is being added into the PriorityQueue"%(entity._Get_Type(), entity._Get_Name())
+
+        
         self._pqEntities._Add_Entity(entity)
+
+        #Here we check to see if the component is a Collision_Body
+        #   If it is, then this entity is special and we need to add the body
+        #   to the Collision_Space component.
+        if entity._Get_All_Components("CBODY") != []:
+
+            #The ENtity must first be flagged so that its render updates
+            #   take care of the continuously moving collision shapes.
+            entity._Set_Collidable(True)
+
+            for component in entity._Get_All_Components("CSHAPE"):
+
+                #The first collision body within the entity will have the shapes attached to it.
+                self._Get_Component("CSPACE:EntityPool")._Add_Shape(entity._Get_All_Components("CBODY")[0]._Get_Body(), component._Get_Shape())
+
+                #The component should also have its collision shape connected with a different component. That way
+                #   the Entity knows which Collision Shape belongs to which component when the positions are updatd for rendering.
 
         
 
