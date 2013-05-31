@@ -1,5 +1,5 @@
 import sfml as sf
-import pymunk._chipmunk as pymunk
+import pymunk
 import config
 
 class Component(object):
@@ -254,22 +254,60 @@ class Animation_Sprite(Component):
 
 class Collision_Space(Component):
     def __init__(self, dData):
-        Component.__init__(self, "SPACE:%s"%(dData['componentID']), True, 0)
+        Component.__init__(self, "CSPACE:%s"%(dData['componentID']), True, 0)
 
-        self._PyMunk_Space = pymunk.cpShape()
+        self._cSpace = pymunk.Space()
+
+        self._cSpace.gravity = (float(dData["gravity"][0]),float(dData["gravity"][1]))
 
     def _Update(self, timeElapsed):
         """This should tell pymunk to step forward in time
         a certain amount.
-        @param timeElapsed This is a sf.Time object I think...
-            This needs to be known if this message is seen."""
+        @param timeElapsed The timeElapsed is a sf.Time objecct
+            and it will be the same value each time depending on the
+            update rate."""
+
+        #This will step the physics for the Collision_Bodys through an update.
+        self._cSpace.step(timeElapsed.as_seconds())
 
 
 class Collision_Body(Component):
     def __init__(self, dData):
-        Component.__init__(self, "BODY:%s"%(dData['componentID']), False, 0)
+        Component.__init__(self, "CBODY:%s"%(dData['componentID']), False, 0)
 
+        mass = None
+        inertia = None
         
+        if dData["MomentType"] == "static":
+            pass
+
+        elif dData["MomentType"] == "circle":
+            mass = int(dData["mass"])
+            radius = int(dData["radius"])
+            inertia = pymunk.moment_for_circle(mass, 0, radius)
+
+        elif dData["MomentType"] == "box":
+            mass = int(dData["mass"])
+            width = int(dData["width"])
+            height = int(dData["height"])
+
+            inertia = pymunk.moment_for_box(mass, width, height)
+            
+        self._cBody = pymunk.Body(mass, inertia)
+
+    def _Get_Body(self):
+        """This is for returning the collision body."""
+        return self._cBody
+
+
+class Collision_Box(Component):
+    def __init__(self, dData):
+        Component.__init__(self, "CBOX:%s"%(dData['componentID']), False, 0)
+
+        self._cBox = pymunk.Poly(dData["cBody"],                         \
+                                 [(0,config.TILE_SIZE), (0,0), (config.TILE_SIZE,0), (config.TILE_SIZE, config.TILE_SIZE)],  \
+                                 (dData["xOffset"], dData["yOffset"]),   \
+                                 True)
 
         
 class Box(Component):

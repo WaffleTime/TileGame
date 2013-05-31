@@ -90,19 +90,6 @@
 		<MainMenu>
 			<viewWidth>1024</viewWidth>
 			<viewHeight>768</viewHeight>
-			<Entity name='Player' type='Human'>
-				<assembleFunc>Assemble_Player</assembleFunc>
-				<drawPriority>7</drawPriority>
-				<Attributes>
-					<WindPos>400,400</WindPos>
-					<FrameWidth>32</FrameWidth>
-					<FrameHeight>48</FrameHeight>
-					<Delay>5.5</Delay>
-					<Texture name='DEFAULT'>playerDefault.png</Texture>
-					<Texture name='walk'>playerWalk.png</Texture>
-					<Texture name='jump'>playerJump.png</Texture>
-				</Attributes>
-			</Entity>
 			<Entity name='MenuDecor' type='View'>
 				<assembleFunc>Assemble_Chunk_Manager</assembleFunc>
 				<drawPriority>0</drawPriority>
@@ -559,15 +546,16 @@
 				<assembleFunc>Entity_PQueue</assembleFunc>
 				<drawPriority>3</drawPriority>
 				<Attributes>
-					
+					<gravity>0,-9.81</gravity>
 					<entity name='Player' type='Human'>
 						<assembleFunc>Assemble_Player</assembleFunc>
 						<drawPriority>7</drawPriority>
 						<Attributes>
 							<WindPos>400,450</WindPos>
+							<mass>5</mass>
 							<FrameWidth>32</FrameWidth>
 							<FrameHeight>48</FrameHeight>
-							<Delay>1.5</Delay>
+							<Delay>0.5</Delay>
 							<Texture name='DEFAULT'>playerDefault.png</Texture>
 							<Texture name='walk'>playerWalk.png</Texture>
 							<Texture name='jump'>playerJump.png</Texture>

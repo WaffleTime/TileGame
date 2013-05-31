@@ -434,11 +434,11 @@ def main():
     ChangeState(lCurrentState, lNextState, window, windowView, EntityManager)
 
     t = sf.Time(0.0)
-    dt = sf.Time(1./config.TICKS_PER_SEC)
+    DT = sf.Time(1./config.TICKS_PER_SEC)
 
     accumulator = sf.Time(0.0)
     
-    MAX_FRAMESKIP = 7
+    MAX_FRAMESKIP = 9
 
     timer = sf.Clock()
 
@@ -499,7 +499,7 @@ def main():
         iLoops = 0  #A counter for the amount of game update loops that are made in sucession whilst skipping rendering updates.
         
         #This loop will start if it is time to commence the next update and will keep going if we are behind schedule and need to catch up.
-        while accumulator >= dt and iLoops < MAX_FRAMESKIP:
+        while accumulator >= DT and iLoops < MAX_FRAMESKIP:
 
             #This makes the program so that it basically pauses all of its game updates when a user clicks outside of the window. And it waits until the user clicks on the window.
             if windowIsActive:
@@ -519,17 +519,29 @@ def main():
 
                     #Finally after we've handled input and have correctly adjusted to the nextState (in most cases it won't happen,)
                     #we can then update our game's model with stuff that will happen in the respective state with each game update.
-                        
-                    EntityManager._Logic_Update(dt)           #This updates our model depending on what is going on in the current state
+
+                    #Notice that DT is a constant variable that represents how much time is going by during
+                    #   this update.
+                    EntityManager._Logic_Update(DT)
 
 
             #If we have received a quit signal, we should stop our loop and quit the game!
             if bQuit:
                 break
-                
-            iLoops += 1
 
-        EntityManager._Render_Update(window, windowView)
+
+            #The accumulator contains the time that hasn't yet been used for the updates.
+            #Each update will assume that dt time is going by, so the accumulator just
+            #   needs to subtract by the time that is being used up.
+            accumulator -= DT
+            
+            #This counts the Update loop
+            iLoops += 1
+            
+        #This makes the program so that it basically pauses all of its game updates when a user clicks outside of the window. And it waits until the user clicks on the window.
+        if windowIsActive:
+            EntityManager._Render_Update(window, windowView)
+            
         window.display()
 
     #This closes our RenderWindow!

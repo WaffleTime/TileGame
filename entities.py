@@ -41,6 +41,12 @@ def Assemble_Player(sEntityName, sEntityType, iDrawPriority, attribDict):
     entity._Add_Component(components.Position({"componentID":"WindPos",        \
                                                "position":attribDict["WindPos"].split(",")}))
 
+    collisionBody = components.Collision_Body({"componentID":attribDict['WorldPos'],    \
+                                               "MomentType":"box",                      \
+                                               "width":attribDict["FrameWidth"],        \
+                                               "height":attribDict["FrameHeight"],      \
+                                               "mass":attribDict["mass"]})
+
     return entity
 
 def Assemble_Chunk(sEntityName, sEntityType, iDrawPriority, attribDict):
@@ -69,6 +75,8 @@ def Assemble_Chunk(sEntityName, sEntityType, iDrawPriority, attribDict):
 
     tileList = components.List({"componentID":"Tiles"})
 
+    collisionBody = components.Collision_Body({"componentID":attribDict['WorldPos'], "MomentType":"static"})
+
     for row in xrange(config.CHUNK_TILES_HIGH):
         #Adds in a list for each row of the tiles
         tileList._Add(components.List({"componentID":"Tiles"}))
@@ -79,9 +87,16 @@ def Assemble_Chunk(sEntityName, sEntityType, iDrawPriority, attribDict):
             for depth in xrange(config.CHUNK_LAYERS):
                 #Then adds in a tile, for each layer that exists, into
                 #   each 2d tile position in this chunk.
-                tileList[row][col]._Add( components.Tile({"componentID":str(row)+","+str(col)+","+str(depth)}) )
+                tileList[row][col]._Add( components.Tile({"componentID":"%d,%d,%d"%(row,col,depth)}) )
+
+                entity._Add_Component(components.Collision_Box({"componentID":"%d,%d,%d"%(row,col,depth),   \
+                                                                "cBody":collisionBody._Get_Body(),          \
+                                                                "xOffset":col,                              \
+                                                                "yOffset":row}))
 
     entity._Add_Component(tileList)
+
+    entity._Add_Component(collisionBody)
 
     return entity
 
@@ -352,7 +367,8 @@ class Entity_PQueue(Entity):
 
         #This is Pymunk's Space() class basically. But it's in a component.
         #   It will contain the collidable object for Entities.
-        Entity._Add_Component(self, components.Collision_Space({"componentID":"EntityPool"}))
+        Entity._Add_Component( self, components.Collision_Space( {"componentID":"EntityPool",     \
+                                                                 "gravity":dAttribs["gravity"].split(",")} ) )
 
     def _Add_Entity(self, entity):
         """This will add entities into our dictionary of lists of entities.
