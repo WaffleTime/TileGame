@@ -103,10 +103,16 @@ class Animated_Sprite(Component):
         that their dependent components have a method that allows position updates. So this method WILL be redundant throughout the
         drawable (and collidable) components."""
 
-        print "AnimatedSPrite position being updated to %d,%d!"%(lPosition[0],lPosition[1])
+        #print "AnimatedSPrite position being updated from %d,%d!"%(self._dAnimated_Sprites[self._lCurrent_Frame[0]][0].x,self._dAnimated_Sprites[self._lCurrent_Frame[0]][0].y)
+
+        #print "AnimatedSPrite position being updated to %d,%d!"%(lPosition[0],lPosition[1])
 
         self._dAnimated_Sprites[self._lCurrent_Frame[0]][0].x = lPosition[0]
-        self._dAnimated_Sprites[self._lCurrent_Frame[0]][0].y = lPosition[1]
+        
+        #The height of the sprite needs to be altered so that the position refers to the top-left corner instead of the
+        #   bottom-left corner
+        self._dAnimated_Sprites[self._lCurrent_Frame[0]][0].y = lPosition[1]-self._iFrame_Height
+        
 
     def _Update_Frame(self):
         """This simply will be used to update the frame of the animation within the SFML sprite based off of the data in this class."""
@@ -274,12 +280,31 @@ class Collision_Space(Component):
         """This is meants for adding in collision bodies into the collision space.
         @param cBody This is a pymunk Body object. It represents an Entity's body."""
 
-        self._cSpace.add(cBody, cShape)
+        #print "Adding Shape into Collision Space"
+        #print cBody, cShape
+
+        #print cBody.position
+
+        if cBody.is_static:
+            self._cSpace.add(cShape)
+
+        else:
+            self._cSpace.add(cBody, cShape)
+
+    def _Remove_Shape(self, cBody, cShape):
+        """This is meant for removing body and shape collision objects out
+        of the Collision SPace."""
+
+        self._cSpace.remove(cBody, cShape)
+
+    def _Get_Static_Body(self):
+        """This is just for getting a static body for the collision space."""
+        return self._cSpace.static_body
 
     def _Update(self, timeElapsed):
         """This should tell pymunk to step forward in time
         a certain amount.
-        @param timeElapsed The timeElapsed is a sf.Time objecct
+        @param timeElapsed The timeElapsed is a sf.Time objecct 
             and it will be the same value each time depending on the
             update rate."""
 
@@ -316,13 +341,16 @@ class Collision_Body(Component):
         return self._cBody
 
 
+
 class Collision_Shape(Component):
-    def __init__(self, cShape, dData):
+    def __init__(self, cShape, cBody, dData):
         Component.__init__(self, "CSHAPE:%s"%(dData['componentID']), False, 0)
 
         self._sDependent_Comp_Name = dData["dependentComponentName"]
 
         self._cShape = cShape
+
+        self._cBody = cBody
 
     def _Get_Shape(self):
         """This is for retrieving the collision shape. It's
@@ -332,6 +360,14 @@ class Collision_Shape(Component):
         the method I speak of.)"""
 
         return self._cShape
+
+    def _Get_Body(self):
+        """This is for retrieving the body of the collision shape.
+        It's also necessary within the Entity_PQueue._Add_Entity() method.
+        @return A Pymunk Body object that is to be connected to the collision shape
+            within the collision space."""
+
+        return self._cBody
 
     def _Get_Dependent_Comp_Name(self):
         """This is for retrieving the name of the component
@@ -343,14 +379,46 @@ class Collision_Shape(Component):
 class Collision_Box(Collision_Shape):
     def __init__(self, dData):
 
-        cBox = pymunk.Poly(dData["cBody"],                         \
-                                 [(0,config.TILE_SIZE), (0,0), (config.TILE_SIZE,0), (config.TILE_SIZE, config.TILE_SIZE)],  \
-                                 (dData["xOffset"], dData["yOffset"]),   \
-                                 True)
+        cBody = None
+
+        width = int(dData["width"])
+        height = int(dData["height"])
+
+        if dData["collisionType"] != "static":
+
+            mass = int(dData["mass"])
+            
+            inertia = pymunk.moment_for_box(mass, width, height)
+
+            cBody = pymunk.Body(mass, inertia)
+
+        else:
+            
+            cBody = dData["staticBody"]
+
+        #This assumes that the dData["yOffset"] is with respect to Pysfml's coordante plane.
+        cBody.position = (dData["xOffset"], config.WINDOW_HEIGHT-dData["yOffset"]-int(dData["height"]))
+
+        cBox = pymunk.Poly(cBody,                                         \
+                           [ (0,height),    \
+                             (width,height),     \
+                             (width,0),    \
+                             (0,0) ],\
+                           (0, 0),                                        \
+                           False)
+
+        """cBox = pymunk.Poly(cBody,                                         \
+                           [ (-width/2,height/2),    \
+                             (width/2,height/2),     \
+                             (width/2,-height/2),    \
+                             (-width/2, -height/2) ],\
+                           (0, 0),                                        \
+                           False)"""
 
         #This will load the Collision_Shape up with the Shape and data that it needs.
         Collision_Shape.__init__(self,      \
                                  cBox,      \
+                                 cBody,     \
                                  {"componentID":dData["componentID"],     \
                                   "dependentComponentName":dData["dependentComponentName"]})
 
@@ -557,7 +625,7 @@ class Dictionary(Component):
         del self._dComponents[itemName]
 
     def __getitem__(self, key):
-        return self._dComponents[key]
+        return self._dComponents.get(key, None)
 
     def __setitem(self, key, value):
         self._dComponents[key] = value

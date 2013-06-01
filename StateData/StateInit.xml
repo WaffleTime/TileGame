@@ -546,12 +546,12 @@
 				<assembleFunc>Entity_PQueue</assembleFunc>
 				<drawPriority>3</drawPriority>
 				<Attributes>
-					<gravity>0,-9.81</gravity>
+					<gravity>0,-64.0</gravity>
 					<entity name='Player' type='Human'>
 						<assembleFunc>Assemble_Player</assembleFunc>
 						<drawPriority>7</drawPriority>
 						<Attributes>
-							<WindPos>400,450</WindPos>
+							<WindPos>450,300</WindPos>
 							<mass>5</mass>
 							<FrameWidth>32</FrameWidth>
 							<FrameHeight>48</FrameHeight>
@@ -582,6 +582,11 @@
 					<entityType>View</entityType>
 					<entitytName>PlayerScreen</entitytName>
 					<componentName>ChunkMan</componentName>
+				</entity>
+				<entity>
+					<entityType>EntityManager</entityType>
+					<entitytName>OnScreenEntities</entitytName>
+					<componentName>EntityMan</componentName>
 				</entity>
 			</System>
 			

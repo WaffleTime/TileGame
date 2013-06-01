@@ -311,99 +311,106 @@ class Input_Manager(object):
         """This is for taking in data on the key that has been pressed (based off of sfml's enumeration of keys.) Its power is limited, but this will allow
         the game to have combos and simultaneous key presses. The only problem I see is that it won't allow a key to be pressed throughout the duration of the combo.
         And the subcombos that are a subset of a larger combo will be activated along with the larger combo (this could be an awesome feature, but also limiting.)"""
-        if bPressed == True:
-            #Check to see if this input was pressed within a duration of the last input.
-            if Input_Manager.fTimeOfLastInput + 0.25 > currentTime:
-                #Check to see if the previous inputs haven't all been released yet.
-                if Input_Manager.bGotoNextPos == False:
-                    #We'll just keep adding to the list of simultaneous key presses until all of these keys are released!
-                    #We only ever add to the end of this list, so there's no point in using a variable.
-                    Input_Manager.qPastInpus[-1].append(iKeyCode)
+
+        #This will prevent unknown keys from doing things to the game.
+        if iKeyCode != -1 and iKeyCode != 93:
+
+            print "This %d keycode has been pressed"%(iKeyCode), bPressed
+
+            if bPressed == True:
+                #Check to see if this input was pressed within a duration of the last input.
+                if Input_Manager.fTimeOfLastInput + 0.25 > currentTime:
+                    #Check to see if the previous inputs haven't all been released yet.
+                    if Input_Manager.bGotoNextPos == False:
+                        #We'll just keep adding to the list of simultaneous key presses until all of these keys are released!
+                        #We only ever add to the end of this list, so there's no point in using a variable.
+                        Input_Manager.qPastInpus[-1].append(iKeyCode)
+
+                    else:
+                        #The last button has been released, so we append to the end!
+                        Input_Manager.qPastInputs.append([iKeyCode])
+                        
+                        #Gotta reset this, because it will be set to True again when iKeyCode is released.
+                        Input_Manager.bGotoNextPos = False
+
+                    Input_Manager.fTimeOfLastInput = currentTime
+
+                elif Input_Manager.iInputsToBeReleased != 0:
+                    #Without this, the combo system's inputs that haven't been released yet won't get their OnReleased function executed.
+                    return
 
                 else:
-                    #The last button has been released, so we append to the end!
-                    Input_Manager.qPastInputs.append([iKeyCode])
-                    
-                    #Gotta reset this, because it will be set to True again when iKeyCode is released.
+                    #We'll have to reset our past inputs because the key being pressed isn't related to them.
+                    del Input_Manager.qPastInputs[:]
+                    #This also means that these variables should be reset as well.
+                    Input_Manager.iInputsToBeReleased = 0
                     Input_Manager.bGotoNextPos = False
 
-                Input_Manager.fTimeOfLastInput = currentTime
-
-            elif Input_Manager.iInputsToBeReleased != 0:
-                #Without this, the combo system's inputs that haven't been released yet won't get their OnReleased function executed.
-                return
-
-            else:
-                #We'll have to reset our past inputs because the key being pressed isn't related to them.
-                del Input_Manager.qPastInputs[:]
-                #This also means that these variables should be reset as well.
-                Input_Manager.iInputsToBeReleased = 0
-                Input_Manager.bGotoNextPos = False
-
-                #This could be the start of a new combo!
-                Input_Manager.qPastInputs.append([iKeyCode])
+                    #This could be the start of a new combo!
+                    Input_Manager.qPastInputs.append([iKeyCode])
 
 
-            #This is suppose to end up looking like "/101.41.78./56./45.78."
-            #Each "/" means that the following keys were all pressed at the same time (all keys that get pressed, until all of those keys are released, are grouped together.)
-            #The "." separate the different keyIDs that exist in each group.
-            sInputKey = ""
-
-            for keyList in Input_Manager.qPastInputs:
-                sInputKey.append("/")
-                for iKeyID in keyList:
-                    sInputKey.append(str(iKeyID)+".")
-
-            #This checks our queue of inputs to see if it matches any of the ones in our dictionary.
-            tKeyData = Input_Manager.dKeyListeners.get(sInputKeys,None)
-            if tKeyData != None:
-                if tKeyData[0] == "action":
-                    #tKeyData[1] is in this format [[0,1,2],[0,1,2],...]
-                    #Each item of the overall list represents a single entity
-                    Input_Manager.lActiveActions.append(tKeyData[1])
-
-                elif tKeyData[0] == "state":
-                    Input_Manager.lActiveStates.append((sInputKeys, tKeyData[1]))
-                
-        else:
-            #A key was released!
-            
-            #Check to see if its time to change the position
-            if len(Input_Manager.qPastInputs[-1]) == 1 or Input_Manager.iInputsToBeReleased == 1:
-                #Signal to append to a new position when a new key is pressed, because the previous inputs have been released!
-                Input_Manager.bGotoNextPos = True
-
+                #This is suppose to end up looking like "/101.41.78./56./45.78."
+                #Each "/" means that the following keys were all pressed at the same time (all keys that get pressed, until all of those keys are released, are grouped together.)
+                #The "." separate the different keyIDs that exist in each group.
                 sInputKey = ""
 
                 for keyList in Input_Manager.qPastInputs:
                     sInputKey.append("/")
                     for iKeyID in keyList:
                         sInputKey.append(str(iKeyID)+".")
-            
-                #We only want to signal the release function to be called when all of the keys are released from the last element.
-                tKeyData = Input_Manager.dKeyListeners.get(sInputKey,None)
+
+                #This checks our queue of inputs to see if it matches any of the ones in our dictionary.
+                tKeyData = Input_Manager.dKeyListeners.get(sInputKeys,None)
                 if tKeyData != None:
-                    if tKeyData[2][0] != None:
-                        #All released inputs will be treated the same (because any input is only released once.)
-                        #But if the input in question doesn't have data pertaining to what to do when the key is released,
-                        #then there's no reason to add it to this list.
-                        Input_Manager.lActiveActions.append(tKeyData[2])
+                    if tKeyData[0] == "action":
+                        #tKeyData[1] is in this format [[0,1,2],[0,1,2],...]
+                        #Each item of the overall list represents a single entity
+                        Input_Manager.lActiveActions.append(tKeyData[1])
 
-                    #The first element of tKeyData is the InputType (action "a", state "s".)
-                    if tKeyData[0] == "state":
-                        #Take that keyCode out of the list of Active State inputs.
-                        for i in xrange(len(Input_Manager.lActiveStates)):
-                            if Input_Manager.lActiveStates[i][0] == sInputKey:
-                                del Input_Manager.lActiveStates[i]
-
+                    elif tKeyData[0] == "state":
+                        Input_Manager.lActiveStates.append((sInputKeys, tKeyData[1]))
+                    
             else:
-                #Check to see if this is the first to be released (with more to be expected.)
-                if Input_Manager.iInputsToBeReleased == 0:
-                    #update that variable with the number of inputs that are needed to be released before we continure to the next position (minus one, because one input was released.)
-                    Input_Manager.iInputsToBeReleased = len(Input_Manager.qPastInputs[-1])-1
+                #A key was released!
+                
+                #Check to see if its time to change the position
+                if (len(Input_Manager.qPastInputs) != 0 and len(Input_Manager.qPastInputs[-1]) == 1)    \
+                   or Input_Manager.iInputsToBeReleased == 1:
+                    #Signal to append to a new position when a new key is pressed, because the previous inputs have been released!
+                    Input_Manager.bGotoNextPos = True
+
+                    sInputKey = ""
+
+                    for keyList in Input_Manager.qPastInputs:
+                        sInputKey.append("/")
+                        for iKeyID in keyList:
+                            sInputKey.append(str(iKeyID)+".")
+                
+                    #We only want to signal the release function to be called when all of the keys are released from the last element.
+                    tKeyData = Input_Manager.dKeyListeners.get(sInputKey,None)
+                    if tKeyData != None:
+                        if tKeyData[2][0] != None:
+                            #All released inputs will be treated the same (because any input is only released once.)
+                            #But if the input in question doesn't have data pertaining to what to do when the key is released,
+                            #then there's no reason to add it to this list.
+                            Input_Manager.lActiveActions.append(tKeyData[2])
+
+                        #The first element of tKeyData is the InputType (action "a", state "s".)
+                        if tKeyData[0] == "state":
+                            #Take that keyCode out of the list of Active State inputs.
+                            for i in xrange(len(Input_Manager.lActiveStates)):
+                                if Input_Manager.lActiveStates[i][0] == sInputKey:
+                                    del Input_Manager.lActiveStates[i]
 
                 else:
-                    Input_Manager.iInputsToBeReleased -= 1
+                    #Check to see if this is the first to be released (with more to be expected.)
+                    if Input_Manager.iInputsToBeReleased == 0:
+                        #update that variable with the number of inputs that are needed to be released before we continure to the next position (minus one, because one input was released.)
+                        Input_Manager.iInputsToBeReleased = len(Input_Manager.qPastInputs[-1])-1
+
+                    else:
+                        Input_Manager.iInputsToBeReleased -= 1
 
     @staticmethod
     def _Mouse_Input(iKeyCode, bPressed):

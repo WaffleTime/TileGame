@@ -3,6 +3,7 @@ import shutil
 import sfml as sf
 import xml.etree.ElementTree as ET
 import config
+import components
 import entities
 
 #####################################################################
@@ -637,9 +638,20 @@ def Update(dEntities):
     Update_Load_List({"LoadList":dEntities["ChunkMan"]._Get_Component("LIST:LoadList"),
                                       "ChunkDataDir":dEntities["ChunkMan"]._Get_Component("MISC:ChunkDataDir")})
 
-    Update_Rebuild_List({"RebuildList":dEntities["ChunkMan"]._Get_Component("LIST:RebuildList"),    \
-                        "FlagList":dEntities["ChunkMan"]._Get_Component("LIST:FlagList"),           \
-                        "VisibilityUpdate":dEntities["ChunkMan"]._Get_Component("FLAG:VisibilityUpdate")})
+    #This checks to see if the ChunkManager doesn't belong to a EntityManager. If it does belong to
+    #   an EntityManager, then we'll need to add the tiles to the Collision space of the ENtityManager.
+    if dEntities.get("EntityMan",None) == None:
+        
+        Update_Rebuild_List({"RebuildList":dEntities["ChunkMan"]._Get_Component("LIST:RebuildList"),    \
+                            "FlagList":dEntities["ChunkMan"]._Get_Component("LIST:FlagList"),           \
+                            "VisibilityUpdate":dEntities["ChunkMan"]._Get_Component("FLAG:VisibilityUpdate")})
+
+    else:
+
+        Update_Rebuild_List({"RebuildList":dEntities["ChunkMan"]._Get_Component("LIST:RebuildList"),    \
+                            "FlagList":dEntities["ChunkMan"]._Get_Component("LIST:FlagList"),           \
+                            "VisibilityUpdate":dEntities["ChunkMan"]._Get_Component("FLAG:VisibilityUpdate"),   \
+                             "CollisionSpace":dEntities["EntityMan"]._Get_Component("CSPACE:EntityPool")})
 
     Update_Unload_List({"UnloadList":dEntities["ChunkMan"]._Get_Component("LIST:UnloadList"),     \
                        "ChunkDict":dEntities["ChunkMan"]._Get_Component("DICT:ChunkDict")})
@@ -694,7 +706,15 @@ def Update_Rebuild_List(dEntities):
             #This limits our chunk rebuilds to 4
             if iNumberOfChunksRebuilt != 5:
                 #print "Building a mesh..."
-                Build_Meshes({"chunk":dEntities["RebuildList"][iChunk]})
+
+                if dEntities.get("CollisionSpace",None) == None:
+
+                    Build_Meshes({"chunk":dEntities["RebuildList"][iChunk]})
+
+                else:
+
+                    Build_Collidable_Meshes({"chunk":dEntities["RebuildList"][iChunk],  \
+                                             "CollisionSpace":dEntities["CollisionSpace"]})
 
                 iNumberOfChunksRebuilt += 1
 
@@ -906,7 +926,6 @@ def Build_Meshes(dEntities):
                                                                                    sf.Vertex( (tileXPos, tileYPos+config.TILE_SIZE), sf.Color.WHITE, (textXPos, textYPos+config.TILE_SIZE) ),    \
                                                                                    sf.Vertex( (tileXPos+config.TILE_SIZE, tileYPos+config.TILE_SIZE), sf.Color.WHITE, (textXPos+config.TILE_SIZE, textYPos+config.TILE_SIZE) ),  \
                                                                                    sf.Vertex( (tileXPos+config.TILE_SIZE, tileYPos), sf.Color.WHITE, (textXPos+config.TILE_SIZE, textYPos) ) ] )
-
                     #print "ActiveTile!", tileXPos, tileYPos
                     #If this tile isn't partially see-through, then all tiles behind it are occluded and we don't need to add them to their meshes.
                     if dEntities["chunk"]._Get_Component("LIST:Tiles")[j][i][k]._Get_Is_Transparent() != True:
@@ -916,7 +935,76 @@ def Build_Meshes(dEntities):
 
 
 
+def Build_Collidable_Meshes(dEntities):
+    """We create a mesh here using a VertexArray for a chunk that's on the screen. This only is meant to be for chunk's in relation to their position on the screen.
+    Chunks off the screen don't need to have their meshes updated for no reason, but they can still have their data loaded before getting onto the screen."""
+    #Makes sure that we have an empty vertex array to add to
 
+    dEntities["chunk"]._Get_Component("MESH:0")._Clear_Meshes()
+
+    #Here we'll iterate through each shape and remove it from the Pymunk space.
+    for cShape in dEntities["chunk"]._Get_All_Components("CSHAPE"):
+
+        dEntities["CollisionSpace"]._Remove_Shape(cShape._Get_Body(), cShape._Get_Shape())
+
+    #Here we must reset all of the collision shapes within this entitiy
+    #   (because they're being moved to a different spot.)
+    dEntities["chunk"]._Remove_All_Components("CSHAPE")
+
+    windowPos = dEntities["chunk"]._Get_Component("POS:WindowPos")._Get_Position()
+
+    windowPos[0] = int(windowPos[0])
+    windowPos[1] = int(windowPos[1])
+
+    #print windowPos
+    
+    #Handles the building of the tiles within the chunk
+    for j in xrange(config.VIEW_TILE_HEIGHT):
+        for i in xrange(config.VIEW_TILE_WIDTH):
+            #This assumes that depth 0 is the very front of the screen.
+            for k in xrange(config.CHUNK_LAYERS):
+
+                if dEntities["chunk"]._Get_Component("LIST:Tiles")[j][i][k]._Get_Is_Active():
+
+                    #Calculates the position inside of our window where the tile will be placed
+                    tileXPos = i*config.TILE_SIZE + windowPos[0]*config.CHUNK_TILES_WIDE*config.TILE_SIZE
+                    tileYPos = j*config.TILE_SIZE + windowPos[1]*config.CHUNK_TILES_HIGH*config.TILE_SIZE
+
+                    #Determine the coordinates of the tileType for our tile atlas (TILE_ATLAS_SIZE^2 possible tileTypes) (not working with pixel coords yet)
+                    textXPos = (dEntities["chunk"]._Get_Component("LIST:Tiles")[j][i][k]._Get_TileID()-1) % config.TILE_ATLAS_SIZE
+                    textYPos = (dEntities["chunk"]._Get_Component("LIST:Tiles")[j][i][k]._Get_TileID()-1-textXPos) / config.TILE_ATLAS_SIZE
+
+                    #Normalize the texture positions!
+                    textXPos *= config.TILE_SIZE
+                    textYPos *= config.TILE_SIZE
+
+                    dEntities["chunk"]._Get_Component("MESH:0")._Add_To_Mesh( k, [ sf.Vertex( (tileXPos, tileYPos), sf.Color.WHITE, (textXPos, textYPos) ),  \
+                                                                                   sf.Vertex( (tileXPos, tileYPos+config.TILE_SIZE), sf.Color.WHITE, (textXPos, textYPos+config.TILE_SIZE) ),    \
+                                                                                   sf.Vertex( (tileXPos+config.TILE_SIZE, tileYPos+config.TILE_SIZE), sf.Color.WHITE, (textXPos+config.TILE_SIZE, textYPos+config.TILE_SIZE) ),  \
+                                                                                   sf.Vertex( (tileXPos+config.TILE_SIZE, tileYPos), sf.Color.WHITE, (textXPos+config.TILE_SIZE, textYPos) ) ] )
+
+                    #Currently only the tiles of a specific layer are put into the collision space.
+                    if k == 1:
+
+                        cBoxComponent = components.Collision_Box({"componentID":"%d,%d,%d"%(j,i,k),                   \
+                                                                    "dependentComponentName":"TILE:%d,%d,%d"%(j,i,k),   \
+                                                                    "collisionType":"static",                                   \
+                                                                    "staticBody":dEntities["CollisionSpace"]._Get_Static_Body(),     \
+                                                                    "xOffset":tileXPos,                                              \
+                                                                    "yOffset":tileYPos,                                              \
+                                                                    "width":config.TILE_SIZE,                                   \
+                                                                    "height":config.TILE_SIZE})
+
+                        dEntities["CollisionSpace"]._Add_Shape(cBoxComponent._Get_Body(), cBoxComponent._Get_Shape())
+
+
+                        dEntities["chunk"]._Add_Component(cBoxComponent)
+                    
+                    #print "ActiveTile!", tileXPos, tileYPo
+                    #If this tile isn't partially see-through, then all tiles behind it are occluded and we don't need to add them to their meshes.
+                    if dEntities["chunk"]._Get_Component("LIST:Tiles")[j][i][k]._Get_Is_Transparent() != True:
+                        #This is confirmed to correctly break out of ONLY the CHUNK_LAYERS loop and still allow the other loops to continue.
+                        break
 
 
 
