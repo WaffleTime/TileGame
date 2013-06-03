@@ -1,3 +1,4 @@
+import sfml as sf
 import config
 
 def Check_Collision(targetX, targetY, targetWidth, targetHeight, x, y, width=0, height=0):
@@ -45,7 +46,8 @@ class TreeNode(object):
     def _Add_Item(self, item):
         """This expects to take in a tuple of data and will basically just insert it into the spot in the quad tree that it belongs in."""
         #Check to see if this node has any data that may be stored within it (if not, the data is within a subnode.)
-        if self._subnodes[0][0] != None:
+        if self._subnodes[0][0] != None or self._subnodes[1][0] != None     \
+           or self._subnodes[0][1] != None or self._subnodes[1][1] != None:
             for yIndx in xrange(2):
                 for xIndx in xrange(2):
                     #This checks collision between the item and the current square within this node.
@@ -72,10 +74,10 @@ class TreeNode(object):
     
             self._items.append(item)
 
-            #print self._items, "This is in the elseeeeee"
+            #print "Here are some items within the QuadTree: ", self._items
 
             #Has this node become full?
-            if len(self._items) >= 3:
+            if len(self._items) >= 5:
 
                 #Instantiate the subnodes
                 for yIndx in xrange(2):
@@ -141,7 +143,8 @@ class TreeNode(object):
         This makes use of recursion (the subnodes make this possible.) (The same method gets called, but by different instances.)"""
 
         #If one of the subnodes is/isn't None, then they all are like that.
-        if self._subnodes[0][0] != None:
+        if self._subnodes[0][0] != None and self._subnodes[1][0] != None     \
+           and self._subnodes[0][1] != None and self._subnodes[1][1] != None:
 
             #Iterate through all of the subnode groups, because it's easier to group them up based off the the x and y planes.
             for subnodeGroup in self._subnodes:
@@ -193,7 +196,6 @@ class Input_Manager(object):
     iInputsToBeReleased = 0
     #Referring to the position within qPastInputs
     bGotoNextPos = False
-    fTimeOfLastInput = 0.0
 
     #This will be handled by the _Mouse_Move() method and it will essentially hold the hotspots that are currently colliding with the mouse.
     #We only want to push the systems into the lActiveActions list once, but we then have to know if we have already done that.
@@ -307,24 +309,25 @@ class Input_Manager(object):
         pass
 
     @staticmethod
-    def _Key_Input(iKeyCode, bPressed, currentTime):
+    def _Key_Input(iKeyCode, bPressed = False, timeElapsed = None):
         """This is for taking in data on the key that has been pressed (based off of sfml's enumeration of keys.) Its power is limited, but this will allow
         the game to have combos and simultaneous key presses. The only problem I see is that it won't allow a key to be pressed throughout the duration of the combo.
-        And the subcombos that are a subset of a larger combo will be activated along with the larger combo (this could be an awesome feature, but also limiting.)"""
+        And the subcombos that are a subset of a larger combo will be activated along with the larger combo (this could be an awesome feature, but also limiting.)
+        @param timeElapsed This should be an SFML Timer object and it represents the time since the last key was pressed."""
 
         #This will prevent unknown keys from doing things to the game.
-        if iKeyCode != -1 and iKeyCode != 93:
+        if iKeyCode != -1:
 
-            print "This %d keycode has been pressed"%(iKeyCode), bPressed
+            print "This %d keycode has been pressed"%(int(iKeyCode)), bPressed
 
             if bPressed == True:
                 #Check to see if this input was pressed within a duration of the last input.
-                if Input_Manager.fTimeOfLastInput + 0.25 > currentTime:
+                if sf.Time(1) > timeElapsed:
                     #Check to see if the previous inputs haven't all been released yet.
                     if Input_Manager.bGotoNextPos == False:
                         #We'll just keep adding to the list of simultaneous key presses until all of these keys are released!
                         #We only ever add to the end of this list, so there's no point in using a variable.
-                        Input_Manager.qPastInpus[-1].append(iKeyCode)
+                        Input_Manager.qPastInputs[-1].append(iKeyCode)
 
                     else:
                         #The last button has been released, so we append to the end!
@@ -332,8 +335,6 @@ class Input_Manager(object):
                         
                         #Gotta reset this, because it will be set to True again when iKeyCode is released.
                         Input_Manager.bGotoNextPos = False
-
-                    Input_Manager.fTimeOfLastInput = currentTime
 
                 elif Input_Manager.iInputsToBeReleased != 0:
                     #Without this, the combo system's inputs that haven't been released yet won't get their OnReleased function executed.
@@ -356,12 +357,14 @@ class Input_Manager(object):
                 sInputKey = ""
 
                 for keyList in Input_Manager.qPastInputs:
-                    sInputKey.append("/")
+                    sInputKey += "/"
                     for iKeyID in keyList:
-                        sInputKey.append(str(iKeyID)+".")
+                        sInputKey += str(iKeyID)+"."
+
+                print "sInputKey", sInputKey
 
                 #This checks our queue of inputs to see if it matches any of the ones in our dictionary.
-                tKeyData = Input_Manager.dKeyListeners.get(sInputKeys,None)
+                tKeyData = Input_Manager.dKeyListeners.get(sInputKey,None)
                 if tKeyData != None:
                     if tKeyData[0] == "action":
                         #tKeyData[1] is in this format [[0,1,2],[0,1,2],...]
@@ -383,9 +386,9 @@ class Input_Manager(object):
                     sInputKey = ""
 
                     for keyList in Input_Manager.qPastInputs:
-                        sInputKey.append("/")
+                        sInputKey += "/"
                         for iKeyID in keyList:
-                            sInputKey.append(str(iKeyID)+".")
+                            sInputKey += str(iKeyID)+"."
                 
                     #We only want to signal the release function to be called when all of the keys are released from the last element.
                     tKeyData = Input_Manager.dKeyListeners.get(sInputKey,None)
@@ -422,6 +425,8 @@ class Input_Manager(object):
             #sf.Mouse.LEFT = 0
             if iKeyCode == 0 and len(Input_Manager.lSelectedHotspots) != 0:
                 for indx in xrange(len(Input_Manager.lSelectedHotspots)-1,-1,-1):
+
+                    #print "This is the selectedHotspots when a hotspot was pressed:", Input_Manager.lSelectedHotspots
                     if Input_Manager.lSelectedHotspots[indx][7][0] != None:
                         Input_Manager.lActiveActions.append(Input_Manager.lSelectedHotspots[indx][7])
 

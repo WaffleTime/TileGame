@@ -5,14 +5,27 @@
 		<Intro>
 			<viewWidth>1024</viewWidth>
 			<viewHeight>768</viewHeight>
+			<Entity name='Title' type='TextBox'>
+				<assembleFunc>Assemble_Text_Box</assembleFunc>
+				<drawPriority>1</drawPriority>
+				<Attributes>
+					<x>325</x>
+					<y>100</y>
+					<width>300</width>
+					<height>50</height>
+					<text>Welcome to the Intro!</text>
+					<Font name='Asman'>ASMAN.ttf</Font>
+				</Attributes>
+			</Entity>
 			<Entity name='Predefined1' type='Button'>
 				<assembleFunc>Assemble_Button</assembleFunc>
+				<drawPriority>1</drawPriority>
 				<Attributes>
-					<x>350</x>
-					<y>380</y>
+					<x>400</x>
+					<y>300</y>
 					<width>150</width>
 					<height>50</height>
-					<text>Start Game</text>
+					<text>Main Menu</text>
 					<Font name='Asman'>ASMAN.ttf</Font>
 				</Attributes>
 				<Component name='State'>
@@ -23,20 +36,11 @@
 			<Entity name='Custom1' type='KeyPress'>
 				<Component name='State'>
 					<componentID>0</componentID>
-					<state>Game,TestLevel</state>
+					<state>Menu,MapEdi</state>
 				</Component>
 			</Entity>
 			<Input type='key'>
-				<key>/24.</key>
-				<OnPressed>
-					<type>action/state</type>
-					<system>Function_Name</system>
-					<entity>
-						<entityType>KeyPress</entityType>
-						<entitytName>Custom1</entitytName>
-						<componentName>state</componentName>
-					</entity>
-				</OnPressed>
+				<key>/24.25.</key>
 				<OnReleased>
 					<system>Change_State</system>
 					<entity>
@@ -47,35 +51,26 @@
 				</OnReleased>
 			</Input>
 			<Input type='hotspot'>
-				<x>350</x>
-				<y>380</y>
+				<x>400</x>
+				<y>300</y>
 				<width>150</width>
 				<height>50</height>
 				<OnSelected>
-					<system>Function_Name</system>
+					<system>Oscillate_Box_Colors</system>
 					<entity>
 						<entityType>Button</entityType>
 						<entitytName>Predefined1</entitytName>
-						<componentName>state</componentName>
+						<componentName>box</componentName>
 					</entity>
 				</OnSelected>
 				<OnDeselected>
-					<system>Function_Name</system>
+					<system>Oscillate_Box_Colors</system>
 					<entity>
 						<entityType>Button</entityType>
 						<entitytName>Predefined1</entitytName>
-						<componentName>state</componentName>
+						<componentName>box</componentName>
 					</entity>
 				</OnDeselected>
-				<OnPressed>
-					<type>action/state</type>
-					<system>Function_Name</system>
-					<entity>
-						<entityType>Button</entityType>
-						<entitytName>Predefined1</entitytName>
-						<componentName>state</componentName>
-					</entity>
-				</OnPressed>
 				<OnReleased>
 					<system>Change_State</system>
 					<entity>
@@ -203,6 +198,22 @@
 				<Component name='State'>
 					<componentID>0</componentID>
 					<state>QUIT,QUIT</state>
+				</Component>
+			</Entity>
+			<Entity name='MapEdi' type='Button'>
+				<assembleFunc>Assemble_Button</assembleFunc>
+				<drawPriority>1</drawPriority>
+				<Attributes>
+					<x>150</x>
+					<y>400</y>
+					<width>150</width>
+					<height>50</height>
+					<text>MapEdi!</text>
+					<Font name='Asman'>ASMAN.ttf</Font>
+				</Attributes>
+				<Component name='State'>
+					<componentID>0</componentID>
+					<state>Menu,MapEdi</state>
 				</Component>
 			</Entity>
 			<Input type='hotspot'>
@@ -355,6 +366,36 @@
 					</entity>
 				</OnReleased>
 			</Input>
+			<Input type='hotspot'>
+				<x>150</x>
+				<y>400</y>
+				<width>150</width>
+				<height>50</height>
+				<OnSelected>
+					<system>Oscillate_Box_Colors</system>
+					<entity>
+						<entityType>Button</entityType>
+						<entitytName>MapEdi</entitytName>
+						<componentName>box</componentName>
+					</entity>
+				</OnSelected>
+				<OnDeselected>
+					<system>Oscillate_Box_Colors</system>
+					<entity>
+						<entityType>Button</entityType>
+						<entitytName>MapEdi</entitytName>
+						<componentName>box</componentName>
+					</entity>
+				</OnDeselected>
+				<OnReleased>
+					<system>Change_State</system>
+					<entity>
+						<entityType>Button</entityType>
+						<entitytName>MapEdi</entitytName>
+						<componentName>state</componentName>
+					</entity>
+				</OnReleased>
+			</Input>
 		</MainMenu>
 
 		<Options>
@@ -501,6 +542,49 @@
 				</OnReleased>
 			</Input>
 		</Instructions>
+		
+		<MapEdi>
+			<viewWidth>1024</viewWidth>
+			<viewHeight>768</viewHeight>
+			<Entity name='MenuDecor' type='View'>
+				<assembleFunc>Assemble_Chunk_Manager</assembleFunc>
+				<drawPriority>1</drawPriority>
+				<Attributes>
+					<ChunkDataDir>\Resources\ChunkData\MainMenu\</ChunkDataDir>
+					<WorldPos>0,0</WorldPos>
+					<ChunksInWind>2,2</ChunksInWind>
+					<RenderState name='TileAtlas0'>itemAtlas.png</RenderState>
+					<RenderState name='TileAtlas1'>groundAtlas.png</RenderState>
+					<RenderState name='TileAtlas2'>backgroundAtlas.png</RenderState>
+				</Attributes>
+			</Entity>
+			<System>
+				<type>state</type>
+				<systemFunc>Update</systemFunc>
+				<entity>
+					<entityType>View</entityType>
+					<entitytName>MenuDecor</entitytName>
+					<componentName>ChunkMan</componentName>
+				</entity>
+			</System>
+			<Entity name='Menu' type='State'>
+				<Component name='State'>
+					<componentID>0</componentID>
+					<state>Menu,MainMenu</state>
+				</Component>
+			</Entity>
+			<Input type='key'>
+				<key>/36.</key>
+				<OnReleased>
+					<system>Change_State</system>
+					<entity>
+						<entityType>State</entityType>
+						<entitytName>Menu</entitytName>
+						<componentName>state</componentName>
+					</entity>
+				</OnReleased>
+			</Input>
+		</MapEdi>
 
 	</Menu>
 

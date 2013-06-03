@@ -299,7 +299,7 @@ def GetEntityBlueprints(entityRoot):
 
     else:
         #Here we will add in a default entity instance.
-        entity = entities.Entity(entityRoot.attrib['name'], entityRoot.attrib['type'],{})
+        entity = entities.Entity(entityRoot.attrib['name'], entityRoot.attrib['type'], iEntityDrawPriority,{})
 
     #THis adds in the components that exist in the xml file for this entity (it allows custom/variations of entities to exist.)
     for component in entityRoot.findall('Component'):
@@ -426,7 +426,7 @@ def main():
     
     #These variables will track our position within the game.
     lCurrentState = ["NULL","NULL"]
-    lNextState = ["Menu","MainMenu"]
+    lNextState = ["Menu","Intro"]
 
     #This will be updated when we change to a state.
     EntityManager = Entity_Manager()
@@ -441,6 +441,8 @@ def main():
     MAX_FRAMESKIP = 9
 
     timer = sf.Clock()
+
+    lastKeyPress = sf.Clock()
 
     #This will be False if the player clicks outside of the program's window and "pause" the program
     windowIsActive = True
@@ -469,14 +471,23 @@ def main():
             if event.type == sf.Event.MOUSE_MOVED:
                 Input_Manager._Mouse_Has_Moved(window.convert_coords(event.x,event.y))
 
-            elif event.type == sf.Event.TEXT_ENTERED:
-                Input_Manager._Key_Input(event.unicode, True, timer.elapsed_time)
+            #elif event.type == sf.Event.TEXT_ENTERED:
+                #Input_Manager._Key_Input(event.unicode, True, lastKeyPress.elapsed_time)
+
+                #This restarts the Timer for the lastKeyPress since a new key just
+                #   got pressed.
+                #lastKeyPress.restart()
             
             elif event.type == sf.Event.KEY_PRESSED:
-                Input_Manager._Key_Input(event.code, True, timer.elapsed_time)
+                Input_Manager._Key_Input(event.code, True, lastKeyPress.elapsed_time)
+
+                #This restarts the Timer for the lastKeyPress since a new key just
+                #   got pressed.
+                lastKeyPress.restart()
                 
             elif event.type == sf.Event.KEY_RELEASED:
-                Input_Manager._Key_Input(event.code, False, timer.elapsed_time)
+                #The time elapsed isn't necessary for the released key.
+                Input_Manager._Key_Input(event.code)
             
             elif event.type == sf.Event.MOUSE_BUTTON_PRESSED:
                 Input_Manager._Mouse_Input(event.button, True)
