@@ -322,7 +322,7 @@ class Input_Manager(object):
 
             if bPressed == True:
                 #Check to see if this input was pressed within a duration of the last input.
-                if sf.Time(1) > timeElapsed:
+                if sf.Time(0.5) > timeElapsed:
                     #Check to see if the previous inputs haven't all been released yet.
                     if Input_Manager.bGotoNextPos == False:
                         #We'll just keep adding to the list of simultaneous key presses until all of these keys are released!
@@ -336,9 +336,9 @@ class Input_Manager(object):
                         #Gotta reset this, because it will be set to True again when iKeyCode is released.
                         Input_Manager.bGotoNextPos = False
 
-                elif Input_Manager.iInputsToBeReleased != 0:
+                #elif Input_Manager.iInputsToBeReleased != 0:
                     #Without this, the combo system's inputs that haven't been released yet won't get their OnReleased function executed.
-                    return
+                    #return
 
                 else:
                     #We'll have to reset our past inputs because the key being pressed isn't related to them.

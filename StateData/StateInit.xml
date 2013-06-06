@@ -592,9 +592,9 @@
 		<NewGame>
 			<viewWidth>1024</viewWidth>
 			<viewHeight>768</viewHeight>
-			<Entity name='MapCrawler' type='View'>
+			<Entity name='MapCrawler' type='WorldGen'>
 				<assembleFunc>Assemble_Chunk_Manager</assembleFunc>
-				<drawPriority>1</drawPriority>
+				<drawPriority>-1</drawPriority>
 				<Attributes>
 					<ChunkDataDir>SavedGame</ChunkDataDir>
 					<WorldPos>0,0</WorldPos>
@@ -604,11 +604,34 @@
 					<RenderState name='TileAtlas2'>backgroundAtlas.png</RenderState>
 				</Attributes>
 			</Entity>
+			<Entity name='Counter' type='WorldGen'>
+				<Component name='Misc'>
+					<componentID>spiralSideCount</componentID>
+					<storage>0</storage>
+				</Component>
+				<Component name='Misc'>
+					<componentID>moveCount</componentID>
+					<storage>0</storage>
+				</Component>
+				<Component name='Misc'>
+					<componentID>maxMoves</componentID>
+					<storage>21</storage>
+				</Component>
+			</Entity>
 			<System>
-				<type>state</type>
+				<type>action</type>
 				<systemFunc>New_Save</systemFunc>
 				<entity>
-					<entityType>View</entityType>
+					<entityType>WorldGen</entityType>
+					<entitytName>MapCrawler</entitytName>
+					<componentName>ChunkMan</componentName>
+				</entity>
+			</System>
+			<System>
+				<type>state</type>
+				<systemFunc>Update</systemFunc>
+				<entity>
+					<entityType>WorldGen</entityType>
 					<entitytName>MapCrawler</entitytName>
 					<componentName>ChunkMan</componentName>
 				</entity>
@@ -617,9 +640,14 @@
 				<type>state</type>
 				<systemFunc>Generate_World_Data</systemFunc>
 				<entity>
-					<entityType>View</entityType>
+					<entityType>WorldGen</entityType>
 					<entitytName>MapCrawler</entitytName>
 					<componentName>ChunkMan</componentName>
+				</entity>
+				<entity>
+					<entityType>WorldGen</entityType>
+					<entitytName>Counter</entitytName>
+					<componentName>MoveCounter</componentName>
 				</entity>
 			</System>
 		</NewGame>
@@ -630,7 +658,7 @@
 				<assembleFunc>Entity_PQueue</assembleFunc>
 				<drawPriority>3</drawPriority>
 				<Attributes>
-					<gravity>0,-64.0</gravity>
+					<gravity>0,-100.0</gravity>
 					<entity name='Player' type='Human'>
 						<assembleFunc>Assemble_Player</assembleFunc>
 						<drawPriority>7</drawPriority>

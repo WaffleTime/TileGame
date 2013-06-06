@@ -150,7 +150,11 @@ class Entity_Manager(object):
         #Before updating any of the entities, we need to call all of the active system functions (providing the associated entities as arguments.)
 
         for (sSystemFuncName, lEntities) in System_Manager._Get_Active_Systems():
-            self._Call_System_Func(sSystemFuncName, lEntities)
+            sNextState = self._Call_System_Func(sSystemFuncName, lEntities)
+
+            if sNextState != "NULL,NULL":
+
+                return sNextState.split(',')
             
 
         #This block iterates through all of the entities in our dictionary of dictionaries and signals each to update itself.
@@ -164,6 +168,8 @@ class Entity_Manager(object):
                     self._Remove_Entity(entity._Get_Type(), entity._Get_Name())
 
                 entity._Update(timeElapsed)
+
+        return ["NULL","NULL"]
 
 
     def _Render_Update(self, pWindow, pWindowView):
@@ -426,7 +432,7 @@ def main():
     
     #These variables will track our position within the game.
     lCurrentState = ["NULL","NULL"]
-    lNextState = ["Menu","Intro"]
+    lNextState = ["Game","NewGame"]
 
     #This will be updated when we change to a state.
     EntityManager = Entity_Manager()
@@ -533,7 +539,15 @@ def main():
 
                     #Notice that DT is a constant variable that represents how much time is going by during
                     #   this update.
-                    EntityManager._Logic_Update(DT)
+                    lNextState = EntityManager._Logic_Update(DT)
+
+                    #Check to see if we have signaled to quit the game thus far
+                    if lNextState[0] == "QUIT":
+                        bQuit = True
+
+                    #If one of the lNextState elements is changed, they all are (just how it goes.)
+                    if lNextState[0] != "NULL" and lNextState[0] != "QUIT":
+                        ChangeState(lCurrentState, lNextState, window, windowView, EntityManager)
 
 
             #If we have received a quit signal, we should stop our loop and quit the game!

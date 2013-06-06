@@ -1,5 +1,7 @@
 import os
+import random
 import shutil
+from math import ceil
 import sfml as sf
 import xml.etree.ElementTree as ET
 import config
@@ -41,11 +43,13 @@ class System_Manager(object):
         """This will be for removing the systems that stay active until told otherwise (this is where we say otherwise.)
         Since the Actions systems will be removed once they are executed, they don't really play an importance here."""
 
-        for indx in xrange(len(System_Manager.lActionSystems)-1,-1,-1):
-            if System_Manager.lActionSystems[indx][0] == sSystemFuncName:
-                System_Manager.lActionSystems.pop(indx)
-                break
-        for indx in xrange(len(System_Manager.lStateSystems)-1,-1,-1):
+        #I'm not sure why this was here.
+        #for indx in xrange(len(System_Manager.lActionSystems)):
+        #    if System_Manager.lActionSystems[indx][0] == sSystemFuncName:
+        #        System_Manager.lActionSystems.pop(indx)
+        #        break
+        
+        for indx in xrange(len(System_Manager.lStateSystems)):
            if System_Manager.lStateSystems[indx][0] == sSystemFuncName:
                 System_Manager.lStateSystems.pop(indx)
                 break
@@ -99,10 +103,14 @@ def New_Save(dEntities):
     fetch the entity xml data for the beginning level."""
 
     previousDirectory = os.getcwd()
+
+    os.chdir(os.getcwd() + "\\SavedGames\\")
     
     lyst = os.listdir(os.getcwd())
 
     counter = 0
+
+    #print lyst
     
     #Iterate through the lyst counting the saved games.
     for i in lyst:
@@ -110,15 +118,16 @@ def New_Save(dEntities):
         #   is a Saved Game dir.
         if (i[0:4] == "Save"):
             counter += 1
+            #print counter, i[0:4]
 
     #This is so that the counter is one more than the total
     #   amount of saves.
     counter += 1
 
     #This is the new saved game's folder
-    os.mkdir(os.getcwd() + "\\SavedGames\\Save" + str(counter))
+    os.mkdir(os.getcwd() +"\\Save" + str(counter))
 
-    os.chdir(os.getcwd() + "\\SavedGames\\Save" + str(counter))
+    os.chdir(os.getcwd() + "\\Save" + str(counter))
 
     #Returns an ELement object that can be modified and
     #   and saved as an xml file. This will be the player's
@@ -132,62 +141,67 @@ def New_Save(dEntities):
     playerStats.find("Class").text = "Hero"
 
     playerStats.append(ET.Element("CurHp"))
-    playerStats.find("CurHp").text = 20
+    playerStats.find("CurHp").text = "20"
     playerStats.append(ET.Element("MaxHp"))
-    playerStats.find("MaxHp").text = 20
+    playerStats.find("MaxHp").text = "20"
     
     playerStats.append(ET.Element("CurMp"))
-    playerStats.find("CurMp").text = 20
+    playerStats.find("CurMp").text = "20"
     playerStats.append(ET.Element("MaxMp"))
-    playerStats.find("MaxMp").text = 20
+    playerStats.find("MaxMp").text = "20"
 
     playerStats.append(ET.Element("Strength"))
-    playerStats.find("Strength").text = 10
+    playerStats.find("Strength").text = "10"
     playerStats.append(ET.Element("Intelligence"))
-    playerStats.find("Intelligence").text = 10
+    playerStats.find("Intelligence").text = "10"
     playerStats.append(ET.Element("Dexterity"))
-    playerStats.find("Dexterity").text = 10
+    playerStats.find("Dexterity").text = "10"
     playerStats.append(ET.Element("Agility"))
-    playerStats.find("Agility").text = 10
+    playerStats.find("Agility").text = "10"
 
     #This should save the xml we just created
     #   into the new saved directory
     ET.ElementTree(playerStats).write("PlayerData.xml")
     
     #Select this new saved game.
-    config.Saved_Game_Directory = "\\SavedGames\\Save" + str(counter)
+    config.Saved_Game_Directory = "\\SavedGames\\Save" + str(counter) + "\\ChunkData\\"
 
     #This will change the directory back to what it was originally.
     os.chdir(previousDirectory)
 
+    os.mkdir("%s%s"%(os.getcwd(), config.Saved_Game_Directory))
+
+    shutil.copy2("%s\\Resources\\ChunkData\\NewSave\\0 0.txt"%os.getcwd(),
+                 "%s%s"%(os.getcwd(), config.Saved_Game_Directory))
+    
+    shutil.copy2("%s\\Resources\\ChunkData\\NewSave\\0 1.txt"%os.getcwd(),
+                 "%s%s"%(os.getcwd(), config.Saved_Game_Directory))
+
+    shutil.copy2("%s\\Resources\\ChunkData\\NewSave\\1 0.txt"%os.getcwd(),
+                 "%s%s"%(os.getcwd(), config.Saved_Game_Directory))
+
+    shutil.copy2("%s\\Resources\\ChunkData\\NewSave\\1 1.txt"%os.getcwd(),
+                 "%s%s"%(os.getcwd(), config.Saved_Game_Directory))
+
+    return "NULL,NULL"
+
 def Generate_World_Data(dEntities):
     """This will generate level data for the current saved game. And the ChunkData will be
-    saved inside the saved game's directory.
+    saved inside the saved game's directory. Note that this function is designed to only
+    generate chunk data for a limited amount of chunks (that way a loading screen
+    can be displayed as the chunks are generated, this is so the user doesn't
+    freak out when the program doesn't respond.)
 
     My Idea for generating the levels so far is:
 
     1. Copy four generic chunks into the \\ChunkData\\. It only needs a platform for the
-    player to spawn on.
+    player to spawn on (this is now done in New_Save().)
 
-    2. (optional) Copy in empty Chunks to stop the generationg of levels to get too crazy. The empty
+    1A. (optional) Copy in empty Chunks to stop the generationg of levels to get too crazy. The empty
     chunks should be exist Y chunks above the player and make a horizontal line X chunks in width.
 
     2. Generate Chunks around the first chunks that were copied in. There should be a separate system
     function that will take in chunks"""
-
-    os.mkdir("%s\\%s\\ChunkData"%(os.getcwd(), config.Saved_Game_Directory))
-
-    shutil.copy2("%s\\Resources\\ChunkData\\NewSave\\0 0.txt"%os.getcwd(),
-                 "%s\\%s\\ChunkData"%(os.getcwd(), config.Saved_Game_Directory))
-    
-    shutil.copy2("%s\\Resources\\ChunkData\\NewSave\\0 1.txt"%os.getcwd(),
-                 "%s\\%s\\ChunkData"%(os.getcwd(), config.Saved_Game_Directory))
-
-    shutil.copy2("%s\\Resources\\ChunkData\\NewSave\\1 0.txt"%os.getcwd(),
-                 "%s\\%s\\ChunkData"%(os.getcwd(), config.Saved_Game_Directory))
-
-    shutil.copy2("%s\\Resources\\ChunkData\\NewSave\\1 1.txt"%os.getcwd(),
-                 "%s\\%s\\ChunkData"%(os.getcwd(), config.Saved_Game_Directory))
 
 
     #Depending on the chunk that will be generated, there will be different chunks
@@ -201,220 +215,474 @@ def Generate_World_Data(dEntities):
     #   the chunk data for the chunk to be generated. But some of those chunks will turn out
     #   to be empty.
 
+
+    #This counts the sides of the spiral that have been generated.
+    iSpiralOffset = int(dEntities["MoveCounter"]._Get_Component("MISC:spiralSideCount")._Get_Storage())
+    iMoveOffset = int(dEntities["MoveCounter"]._Get_Component("MISC:moveCount")._Get_Storage())
+
     #Right, down, left, up
-    lOrderOfOffsetsX = [1, 0, -1, 0]
-    lOrderOfOffsetsY = [0, -1, 0, 1]
+    lOrderOfOffsetsX = [2, 0, -2, 0]
+    lOrderOfOffsetsY = [0, 2, 0, -2]
 
-    #This offset loops says how many tiles over the
-    #   Chunk Manager can go before it needs to change
-    #   directions.
-    #Since the spiral we do around the chunk that was copied in
-    #   is predictable. We're incrementing the offset by 2 each time.
-    #   But for each offset given, the ChunkManager must move twice.
-    for offset in xrange(2,100,2):
 
-        #These two moves will move the chunk manager over four new chunks.
+    print "The current spiral side offset is %d" % (iSpiralOffset)
+    print "The current move offset is %d" % (iMoveOffset)
+
+    if iSpiralOffset < int(dEntities["MoveCounter"]._Get_Component("MISC:maxMoves")._Get_Storage()):
+
+        #This checks to see if we still have to generate more chunks fo the
+        #   current side of the spiral.
+        if iMoveOffset < int(ceil((iSpiralOffset+1)/2.)):
+
+            #These two moves will move the chunk manager over four new chunks.
+            Move_Chunk_Position( {"ChunkMan":dEntities["ChunkMan"],
+                                  "xOffset":lOrderOfOffsetsX[iSpiralOffset%4],
+                                  "yOffset":lOrderOfOffsetsY[iSpiralOffset%4]} )
+
+            Update({"ChunkMan":dEntities["ChunkMan"]})
+            Update({"ChunkMan":dEntities["ChunkMan"]})
+
+            #This is just for cleaning up the below part.
+            lWorldPos = dEntities["ChunkMan"]._Get_Component("POS:WorldPos")._Get_Position()
+
+            print "World Position after offset is %d,%d"%(lWorldPos[0], lWorldPos[1])
+
+            dChunkDict = dEntities["ChunkMan"]._Get_Component("DICT:ChunkDict")
+
+            #Before iterating through the chunks on the screen, we must first
+            #   check to see which chunk we should start with (it matters because
+            #   of the Markov Chain generation, the chunk next to non-empty chunks should be
+            #   the one that is started with first.)
+
+            #Each element represents a position within the target chunk that
+            #   we'll start at.
+            #topLeft, topRight, bottomLeft, bottomRight
+            lVotes = [0, 0, 0, 0]
+
+            #These checks will resultingly vote for the area that we'll start
+            #   the generation in.
+
+            #Check to see if we should vote for the top left corner.
+            if (not dChunkDict["%d,%d"%(lWorldPos[0]-1, lWorldPos[1])]._Get_Component("FLAG:IsEmpty")._Get_Flag()):
+                #Vote for the relevant starting areas
+                lVotes[0] += 1
+
+            if (not dChunkDict["%d,%d"%(lWorldPos[0], lWorldPos[1]-1)]._Get_Component("FLAG:IsEmpty")._Get_Flag()):
+                #Vote for the relevant starting areas
+                lVotes[0] += 1
+
+
+            #Check to see if we should vote for the bottom left corner.    
+            if (not dChunkDict["%d,%d"%(lWorldPos[0]-1, lWorldPos[1]+1)]._Get_Component("FLAG:IsEmpty")._Get_Flag()):
+                #Vote for the relevant starting areas
+                lVotes[2] += 1
+
+            if (not dChunkDict["%d,%d"%(lWorldPos[0], lWorldPos[1]+2)]._Get_Component("FLAG:IsEmpty")._Get_Flag()):
+                #Vote for the relevant starting areas
+                lVotes[2] += 1
+
+            #Check to see if we should vote for the top right corner.    
+            if (not dChunkDict["%d,%d"%(lWorldPos[0]+1, lWorldPos[1]-1)]._Get_Component("FLAG:IsEmpty")._Get_Flag()):
+                #Vote for the relevant starting areas
+                lVotes[1] += 1
+
+            if (not dChunkDict["%d,%d"%(lWorldPos[0]+2, lWorldPos[1]+2)]._Get_Component("FLAG:IsEmpty")._Get_Flag()):
+                #Vote for the relevant starting areas
+                lVotes[1] += 1
+
+
+            #Check to see if we should vote for the bottom right corner.    
+            if (not dChunkDict["%d,%d"%(lWorldPos[0]+1, lWorldPos[1]+2)]._Get_Component("FLAG:IsEmpty")._Get_Flag()):
+                #Vote for the relevant starting areas
+                lVotes[3] += 1
+
+            if (not dChunkDict["%d,%d"%(lWorldPos[0]+2, lWorldPos[1]+1)]._Get_Component("FLAG:IsEmpty")._Get_Flag()):
+                #Vote for the relevant starting areas
+                lVotes[3] += 1
+
+            #Now we must determine which vote got the highest number (ties don't matter.)
+
+            iGreatestIndx = 0
+            iGreatestVotes = 0
+
+            for indx in xrange(len(lVotes)):
+
+                #The strictly greater than will favor the top areas over the bottom.
+                if lVotes[indx] > iGreatestVotes:
+
+                    iGreatestIndx = indx
+                    iGreatestVotes = lVotes[indx]
+
+            iStartX = 0
+            iEndX = 0
+            iStepX = 1
+            
+            iStartY = 0
+            iEndY = 0
+            iStepY = 1
+
+            #Check to see if topLeft is the area we'll start in.
+            if iGreatestIndx == 0:
+                #Since the left and upper chunks aren't empty
+                #We will start the generation from the left and upper corner.
+                iStartX = 0
+                iEndX = dEntities["ChunkMan"]._Get_Component("POS:ChunksInWind")._Get_X()
+                iStepX = 1
+
+                iStartY = 0
+                iEndY = dEntities["ChunkMan"]._Get_Component("POS:ChunksInWind")._Get_Y()
+                iStepY = 1
+
+            #Check to see if bottomLeft is the area we'll start in.
+            elif iGreatestIndx == 2:
+                #Since the left and down chunks aren't empty
+                #We will start the generation from the left and down corner.
+                iStartX = 0
+                iEndX = dEntities["ChunkMan"]._Get_Component("POS:ChunksInWind")._Get_X()
+                iStepX = 1
+
+                iStartY = dEntities["ChunkMan"]._Get_Component("POS:ChunksInWind")._Get_Y()-1
+                iEndY = -1
+                iStepX = -1
+
+
+            #Check to see if topRight is the area we'll start in.
+            elif iGreatestIndx == 1:
+                #Since the right and upper chunks aren't empty
+                #We will start the generation from the right and upper corner.
+                iStartX = dEntities["ChunkMan"]._Get_Component("POS:ChunksInWind")._Get_X()-1
+                iEndX = -1
+                iStepX = -1
+
+                iStartY = 0
+                iEndY = dEntities["ChunkMan"]._Get_Component("POS:ChunksInWind")._Get_Y()
+                iStepY = 1
+
+            #Check to see if bottomRight is the area we'll start in.
+            elif iGreatestIndx == 3:
+                #Since the right and down chunks aren't empty
+                #We will start the generation from the right and down corner.
+                iStartX = dEntities["ChunkMan"]._Get_Component("POS:ChunksInWind")._Get_X()-1
+                iEndX = -1
+                iStepX = -1
+
+                iStartY = dEntities["ChunkMan"]._Get_Component("POS:ChunksInWind")._Get_Y()-1
+                iEndY = -1
+                iStepX = -1
+
+            #Now we have to call Generate_Chunk_Data for each of the four middle
+            #   chunks.
+            for yChunk in xrange(iStartY, iEndY, iStepY):
+                for xChunk in xrange(iStartX, iEndX, iStepX):
+
+                    print "ChunkPosition in window being generated", xChunk, yChunk
+
+                    Generate_Chunk_Data( {"ChunkMan":dEntities["ChunkMan"],      \
+                                          "TargetWindowPos":(xChunk,yChunk)} )
+
+            #After generating chunks for the current area, we need to increment the move counter
+            #   for the current side of the spiral.
+            dEntities["MoveCounter"]._Get_Component("MISC:moveCount")._Set_Storage(str(iMoveOffset+1))
+
+        #This is entered when the current side of the spiral is complete
+        else:
+
+            #Here's where we'll increment our counter component.
+            #This counts the directional moves (moving more than once in one direction
+            #   counts as a single move. So we increment after generating a row/column of chunks
+            #   and those rows/columns will increase in size by 2 chunks every two move counts.)
+            dEntities["MoveCounter"]._Get_Component("MISC:spiralSideCount")._Set_Storage(str(iSpiralOffset+1))
+
+            #We also have to reset our move counter for the next side of the spiral.
+            dEntities["MoveCounter"]._Get_Component("MISC:moveCount")._Set_Storage("0")
+
+    #When this is entered, the generation will be complete
+    else:
+        
+        #ImportantNote: The last 12 chunks won't be saved unless the world chunk position is moved 4
+        #   chunks over (assuming any situation, that basically just loads a completely new area into
+        #   the game while simultaneously saving the last area.)
         Move_Chunk_Position( {"ChunkMan":dEntities["ChunkMan"],
-                              "xOffset":lOrderOfOffsetsX[(offset/2-1)%4],
-                              "yOffset":lOrderOfOffsetsY[(offset/2-1)%4]} )
+                              "xOffset":4,
+                              "yOffset":0} )
 
-        Move_Chunk_Position( {"ChunkMan":dEntities["ChunkMan"],
-                              "xOffset":lOrderOfOffsetsX[(offset/2-1)%4],
-                              "yOffset":lOrderOfOffsetsY[(offset/2-1)%4]} )
+        #And once we reach this point, the generation is done, so
+        #   we need to remove this system function from the System_Manager.
+        System_Manager._Remove_State_System("Generate_World_Data")
 
-        #This is just for cleaning up the below part.
-        lWorldPos = dEntities["ChunkMan"]._Get_Component("POS:WorldPos")._Get_Position()
+        #After doing this, we should also change the state to the new saved game!
+        #Since the config.Saved_Game_Directory was set in New_Save(), we can
+        #   just switch to the continue state to start the new game.
+        return "Game,Continue"
 
-        dChunkDict = dEntities["ChunkMan"]._Get_Component("DICT:ChunkDict")
-
-        #Now we have to call Generate_Chunk_Data for each of the four middle
-        #   chunks.
-        for yChunk in xrange(2):
-            for xChunk in xrange(2):
-
-                Generate_Chunk_Data( {"TargetChunk":dChunkDict["%d,%d"%(lWorldPos[0]+xChunk, lWorldPos[1]+yChunk)],
-                                      "RChunk":dChunkDict["%d,%d"%(lWorldPos[0]+xChunk+1, lWorldPos[1]+yChunk)],
-                                      "DChunk":dChunkDict["%d,%d"%(lWorldPos[0]+xChunk, lWorldPos[1]+yChunk-1)],
-                                      "LChunk":dChunkDict["%d,%d"%(lWorldPos[0]+xChunk-1, lWorldPos[1]+yChunk)],
-                                      "UChunk":dChunkDict["%d,%d"%(lWorldPos[0]+xChunk, lWorldPos[1]+yChunk+1)],
-                                      "URChunk":dChunkDict["%d,%d"%(lWorldPos[0]+xChunk+1, lWorldPos[1]+yChunk+1)],
-                                      "ULChunk":dChunkDict["%d,%d"%(lWorldPos[0]+xChunk-1, lWorldPos[1]+yChunk+1)],
-                                      "DRChunk":dChunkDict["%d,%d"%(lWorldPos[0]+xChunk+1, lWorldPos[1]+yChunk-1)],
-                                      "DLChunk":dChunkDict["%d,%d"%(lWorldPos[0]+xChunk-1, lWorldPos[1]+yChunk-1)]} )
-
+    return "NULL,NULL"
+        
 
 def Generate_Chunk_Data(dEntities):
     """This should take in a chunk entity that is going to be filled. And all the rest
     of the chunk entities are going to be Chunks that have a relationship with the
     chunk that is to be filled."""
 
-    #The tiles that are generated first should be determined
-    #  based off of the non-empty chunks in the chunk manager.
-    #Check to see if the Right chunk is not empty.
-    if (not dEntities["LChunk"]._Get_Component("FLAG:IsEmpty")._Get_Flag()):
+    dChunkDict = dEntities["ChunkMan"]._Get_Component("DICT:ChunkDict")
+    lWorldPos = dEntities["ChunkMan"]._Get_Component("POS:WorldPos")._Get_Position()
 
-        #Check to see if the upper chunk is not empty.
-        if (not dEntities["UChunk"]._Get_Component("FLAG:IsEmpty")._Get_Flag()):
+    tWindowPos = dEntities["TargetWindowPos"]
 
-            #Since the left and upper chunks aren't empty
-            #We will start the generation from the left and upper corner.
-            iStartX = 0
-            iEndX = config.CHUNK_TILES_WIDE
-            iStepX = 1
-            
+    TargetChunk = dChunkDict["%d,%d"%(lWorldPos[0]+tWindowPos[0], lWorldPos[1]+tWindowPos[1])]
+    RChunk = dChunkDict["%d,%d"%(lWorldPos[0]+tWindowPos[0]+1, lWorldPos[1]+tWindowPos[1])]
+    DChunk = dChunkDict["%d,%d"%(lWorldPos[0]+tWindowPos[0], lWorldPos[1]+tWindowPos[1]+1)]
+    LChunk = dChunkDict["%d,%d"%(lWorldPos[0]+tWindowPos[0]-1, lWorldPos[1]+tWindowPos[1])]
+    UChunk = dChunkDict["%d,%d"%(lWorldPos[0]+tWindowPos[0], lWorldPos[1]+tWindowPos[1]-1)]
+    URChunk = dChunkDict["%d,%d"%(lWorldPos[0]+tWindowPos[0]+1, lWorldPos[1]+tWindowPos[1]-1)]
+    ULChunk = dChunkDict["%d,%d"%(lWorldPos[0]+tWindowPos[0]-1, lWorldPos[1]+tWindowPos[1]-1)]
+    DRChunk = dChunkDict["%d,%d"%(lWorldPos[0]+tWindowPos[0]+1, lWorldPos[1]+tWindowPos[1]+1)]
+    DLChunk = dChunkDict["%d,%d"%(lWorldPos[0]+tWindowPos[0]-1, lWorldPos[1]+tWindowPos[1]+1)]
 
-            iStartY = 0
-            iEndY = config.CHUNK_TILES_HIGH
-            iStepY = 1
+    #These variables will help decide which area we should start
+    #   from when generating tiles (the algorithm will work better
+    #   when there are non-empty chunkss close to the tiles that are
+    #   being generated first.)
 
-        elif (not dEntities["DChunk"]._Get_Component("FLAG:IsEmpty")._Get_Flag()):
+    #Each element represents a position within the target chunk that
+    #   we'll start at.
+    #topLeft, topRight, bottomLeft, bottomRight
+    lVotes = [0, 0, 0, 0]
 
-            #Since the left and down chunks aren't empty
-            #We will start the generation from the left and down corner.
-            iStartX = 0
-            iEndX = config.CHUNK_TILES_WIDE
-            iStepX = 1
+    #These checks will resultingly vote for the area that we'll start
+    #   the generation in.
 
-            iStartY = config.CHUNK_TILES_HIGH-1
-            iEndY = -1
-            iStepX = -1
+    if (not LChunk._Get_Component("FLAG:IsEmpty")._Get_Flag()):
+        #Vote for the relevant starting areas
+        lVotes[0] += 1
+        lVotes[2] += 1
 
-    if (not dEntities["RChunk"]._Get_Component("FLAG:IsEmpty")._Get_Flag()):
+    if (not RChunk._Get_Component("FLAG:IsEmpty")._Get_Flag()):
+        #Vote for the relevant starting areas
+        lVotes[1] += 1
+        lVotes[3] += 1
 
-        #Check to see if the upper chunk is not empty.
-        if (not dEntities["UChunk"]._Get_Component("FLAG:IsEmpty")._Get_Flag()):
+    if (not DChunk._Get_Component("FLAG:IsEmpty")._Get_Flag()):
+        #Vote for the relevant starting areas
+        lVotes[3] += 1
+        lVotes[2] += 1
 
-            #Since the right and upper chunks aren't empty
-            #We will start the generation from the right and upper corner.
-            iStartX = config.CHUNK_TILES_WIDE-1
-            iEndX = -1
-            iStepX = -1
-            
+    if (not UChunk._Get_Component("FLAG:IsEmpty")._Get_Flag()):
+        #Vote for the relevant starting areas
+        lVotes[0] += 1
+        lVotes[1] += 1
 
-            iStartY = 0
-            iEndY = config.CHUNK_TILES_HIGH
-            iStepY = 1
+    if (not DLChunk._Get_Component("FLAG:IsEmpty")._Get_Flag()):
+        #Vote for the relevant starting areas
+        lVotes[2] += 1
 
-        elif (not dEntities["DChunk"]._Get_Component("FLAG:IsEmpty")._Get_Flag()):
+    if (not ULChunk._Get_Component("FLAG:IsEmpty")._Get_Flag()):
+        #Vote for the relevant starting areas
+        lVotes[0] += 1
 
-            #Since the right and down chunks aren't empty
-            #We will start the generation from the right and down corner.
-            iStartX = config.CHUNK_TILES_WIDE-1
-            iEndX = -1
-            iStepX = -1
+    if (not DRChunk._Get_Component("FLAG:IsEmpty")._Get_Flag()):
+        #Vote for the relevant starting areas
+        lVotes[3] += 1
 
-            iStartY = config.CHUNK_TILES_HIGH-1
-            iEndY = -1
-            iStepX = -1
+    if (not URChunk._Get_Component("FLAG:IsEmpty")._Get_Flag()):
+        #Vote for the relevant starting areas
+        lVotes[1] += 1
+
+
+    #Now we must determine which vote got the highest number (ties don't matter.)
+
+    iGreatestIndx = 0
+    iGreatestVotes = 0
+
+    for indx in xrange(len(lVotes)):
+
+        #The strictly greater than will favor the top areas over the bottom.
+        if lVotes[indx] > iGreatestVotes:
+
+            iGreatestIndx = indx
+            iGreatestVotes = lVotes[indx]
+
+    iStartX = 0
+    iEndX = 0
+    iStepX = 1
+    
+
+    iStartY = 0
+    iEndY = 0
+    iStepY = 1
+
+    #Check to see if topLeft is the area we'll start in.
+    if iGreatestIndx == 0:
+        #Since the left and upper chunks aren't empty
+        #We will start the generation from the left and upper corner.
+        iStartX = 0
+        iEndX = config.CHUNK_TILES_WIDE
+        iStepX = 1
+
+        iStartY = 0
+        iEndY = config.CHUNK_TILES_HIGH
+        iStepY = 1
+
+    #Check to see if bottomLeft is the area we'll start in.
+    elif iGreatestIndx == 2:
+        #Since the left and down chunks aren't empty
+        #We will start the generation from the left and down corner.
+        iStartX = 0
+        iEndX = config.CHUNK_TILES_WIDE
+        iStepX = 1
+
+        iStartY = config.CHUNK_TILES_HIGH-1
+        iEndY = -1
+        iStepX = -1
+
+
+    #Check to see if topRight is the area we'll start in.
+    elif iGreatestIndx == 1:
+        #Since the right and upper chunks aren't empty
+        #We will start the generation from the right and upper corner.
+        iStartX = config.CHUNK_TILES_WIDE-1
+        iEndX = -1
+        iStepX = -1
+
+        iStartY = 0
+        iEndY = config.CHUNK_TILES_HIGH
+        iStepY = 1
+
+    #Check to see if bottomRight is the area we'll start in.
+    elif iGreatestIndx == 3:
+        #Since the right and down chunks aren't empty
+        #We will start the generation from the right and down corner.
+        iStartX = config.CHUNK_TILES_WIDE-1
+        iEndX = -1
+        iStepX = -1
+
+        iStartY = config.CHUNK_TILES_HIGH-1
+        iEndY = -1
+        iStepX = -1
+
+    #This will be what we pass to Alter_Tiles()
+    #   after we figure out what the tiles will be changed to.
+    lTiles = []
 
     #Then iterate through the tiles within the Chunk accordingly.
     #The tiles don't need their world position in order to
     #   access the tiles.
     for y in xrange(iStartY, iEndY, iStepY):
         for x in xrange(iStartX, iEndX, iStepX):
-
-            #This will hold all the tileTypes that
-            #   were generated.
-            lTileTypes = []
-            
-            #Now we'll iterate through the compatible position
-            #   relations for the Markov Chains.
-            for yRelation in xrange(y-12, y+12):
-                for xRelation in xrange(x-16, x+16):
-
-                    #To see if the tile in relation exists, we
-                    #   must know the chunk that it is on.
-                    #This checks to see if the relation is within the Chunk that is being
-                    #   generated.
-                    if (yRelation >= 0 and yRelation < config.CHUNK_TILES_HIGH) \
-                        and (xRelation >= 0 and xRelation < config.CHUNK_TILES_WIDE):
-
-                        #So then we can check to see if the tile in this relation has
-                        #   been generated yet.
-                        #This checks to see if the yRelation shows that the tile may have
-                        #    been generated already.
-                        #If it hasn't already been generated, we'll ignore it.
-                        if ( (y - yRelation)*iStepY >= 0 ):
-                            #This checks to see if the xRelation shows that the tile may have
+            for z in xrange(config.CHUNK_LAYERS):
+                #This will hold all the tileTypes that
+                #   were generated.
+                lTileTypes = []
+                
+                #Now we'll iterate through the compatible position
+                #   relations for the Markov Chains.
+                for yRelation in xrange(y-12, y+12):
+                    for xRelation in xrange(x-16, x+16):
+                        #To see if the tile in relation exists, we
+                        #   must know the chunk that it is on.
+                        #This checks to see if the relation is within the Chunk that is being
+                        #   generated.
+                        if (yRelation >= 0 and yRelation < config.CHUNK_TILES_HIGH) \
+                            and (xRelation >= 0 and xRelation < config.CHUNK_TILES_WIDE):
+                            #So then we can check to see if the tile in this relation has
+                            #   been generated yet.
+                            #This checks to see if the yRelation shows that the tile may have
                             #    been generated already.
-                            if ( (x - xRelation)*iStepX >= 0 ):
-                    
-                                #This should only execute when we know the tile exists for
-                                #   the particular relation.
-                                #Here we get a random (weighted by markov chain) tileType
-                                #   that will be added to a list of tileTypes
-                                lTileTypes.append( Calc_New_TileType_For_Relation([xRelation, yRelation],
-                                                                                  dEntities["TargetChunk"]._Get_Component("LIST:Tiles")[yRelation][xRelation][1]) )
+                            #If it hasn't already been generated, we'll ignore it.
+                            if ( (y - yRelation)*iStepY >= 0 ):
+                                #This checks to see if the xRelation shows that the tile may have
+                                #    been generated already.
+                                if ( (x - xRelation)*iStepX >= 0 ):
+                                    #This should only execute when we know the tile exists for
+                                    #   the particular relation.
+                                    #Here we get a random (weighted by markov chain) tileType
+                                    #   that will be added to a list of tileTypes
+                                    lTileTypes.append( Calc_New_TileType_For_Relation([xRelation, yRelation],   \
+                                                                                      TargetChunk._Get_Component("LIST:Tiles")[yRelation][xRelation][z]) )
 
 
-                    #If the relation isn't within the chunk, then it must be within a neighboring chunk.
-                    #So we'll first check to see if the right chunk has the relation position.
-                    elif (yRelation >= 0 and yRelation < config.CHUNK_TILES_HIGH)   \
-                        and (xRelation >= config.CHUNK_TILES_WIDE):
+                        #If the relation isn't within the chunk, then it must be within a neighboring chunk.
+                        #So we'll first check to see if the right chunk has the relation position.
+                        elif (yRelation >= 0 and yRelation < config.CHUNK_TILES_HIGH)   \
+                            and (xRelation >= config.CHUNK_TILES_WIDE):
 
-                        if not dEntities["RChunk"]._Get_Component("FLAG:IsEmpty")._Get_Flag():
-                            lTileTypes.append( Calc_New_TileType_For_Relation([xRelation, yRelation],
-                                                                              dEntities["RChunk"]._Get_Component("LIST:Tiles")[yRelation][xRelation-config.CHUNK_TILES_WIDE][1]) )
+                            if not RChunk._Get_Component("FLAG:IsEmpty")._Get_Flag():
+                                lTileTypes.append( Calc_New_TileType_For_Relation([xRelation, yRelation],   \
+                                                                                  RChunk._Get_Component("LIST:Tiles")[yRelation][xRelation-config.CHUNK_TILES_WIDE][z]) )
 
-                    #Then we'll check to see if the down chunk has the relation position.
-                    elif (yRelation >= config.CHUNK_TILES_HIGH) \
-                        and (xRelation >= 0 and xRelation < config.CHUNK_TILES_WIDE):
+                        #Then we'll check to see if the down chunk has the relation position.
+                        elif (yRelation >= config.CHUNK_TILES_HIGH) \
+                            and (xRelation >= 0 and xRelation < config.CHUNK_TILES_WIDE):
 
-                        if not dEntities["DChunk"]._Get_Component("FLAG:IsEmpty")._Get_Flag():
-                            lTileTypes.append( Calc_New_TileType_For_Relation([xRelation, yRelation],
-                                                                              dEntities["DChunk"]._Get_Component("LIST:Tiles")[yRelation-config.CHUNK_TILES_HIGH][xRelation][1]) )
+                            if not DChunk._Get_Component("FLAG:IsEmpty")._Get_Flag():
+                                lTileTypes.append( Calc_New_TileType_For_Relation([xRelation, yRelation],   \
+                                                                                  DChunk._Get_Component("LIST:Tiles")[yRelation-config.CHUNK_TILES_HIGH][xRelation][z]) )
 
-                    #Then we'll check to see if the left chunk has the relation position.
-                    elif (yRelation >= 0 and yRelation < config.CHUNK_TILES_HIGH)   \
-                        and (xRelation < 0):
+                        #Then we'll check to see if the left chunk has the relation position.
+                        elif (yRelation >= 0 and yRelation < config.CHUNK_TILES_HIGH)   \
+                            and (xRelation < 0):
 
-                        if not dEntities["LChunk"]._Get_Component("FLAG:IsEmpty")._Get_Flag():
-                            lTileTypes.append( Calc_New_TileType_For_Relation([xRelation, yRelation],
-                                                                              dEntities["LChunk"]._Get_Component("LIST:Tiles")[yRelation][(-1*xRelation)-1][1]) )
+                            if not LChunk._Get_Component("FLAG:IsEmpty")._Get_Flag():
+                                lTileTypes.append( Calc_New_TileType_For_Relation([xRelation, yRelation],   \
+                                                                                  LChunk._Get_Component("LIST:Tiles")[yRelation][(-1*xRelation)-1][z]) )
 
-                    #Then we'll check to see if the up chunk has the relation position.
-                    elif (yRelation < 0)    \
-                        and (xRelation >= 0 and xRelation < config.CHUNK_TILES_WIDE):
+                        #Then we'll check to see if the up chunk has the relation position.
+                        elif (yRelation < 0)    \
+                            and (xRelation >= 0 and xRelation < config.CHUNK_TILES_WIDE):
 
-                        if not dEntities["UChunk"]._Get_Component("FLAG:IsEmpty")._Get_Flag():
-                            lTileTypes.append( Calc_New_TileType_For_Relation([xRelation, yRelation],
-                                                                              dEntities["UChunk"]._Get_Component("LIST:Tiles")[(-1*yRelation)-1][xRelation][1]) )
+                            if not UChunk._Get_Component("FLAG:IsEmpty")._Get_Flag():
+                                lTileTypes.append( Calc_New_TileType_For_Relation([xRelation, yRelation],   \
+                                                                                  UChunk._Get_Component("LIST:Tiles")[(-1*yRelation)-1][xRelation][z]) )
 
-                    #Then we'll check to see if the up right chunk has the relation position.
-                    elif (yRelation < 0)    \
-                        and (xRelation >= config.CHUNK_TILES_WIDE):
+                        #Then we'll check to see if the up right chunk has the relation position.
+                        elif (yRelation < 0)    \
+                            and (xRelation >= config.CHUNK_TILES_WIDE):
 
-                        if not dEntities["URChunk"]._Get_Component("FLAG:IsEmpty")._Get_Flag():
-                            lTileTypes.append( Calc_New_TileType_For_Relation([xRelation, yRelation],
-                                                                              dEntities["URChunk"]._Get_Component("LIST:Tiles")[(-1*yRelation)-1][xRelation-config.CHUNK_TILES_WIDE][1]) )
+                            if not URChunk._Get_Component("FLAG:IsEmpty")._Get_Flag():
+                                lTileTypes.append( Calc_New_TileType_For_Relation([xRelation, yRelation],   \
+                                                                                  URChunk._Get_Component("LIST:Tiles")[(-1*yRelation)-1][xRelation-config.CHUNK_TILES_WIDE][z]) )
 
-                    #Then we'll check to see if the up left chunk has the relation position.
-                    elif (yRelation < 0)    \
-                        and (xRelation < 0):
+                        #Then we'll check to see if the up left chunk has the relation position.
+                        elif (yRelation < 0)    \
+                            and (xRelation < 0):
 
-                        if not dEntities["ULChunk"]._Get_Component("FLAG:IsEmpty")._Get_Flag():
-                            lTileTypes.append( Calc_New_TileType_For_Relation([xRelation, yRelation],
-                                                                              dEntities["ULChunk"]._Get_Component("LIST:Tiles")[(-1*yRelation)-1][(-1*yRelation)-1][1]) )
+                            if not ULChunk._Get_Component("FLAG:IsEmpty")._Get_Flag():
+                                lTileTypes.append( Calc_New_TileType_For_Relation([xRelation, yRelation],   \
+                                                                                  ULChunk._Get_Component("LIST:Tiles")[(-1*yRelation)-1][(-1*yRelation)-1][z]) )
 
-                    #Then we'll check to see if the down right chunk has the relation position.
-                    elif (yRelation >= config.CHUNK_TILES_HIGH) \
-                        and (xRelation >= config.CHUNK_TILES_WIDE):
+                        #Then we'll check to see if the down right chunk has the relation position.
+                        elif (yRelation >= config.CHUNK_TILES_HIGH) \
+                            and (xRelation >= config.CHUNK_TILES_WIDE):
 
-                        if not dEntities["DRChunk"]._Get_Component("FLAG:IsEmpty")._Get_Flag():
-                            lTileTypes.append( Calc_New_TileType_For_Relation([xRelation, yRelation],
-                                                                              dEntities["DRChunk"]._Get_Component("LIST:Tiles")[yRelation-config.CHUNK_TILES_HIGH][xRelation-config.CHUNK_TILES_WIDE][1]) )
+                            if not DRChunk._Get_Component("FLAG:IsEmpty")._Get_Flag():
+                                lTileTypes.append( Calc_New_TileType_For_Relation([xRelation, yRelation],   \
+                                                                                  DRChunk._Get_Component("LIST:Tiles")[yRelation-config.CHUNK_TILES_HIGH][xRelation-config.CHUNK_TILES_WIDE][z]) )
 
-                    #Then we'll check to see if the down left chunk has the relation position.
-                    elif (yRelation >= config.CHUNK_TILES_HIGH) \
-                        and (xRelation < 0):
+                        #Then we'll check to see if the down left chunk has the relation position.
+                        elif (yRelation >= config.CHUNK_TILES_HIGH) \
+                            and (xRelation < 0):
 
-                        if not dEntities["DLChunk"]._Get_Component("FLAG:IsEmpty")._Get_Flag():
-                            lTileTypes.append( Calc_New_TileType_For_Relation([xRelation, yRelation],
-                                                                              dEntities["DLChunk"]._Get_Component("LIST:Tiles")[yRelation-config.CHUNK_TILES_HIGH][(-1*yRelation)-1][1]) )
+                            if not DLChunk._Get_Component("FLAG:IsEmpty")._Get_Flag():
+                                lTileTypes.append( Calc_New_TileType_For_Relation([xRelation, yRelation],   \
+                                                                                  DLChunk._Get_Component("LIST:Tiles")[yRelation-config.CHUNK_TILES_HIGH][(-1*xRelation)-1][z]) )
 
-            newTileType = Determine_Majority_TileType(lTileTypes)
+                newTileType = Determine_Majority_TileType(lTileTypes)
 
-            dEntities["TargetChunk"]._Get_Component("LIST:Tiles")[yRelation][xRelation][1]
+                lTiles.append( (x + dEntities["TargetWindowPos"][0]*config.CHUNK_TILES_WIDE,    \
+                                y + dEntities["TargetWindowPos"][1]*config.CHUNK_TILES_HIGH,    \
+                                z,                                                              \
+                                newTileType) )
+
+    #print "New Tiles", lTiles
+
+    #This will finally alter the tile data for the tiles in the target chunk.
+    Alter_Tiles( {"lTileData":lTiles,                               \
+                  "ChunkMan":dEntities["ChunkMan"]} )
+
+    #lWorldPos = dEntities["ChunkMan"]._Get_Component("POS:WorldPos")._Get_Position()
+
+    #print "This tileID should be 1",
+
+    #print dEntities["ChunkMan"]._Get_Component("DICT:ChunkDict")["%d,%d"%(dEntities["TargetWindowPos"][0]+lWorldPos[0],dEntities["TargetWindowPos"][1]+lWorldPos[1])]._Get_Component("LIST:Tiles")[0][0][1]
 
 
 def Determine_Majority_TileType(lTileTypes):
@@ -475,6 +743,8 @@ def Calc_New_TileType_For_Relation(sTileRelation, iOldTileType):
 
     #Return the tileType that was picked.
 
+    return 1
+
 
 def Load_Chunk_Entities(dEntities):
     """This will load in some Entities for the Chunk_"""
@@ -502,45 +772,50 @@ def Oscillate_Box_Colors(dEntities):
 
 
 
-def Alter_Tiles(lTileData, ManChunkEntity):
+def Alter_Tiles(dEntities):
 
     #Just initializing some variables for the upcoming for loop
-    xTileOffset = 0
-    xChunkOffset = 0
-    yTileOffset = 0
-    yChunkOffset = 0
-
     alteredChunks = {}
 
-    chunkDict = ManChunkEntity._Get_Component(CHUNK_DICT)[(xChunkOffset, yChunkOffset)]
-    worldPos = ManChunkEntity._Get_Component(WORLD_POS)._Get_Position()
-    rebuildList = ManChunkEntity._Get_Component(REBUILD_LIST)
+    chunkDict = dEntities["ChunkMan"]._Get_Component("DICT:ChunkDict")
+    worldPos = dEntities["ChunkMan"]._Get_Component("POS:WorldPos")._Get_Position()
+    rebuildList = dEntities["ChunkMan"]._Get_Component("LIST:RebuildList")
 
     #This assumes all elements of listOfTiles are tuples with four integers in each.
-    for (x, y, z, newTileType) in lTileData:
+    for (x, y, z, newTileType) in dEntities["lTileData"]:
+
+        #print "Tile Altered:", x, y, z, newTileType
 
         #Fill the variables we're going to be using to find the tile and chunk we're altering.
         #This represents the tile position within the chunk it belongs to
         xTileOffset = x % config.CHUNK_TILES_WIDE
         #This represents the chunk position (of the chunk the tile is inside of) within the window!
-        xChunkOffset = int((x-xTileOffset) / config.CHUNK_TILES_WIDE) + worldPos[0]        
+        xChunkOffset = int((x-xTileOffset) / config.CHUNK_TILES_WIDE) + worldPos[0]
 
         yTileOffset = y %config.CHUNK_TILES_HIGH
         yChunkOffset = int((y-yTileOffset) / config.CHUNK_TILES_HIGH) + worldPos[1]
 
-        #Now we're altering the chunk at chunk position ( self._x_World_Chunk_Position + xChunkOffset, self._y_World_Chunk_Position + yChunkOffset )
-        chunkDict[(xChunkOffset, yChunkOffset)]._Get_Component(TILES)[xTileOffset][yTileOffset][z]._Set_Tile_ID(newTileType)
+        #print xTileOffset, yTileOffset, xChunkOffset, yChunkOffset
 
-        alteredChunks[(xChunkOffset, yChunkOffset)] = 1
+        #Now we're altering the chunk at chunk position ( self._x_World_Chunk_Position + xChunkOffset, self._y_World_Chunk_Position + yChunkOffset )
+        chunkDict["%d,%d" % (xChunkOffset, yChunkOffset)]._Get_Component("LIST:Tiles")[yTileOffset][xTileOffset][z]._Set_TileID(newTileType)
+
+        alteredChunks["%d,%d" % (xChunkOffset, yChunkOffset)] = 1
 
     for chunkPosition in alteredChunks.keys():
-        rebuildList.append(chunkDict[chunkPosition])
+        rebuildList._Add(chunkDict[chunkPosition])
 
 
 
 def Move_Chunk_Position(dEntities):
     """This will add/remove chunks from our dictionary and is meant to be used when we translate our window across the chunk world (because scrolling.)
     There are chunks assumed to already be active on the screen."""
+
+    xOffset = dEntities["xOffset"]
+    yOffset = dEntities["yOffset"]
+
+    print "Offsets are %d,%d" % (xOffset, yOffset)
+    
     #If the chunk position hasn't been moved, then we don't need to rebuild any meshes or initialize any new chunks
     if xOffset != 0 or yOffset != 0:
 
@@ -557,6 +832,9 @@ def Move_Chunk_Position(dEntities):
         rebuildList = dEntities["ChunkMan"]._Get_Component("LIST:RebuildList")
         unloadList = dEntities["ChunkMan"]._Get_Component("LIST:UnloadList")
 
+        xEven = None
+        yEven = None
+
         #These variables are determined before the following for loop because they will otherwise have to be calculated more than once.
         if (chunksInWindow[0] + xOffset) % 2 == 0:
             xEven = True
@@ -568,15 +846,17 @@ def Move_Chunk_Position(dEntities):
         else:
             yEven = False
 
+        print "Moving the world position!"
+
         #If we move our world chunk position, then we will essentially need to reset all of the chunk's window positions (that are still on the screen.)
         #And the chunks that move off the screen will remain unaltered in case they return to their original window position (which then it won't need its mesh rebuilt.)
         for i in xrange( worldPos[0] - 1, worldPos[0] + chunksInWindow[0] + 1 ):
             for j in xrange( worldPos[1] - 1, worldPos[1] + chunksInWindow[1] + 1 ):
 
                 #This checks to see if the chunk already exists in our dictionary (it was already inside the window or window buffer.)
-                if chunkDict._Get(i+","+j) != None:
+                if chunkDict._Get("%d,%d"%(i,j)) != None:
 
-                    pChunk = chunkDict[i+","+j]
+                    pChunk = chunkDict["%d,%d"%(i,j)]
 
                     #Each chunk needs to be checked to see if its position isn't equal to what we'll be setting it to.
                     #So then the chunks that have the correct position already won't be added to the rebuild list (their mesh is already correct.)
@@ -599,21 +879,23 @@ def Move_Chunk_Position(dEntities):
                     #For each chunk that is initialized, there will be one that we will have to free from memory.
 
                     #Initialize a new chunk at position i,j in the world of chunks and put it into our dictionary.
-                    chunkDict[i+","+j] = entities.Assemble_Chunk( "%d, %d" % (i,j),     \
-                                                                   "Chunk",              \
-                                                                   {"WorldPos":i+","+j,
-                                                                    "WindowPos":str(i - worldPos[0])+","+str(j - worldPos[1])} )
+                    chunkDict["%d,%d"%(i,j)] = entities.Assemble_Chunk( "%s,%s" % (i, j),       \
+                                                                          "Chunk",              \
+                                                                          random.choice(chunkDict.values()),        \
+                                                                          {"WorldPos":"%d,%d"%(i,j),                \
+                                                                           "WindowPos":str(i - worldPos[0])+","+str(j - worldPos[1])} )
 
-                    pChunk = chunkDict[i+","+j]
+
+                    pChunk = chunkDict["%d,%d"%(i,j)]
 
                     loadList._Add(pChunk)
                     #Schedule an old chunk to be unloaded and then removed from the chunk dictionary
 
                     #Find the middle chunk position inbetween the previous and the next world chunk position.
-                    midChunkX = worldPos[0] - xOffset + (chunksInWindow[0] + xOffset)/2   #Note that the division operator will round down when the result isn't a whole number.
-                    midChunkY = worldPos[1] - yOffset + (chunksInWindow[1] + yOffset)/2
+                    midChunkX = worldPos[0] - xOffset + (chunksInWindow[0] + xOffset)//2   #Note that the division operator will round down when the result isn't a whole number.
+                    midChunkY = worldPos[1] - yOffset + (chunksInWindow[1] + yOffset)//2
 
-                    #These if statements make it possible to use this method when there are an even or odd amount of chunks in the window (it'll be one or the other.)
+                    #These if statements make it possible to use this method when there are an even or odd amount of chunks in the window.
                     if xEven:
                         p = midChunkX - (i - midChunkX) - 1
                     else:
@@ -624,10 +906,10 @@ def Move_Chunk_Position(dEntities):
                     else:
                         q = midChunkY - (j - midChunkY)
 
-                    #print "chunk removed at", p, q
+                    print "chunk removed at", p, q
 
                     #This saves the chunk's data
-                    pChunk = chunkDict[p+","+q]
+                    pChunk = chunkDict["%d,%d"%(p,q)]
 
                     unloadList._Add(pChunk)
 
@@ -635,8 +917,8 @@ def Update(dEntities):
     """This will initiate all of the different updates that need done for
     the Chunk Manager Entity."""
     
-    Update_Load_List({"LoadList":dEntities["ChunkMan"]._Get_Component("LIST:LoadList"),
-                                      "ChunkDataDir":dEntities["ChunkMan"]._Get_Component("MISC:ChunkDataDir")})
+    Update_Load_List({"LoadList":dEntities["ChunkMan"]._Get_Component("LIST:LoadList"),                 \
+                      "ChunkDataDir":dEntities["ChunkMan"]._Get_Component("MISC:ChunkDataDir")})
 
     #This checks to see if the ChunkManager doesn't belong to a EntityManager. If it does belong to
     #   an EntityManager, then we'll need to add the tiles to the Collision space of the ENtityManager.
@@ -648,13 +930,14 @@ def Update(dEntities):
 
     else:
 
-        Update_Rebuild_List({"RebuildList":dEntities["ChunkMan"]._Get_Component("LIST:RebuildList"),    \
-                            "FlagList":dEntities["ChunkMan"]._Get_Component("LIST:FlagList"),           \
+        Update_Rebuild_List({"RebuildList":dEntities["ChunkMan"]._Get_Component("LIST:RebuildList"),            \
+                            "FlagList":dEntities["ChunkMan"]._Get_Component("LIST:FlagList"),                   \
                             "VisibilityUpdate":dEntities["ChunkMan"]._Get_Component("FLAG:VisibilityUpdate"),   \
                              "CollisionSpace":dEntities["EntityMan"]._Get_Component("CSPACE:EntityPool")})
 
     Update_Unload_List({"UnloadList":dEntities["ChunkMan"]._Get_Component("LIST:UnloadList"),     \
-                       "ChunkDict":dEntities["ChunkMan"]._Get_Component("DICT:ChunkDict")})
+                       "ChunkDict":dEntities["ChunkMan"]._Get_Component("DICT:ChunkDict"),        \
+                        "ChunkDataDir":dEntities["ChunkMan"]._Get_Component("MISC:ChunkDataDir")})
 
     #This will be entered when the rebuild list rebuilds its first chunk.
     if dEntities["ChunkMan"]._Get_Component("FLAG:VisibilityUpdate")._Get_Flag():
@@ -662,93 +945,141 @@ def Update(dEntities):
         Update_Flag_List({"FlagList":dEntities["ChunkMan"]._Get_Component("LIST:FlagList")})
 
         #Update the render list if the camera's Position has changed
-        Update_Render_List({"ChunkDict":dEntities["ChunkMan"]._Get_Component("DICT:ChunkDict"),
-                           "WorldPos":dEntities["ChunkMan"]._Get_Component("POS:WorldPos"),
-                           "ChunksInWind":dEntities["ChunkMan"]._Get_Component("POS:ChunksInWind"),
+        Update_Render_List({"ChunkDict":dEntities["ChunkMan"]._Get_Component("DICT:ChunkDict"),         \
+                           "WorldPos":dEntities["ChunkMan"]._Get_Component("POS:WorldPos"),             \
+                           "ChunksInWind":dEntities["ChunkMan"]._Get_Component("POS:ChunksInWind"),     \
                            "RenderList":dEntities["ChunkMan"]._Get_Component("RLIST:RenderList")})
 
         dEntities["ChunkMan"]._Get_Component("FLAG:VisibilityUpdate")._Set_Flag(False)
 
+    return "NULL,NULL"
+
 
 def Update_Load_List(dEntities):
     """This will signal chunks to load its data from their text files. Don't confuse this for updating the meshes of the chunks."""
-    iNumberOfChunksLoaded = 0
 
-    for iChunk in xrange(len(dEntities["LoadList"])-1,-1,-1):
+    #This whole prior check process is to make sure we are dealing with the first
+    #   so many entities in the list, but are still removing in a descending order
+    
+    iEntities = 0
+
+    #This checks to see if the LoadList is less than what we are limiting
+    #   for the loading.
+    if (len(dEntities["LoadList"]) > 0 and len(dEntities["LoadList"]) < 9):
+
+        #If so, we can straight up use the length of the LoadList.
+        iEntities = len(dEntities["LoadList"])
+
+    #Here we check to see if we need to limit.
+    elif (len(dEntities["LoadList"]) >= 9):
+
+        #If so, we just set the amount of entities to
+        #   be loaded to the limit.
+        iEntities = 9
+    
+
+    for iChunk in xrange(iEntities-1,-1,-1):
 
         #Checks to see if the chunk has been loaded yet
         if dEntities["LoadList"][iChunk]._Get_Component("FLAG:IsLoaded")._Get_Flag() == False:
 
-            #This limits chunk loading for a single tick
-            if iNumberOfChunksLoaded != 5:
+            #Loads the tile data from its file
+            Load_Data({"chunk":dEntities["LoadList"][iChunk],
+                       "ChunkDataDir":dEntities["ChunkDataDir"]})
+            dEntities["LoadList"][iChunk]._Get_Component("FLAG:IsLoaded")._Set_Flag(True)
 
-                #Loads the tile data from its file
-                Load_Data({"chunk":dEntities["LoadList"][iChunk],
-                           "ChunkDataDir":dEntities["ChunkDataDir"]})
-                dEntities["LoadList"][iChunk]._Get_Component("FLAG:IsLoaded")._Set_Flag(True)
-
-                dEntities["LoadList"]._Remove(iChunk)
-
-                iNumberOfChunksLoaded += 1
-
-            else:
-                break
+            dEntities["LoadList"]._Remove(iChunk)
 
 def Update_Rebuild_List(dEntities):
     """If a chunk has been updated and added to the rebuild_List. Then we will be signaling it to rebuild its mesh here. I also took out the section that
     was trying to optimize the render calls. But then I realized that in a 2d world, chunks can't really be occluded by other chunks (was thinking in 3d.)"""
+
+    #This whole prior check process is to make sure we are dealing with the first
+    #   so many entities in the list, but are still removing in a descending order
+    
+    iEntities = 0
+
+    #This checks to see if the RebuildList is less than what we are limiting
+    #   for the loading.
+    if (len(dEntities["RebuildList"]) > 0 and len(dEntities["RebuildList"]) < 5):
+
+        #If so, we can straight up use the length of the RebuildList.
+        iEntities = len(dEntities["RebuildList"])
+
+    #Here we check to see if we need to limit.
+    elif (len(dEntities["RebuildList"]) >= 5):
+
+        #If so, we just set the amount of entities to
+        #   be rebuilt to the limit.
+        iEntities = 5
+
     iNumberOfChunksRebuilt = 0
-    for iChunk in xrange(len(dEntities["RebuildList"])-1,-1,-1):
+    
+
+    for iChunk in xrange(iEntities-1,-1,-1):
 
         #Checking to see if the chunk has been loaded yet
         if dEntities["RebuildList"][iChunk]._Get_Component("FLAG:IsLoaded")._Get_Flag():
 
-            #This limits our chunk rebuilds to 4
-            if iNumberOfChunksRebuilt != 5:
-                #print "Building a mesh..."
+            if dEntities.get("CollisionSpace",None) == None:
 
-                if dEntities.get("CollisionSpace",None) == None:
-
-                    Build_Meshes({"chunk":dEntities["RebuildList"][iChunk]})
-
-                else:
-
-                    Build_Collidable_Meshes({"chunk":dEntities["RebuildList"][iChunk],  \
-                                             "CollisionSpace":dEntities["CollisionSpace"]})
-
-                iNumberOfChunksRebuilt += 1
-
-                #This limits us to doing only one update to this component
-                if iNumberOfChunksRebuilt == 1:
-
-                    dEntities["VisibilityUpdate"]._Set_Flag(True)
-
-                dEntities["FlagList"]._Add(dEntities["RebuildList"]._Pop(iChunk))  #removes the chunk pointer from the list
+                Build_Meshes({"chunk":dEntities["RebuildList"][iChunk]})
 
             else:
-                break
+
+                Build_Collidable_Meshes({"chunk":dEntities["RebuildList"][iChunk],  \
+                                         "CollisionSpace":dEntities["CollisionSpace"]})
+
+            iNumberOfChunksRebuilt += 1
+
+            #This limits us to doing only one update to this component
+            if iNumberOfChunksRebuilt == 1:
+
+                dEntities["VisibilityUpdate"]._Set_Flag(True)
+
+            dEntities["FlagList"]._Add(dEntities["RebuildList"]._Pop(iChunk))  #removes the chunk pointer from the list
+
 
 def Update_Unload_List(dEntities):
     """Here we will be freeing the memory associated with chunks that are far enough away from the window that we don't care about them anymore.
     So we will pop them from the _chunk_Dict and then save their data to their respective file."""
-    #The del command will probably be helpful here
-    iNumberOfChunksUnloaded = 0
-    for iChunk in xrange(len(dEntities["UnloadList"])-1,-1,-1):
 
-        if iNumberOfChunksUnloaded < 5  \
-           and dEntities["UnloadList"][iChunk]._Get_Component("FLAG:IsLoaded")._Get_Flag():
 
-            Unload(dEntities["UnloadList"][iChunk])    #This will save the contents of our chunk to a file (so we can free our memory.)
+    #This whole prior check process is to make sure we are dealing with the first
+    #   so many entities in the list, but are still removing in a descending order
+    
+    iEntities = 0
+
+    #This checks to see if the UnloadList is less than what we are limiting
+    #   for the loading.
+    if (len(dEntities["UnloadList"]) > 0 and len(dEntities["UnloadList"]) < 9):
+
+        #If so, we can straight up use the length of the UnloadList.
+        iEntities = len(dEntities["UnloadList"])
+
+    #Here we check to see if we need to limit.
+    elif (len(dEntities["UnloadList"]) >= 9):
+
+        #If so, we just set the amount of entities to
+        #   be Unloaded to the limit.
+        iEntities = 9
+    
+
+    for iChunk in xrange(iEntities-1,-1,-1):
+
+        if dEntities["UnloadList"][iChunk]._Get_Component("FLAG:IsLoaded")._Get_Flag():
+
+            #This will save the contents of our chunk to a file (so we can free our memory.)
+            Unload({"chunk":dEntities["UnloadList"][iChunk],
+                    "ChunkDataDir":dEntities["ChunkDataDir"]})
 
             #print dEntities["UnloadList"]._Get(iChunk)._Get_Component(CWORLD_POS)._Get_Position()
 
             #Now we take the chunk and chunk pointer variables outside of the lists because they aren't needed anymore.
-            chunkDict.pop(str(dEntities["UnloadList"][iChunk]._Get_Component("POS:WorldPos")._Get_X())  \
-                          + "," + str(dEntities["UnloadList"][iChunk]._Get_Component("POS:WorldPos")._Get_Y()))
-
+            dEntities["ChunkDict"]._Remove(str(dEntities["UnloadList"][iChunk]._Get_Component("POS:WorldPos")._Get_X())  \
+                                           + "," + str(dEntities["UnloadList"][iChunk]._Get_Component("POS:WorldPos")._Get_Y()))
+    
             dEntities["UnloadList"]._Remove(iChunk)
-
-            iNumberOfChunksUnloaded += 1
 
 def Update_Flag_List(dEntities):
     """The chunks within the flag list have just recently either been loaded or had their tile data altered. So here we will see if those chunks are empty. And if they are,
@@ -770,14 +1101,14 @@ def Update_Render_List(dEntities):
 
     dEntities["RenderList"]._Clear()
 
+    #print dEntities["ChunkDict"]
+
     #print "These are the world positions of the chunks that are in the render list!"
 
     #Only the chunks within the window are applicable
     #This will iterate through all of the chunks inside the window at the moment.
     for i in xrange( dEntities["WorldPos"]._Get_X(), dEntities["WorldPos"]._Get_X() + dEntities["ChunksInWind"]._Get_X() ):
         for j in xrange( dEntities["WorldPos"]._Get_Y(), dEntities["WorldPos"]._Get_Y() + dEntities["ChunksInWind"]._Get_Y() ):
-
-            #print i, j
 
             #Check to see if the chunk is loaded and not empty!
             if dEntities["ChunkDict"]["%d,%d"%(i,j)]._Get_Component("FLAG:IsLoaded")._Get_Flag() \
@@ -847,6 +1178,11 @@ def Load_Data(dEntities):
 def Unload(dEntities):
     """This is where we'll be saving the contents of a chunk to a file."""
 
+    print "unloading chunk", str(dEntities["chunk"]._Get_Component("POS:WorldPos")._Get_X()) \
+                    + " " + str(dEntities["chunk"]._Get_Component("POS:WorldPos")._Get_Y())
+
+    print dEntities["chunk"]._Get_Component("FLAG:IsEmpty")._Get_Flag()
+
     #This checks to see if the chunks that are being loaded in
     #   are linked with a saved game.
     if dEntities["ChunkDataDir"]._Get_Storage()[-9:] != "SavedGame":
@@ -858,7 +1194,7 @@ def Unload(dEntities):
         fileName = os.getcwd() + config.Saved_Game_Directory    \
                    + str(dEntities["chunk"]._Get_Component("POS:WorldPos")._Get_X()) \
                    + " " + str(dEntities["chunk"]._Get_Component("POS:WorldPos")._Get_Y()) + ".txt"
-    #try:
+
     fileObj = open(fileName, "w")       #This won't provoke errors, because the file will either be created or overwritten.
 
     #The attributes and the tile IDs need to be assembled into a string representation and written to our fileObj
@@ -876,8 +1212,7 @@ def Unload(dEntities):
     fileObj.write(dataString)
 
     fileObj.close()     #Without this, there could be a corrupted file
-    #except Exception:
-        #print fileName, "failed to load, because it does not exist!"
+
 
 def Flag_Update(dEntities):
     """This will determine if a chunk is empty or not depending on its meshes (a chunk with an empty mesh might as well be empty.)"""

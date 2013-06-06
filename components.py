@@ -560,7 +560,7 @@ class Render_List(Component):
         self._lComponents.append(item)
 
     def _Clear(self):
-        for i in xrange(len(self._lComponents)):
+        for i in xrange(len(self._lComponents)-1,-1,-1):
             del self._lComponents[i]
 
     def _Remove(self, indx):
@@ -608,6 +608,9 @@ class List(Component):
     def __setitem__(self, indx, item):
         self._lComponents[indx] = item
 
+    def __str__(self):
+        return str(self._lComponents)
+
     def __len__(self):
         return len(self._lComponents)
 
@@ -627,8 +630,14 @@ class Dictionary(Component):
     def __getitem__(self, key):
         return self._dComponents.get(key, None)
 
-    def __setitem(self, key, value):
+    def __setitem__(self, key, value):
         self._dComponents[key] = value
+
+    def values(self):
+        return self._dComponents.values()
+
+    def __str__(self):
+        return str(self._dComponents)
 
     def _Clear(self):
         del self._lComponents
@@ -676,7 +685,7 @@ class Position(Component):
     def _Get_Y(self):
         return self._position[1]
 
-    def _Set_Position(self, postion):
+    def _Set_Position(self, position):
         self._position = position
 
     def _Add_To_X(self, number):
