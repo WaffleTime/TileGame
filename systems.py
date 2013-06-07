@@ -91,7 +91,7 @@ def Change_Save_Dir(dEntities):
     """This is for switching the directory that is looked in for saved game
     information. That directory contains chunk data, player data and
     entity data."""
-    
+
     config.Saved_Game_Directory = dEntities["button"]._Get_Component("MISC:SaveDir")._Get_Storage()
 
     return "NULL,NULL"
@@ -105,13 +105,13 @@ def New_Save(dEntities):
     previousDirectory = os.getcwd()
 
     os.chdir(os.getcwd() + "\\SavedGames\\")
-    
+
     lyst = os.listdir(os.getcwd())
 
     counter = 0
 
     #print lyst
-    
+
     #Iterate through the lyst counting the saved games.
     for i in lyst:
         #Checks if the current item
@@ -144,7 +144,7 @@ def New_Save(dEntities):
     playerStats.find("CurHp").text = "20"
     playerStats.append(ET.Element("MaxHp"))
     playerStats.find("MaxHp").text = "20"
-    
+
     playerStats.append(ET.Element("CurMp"))
     playerStats.find("CurMp").text = "20"
     playerStats.append(ET.Element("MaxMp"))
@@ -162,7 +162,7 @@ def New_Save(dEntities):
     #This should save the xml we just created
     #   into the new saved directory
     ET.ElementTree(playerStats).write("PlayerData.xml")
-    
+
     #Select this new saved game.
     config.Saved_Game_Directory = "\\SavedGames\\Save" + str(counter) + "\\ChunkData\\"
 
@@ -173,7 +173,7 @@ def New_Save(dEntities):
 
     shutil.copy2("%s\\Resources\\ChunkData\\NewSave\\0 0.txt"%os.getcwd(),
                  "%s%s"%(os.getcwd(), config.Saved_Game_Directory))
-    
+
     shutil.copy2("%s\\Resources\\ChunkData\\NewSave\\0 1.txt"%os.getcwd(),
                  "%s%s"%(os.getcwd(), config.Saved_Game_Directory))
 
@@ -239,7 +239,6 @@ def Generate_World_Data(dEntities):
                                   "xOffset":lOrderOfOffsetsX[iSpiralOffset%4],
                                   "yOffset":lOrderOfOffsetsY[iSpiralOffset%4]} )
 
-            Update({"ChunkMan":dEntities["ChunkMan"]})
             Update({"ChunkMan":dEntities["ChunkMan"]})
 
             #This is just for cleaning up the below part.
@@ -343,7 +342,7 @@ def Generate_World_Data(dEntities):
 
                 iStartY = dEntities["ChunkMan"]._Get_Component("POS:ChunksInWind")._Get_Y()-1
                 iEndY = -1
-                iStepX = -1
+                iStepY = -1
 
 
             #Check to see if topRight is the area we'll start in.
@@ -368,7 +367,11 @@ def Generate_World_Data(dEntities):
 
                 iStartY = dEntities["ChunkMan"]._Get_Component("POS:ChunksInWind")._Get_Y()-1
                 iEndY = -1
-                iStepX = -1
+                iStepY = -1
+
+            #print "Chunks should be generated meow."
+            #print iStartY, iEndY, iStepY
+            #print iStartX, iEndX, iStepX
 
             #Now we have to call Generate_Chunk_Data for each of the four middle
             #   chunks.
@@ -386,7 +389,6 @@ def Generate_World_Data(dEntities):
 
         #This is entered when the current side of the spiral is complete
         else:
-
             #Here's where we'll increment our counter component.
             #This counts the directional moves (moving more than once in one direction
             #   counts as a single move. So we increment after generating a row/column of chunks
@@ -405,6 +407,8 @@ def Generate_World_Data(dEntities):
         Move_Chunk_Position( {"ChunkMan":dEntities["ChunkMan"],
                               "xOffset":4,
                               "yOffset":0} )
+
+        Update({"ChunkMan":dEntities["ChunkMan"]})
 
         #And once we reach this point, the generation is done, so
         #   we need to remove this system function from the System_Manager.
@@ -532,7 +536,7 @@ def Generate_Chunk_Data(dEntities):
 
         iStartY = config.CHUNK_TILES_HIGH-1
         iEndY = -1
-        iStepX = -1
+        iStepY = -1
 
 
     #Check to see if topRight is the area we'll start in.
@@ -557,7 +561,7 @@ def Generate_Chunk_Data(dEntities):
 
         iStartY = config.CHUNK_TILES_HIGH-1
         iEndY = -1
-        iStepX = -1
+        iStepY = -1
 
     #This will be what we pass to Alter_Tiles()
     #   after we figure out what the tiles will be changed to.
@@ -958,6 +962,7 @@ def Update(dEntities):
 def Update_Load_List(dEntities):
     """This will signal chunks to load its data from their text files. Don't confuse this for updating the meshes of the chunks."""
 
+    """
     #This whole prior check process is to make sure we are dealing with the first
     #   so many entities in the list, but are still removing in a descending order
     
@@ -976,12 +981,14 @@ def Update_Load_List(dEntities):
         #If so, we just set the amount of entities to
         #   be loaded to the limit.
         iEntities = 9
-    
+    """
 
-    for iChunk in xrange(iEntities-1,-1,-1):
+    for iChunk in xrange(len(dEntities["LoadList"])-1,-1,-1): #iEntities-1,-1,-1):
 
         #Checks to see if the chunk has been loaded yet
         if dEntities["LoadList"][iChunk]._Get_Component("FLAG:IsLoaded")._Get_Flag() == False:
+
+            print "Chunk being loaded", dEntities["LoadList"][iChunk]._Get_Component("POS:WorldPos")._Get_Position()
 
             #Loads the tile data from its file
             Load_Data({"chunk":dEntities["LoadList"][iChunk],
@@ -1340,9 +1347,3 @@ def Build_Collidable_Meshes(dEntities):
                     if dEntities["chunk"]._Get_Component("LIST:Tiles")[j][i][k]._Get_Is_Transparent() != True:
                         #This is confirmed to correctly break out of ONLY the CHUNK_LAYERS loop and still allow the other loops to continue.
                         break
-
-
-
-
-
-
