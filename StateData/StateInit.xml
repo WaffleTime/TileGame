@@ -133,7 +133,7 @@
 				</Attributes>
 				<Component name='State'>
 					<componentID>0</componentID>
-					<state>Game,NewGame</state>
+					<state>Game,ChooseMapDir</state>
 				</Component>
 			</Entity>
 			<Entity name='SavedGame' type='Button'>
@@ -213,7 +213,7 @@
 				</Attributes>
 				<Component name='State'>
 					<componentID>0</componentID>
-					<state>Menu,MapEdi</state>
+					<state>Menu,ChooseMapDir</state>
 				</Component>
 			</Entity>
 			<Input type='hotspot'>
@@ -542,8 +542,7 @@
 				</OnReleased>
 			</Input>
 		</Instructions>
-		
-		<MapEdi>
+		<ChooseMapDir>
 			<viewWidth>1024</viewWidth>
 			<viewHeight>768</viewHeight>
 			<Entity name='MenuDecor' type='View'>
@@ -567,10 +566,94 @@
 					<componentName>ChunkMan</componentName>
 				</entity>
 			</System>
+			<Entity name='Map1' type='Button'>
+				<assembleFunc>Assemble_Button</assembleFunc>
+				<drawPriority>2</drawPriority>
+				<Attributes>
+					<x>400</x>
+					<y>300</y>
+					<width>150</width>
+					<height>50</height>
+					<text>Map1</text>
+					<Font name='Asman'>ASMAN.ttf</Font>
+				</Attributes>
+				<Component name='State'>
+					<componentID>0</componentID>
+					<state>Menu,MapEdi</state>
+				</Component>
+				<Component name='Misc'>
+					<componentID>Dir</componentID>
+					<storage>\MapData\Map1\</storage>
+				</Component>
+			</Entity>
+			<Input type='hotspot'>
+				<x>400</x>
+				<y>300</y>
+				<width>150</width>
+				<height>50</height>
+				<OnSelected>
+					<system>Oscillate_Box_Colors</system>
+					<entity>
+						<entityType>Button</entityType>
+						<entitytName>Map1</entitytName>
+						<componentName>box</componentName>
+					</entity>
+				</OnSelected>
+				<OnDeselected>
+					<system>Oscillate_Box_Colors</system>
+					<entity>
+						<entityType>Button</entityType>
+						<entitytName>Map1</entitytName>
+						<componentName>box</componentName>
+					</entity>
+				</OnDeselected>
+				<OnPressed>
+					<type>action</type>
+					<system>Change_Map_Dir</system>
+					<entity>
+						<entityType>Button</entityType>
+						<entitytName>Map1</entitytName>
+						<componentName>button</componentName>						
+					</entity>
+				</OnPressed>
+				<OnReleased>
+					<system>Change_State</system>
+					<entity>
+						<entityType>Button</entityType>
+						<entitytName>Map1</entitytName>
+						<componentName>state</componentName>						
+					</entity>
+				</OnReleased>
+			</Input>
+		</ChooseMapDir>
+		<MapEdi>
+			<viewWidth>1024</viewWidth>
+			<viewHeight>768</viewHeight>
+			<Entity name='MapCrawler' type='View'>
+				<assembleFunc>Assemble_Chunk_Manager</assembleFunc>
+				<drawPriority>1</drawPriority>
+				<Attributes>
+					<ChunkDataDir>MapEdi</ChunkDataDir>
+					<WorldPos>0,0</WorldPos>
+					<ChunksInWind>2,2</ChunksInWind>
+					<RenderState name='TileAtlas0'>itemAtlas.png</RenderState>
+					<RenderState name='TileAtlas1'>groundAtlas.png</RenderState>
+					<RenderState name='TileAtlas2'>backgroundAtlas.png</RenderState>
+				</Attributes>
+			</Entity>
+			<System>
+				<type>state</type>
+				<systemFunc>Update</systemFunc>
+				<entity>
+					<entityType>View</entityType>
+					<entitytName>MapCrawler</entitytName>
+					<componentName>ChunkMan</componentName>
+				</entity>
+			</System>
 			<Entity name='Menu' type='State'>
 				<Component name='State'>
 					<componentID>0</componentID>
-					<state>Menu,MainMenu</state>
+					<state>Menu,SaveMapMCData</state>
 				</Component>
 			</Entity>
 			<Input type='key'>
@@ -584,11 +667,324 @@
 					</entity>
 				</OnReleased>
 			</Input>
+			<Entity name='Right' type='Direction'>
+				<Component name='Position'>
+					<componentID>direction</componentID>
+					<positionX>1</positionX>
+					<positionY>0</positionY>
+				</Component>
+			</Entity>
+			<Input type='key'>
+				<key>/72.</key>
+				<OnReleased>
+					<system>Move_Chunk_Position</system>
+					<entity>
+						<entityType>Direction</entityType>
+						<entitytName>Right</entitytName>
+						<componentName>Offset</componentName>
+					</entity>
+					<entity>
+						<entityType>View</entityType>
+						<entitytName>MapCrawler</entitytName>
+						<componentName>ChunkMan</componentName>
+					</entity>
+				</OnReleased>
+			</Input>
+			<Entity name='Left' type='Direction'>
+				<Component name='Position'>
+					<componentID>direction</componentID>
+					<positionX>-1</positionX>
+					<positionY>0</positionY>
+				</Component>
+			</Entity>
+			<Input type='key'>
+				<key>/71.</key>
+				<OnReleased>
+					<system>Move_Chunk_Position</system>
+					<entity>
+						<entityType>Direction</entityType>
+						<entitytName>Left</entitytName>
+						<componentName>Offset</componentName>
+					</entity>
+					<entity>
+						<entityType>View</entityType>
+						<entitytName>MapCrawler</entitytName>
+						<componentName>ChunkMan</componentName>
+					</entity>
+				</OnReleased>
+			</Input>
+			<Entity name='Up' type='Direction'>
+				<Component name='Position'>
+					<componentID>direction</componentID>
+					<positionX>0</positionX>
+					<positionY>-1</positionY>
+				</Component>
+			</Entity>
+			<Input type='key'>
+				<key>/73.</key>
+				<OnReleased>
+					<system>Move_Chunk_Position</system>
+					<entity>
+						<entityType>Direction</entityType>
+						<entitytName>Up</entitytName>
+						<componentName>Offset</componentName>
+					</entity>
+					<entity>
+						<entityType>View</entityType>
+						<entitytName>MapCrawler</entitytName>
+						<componentName>ChunkMan</componentName>
+					</entity>
+				</OnReleased>
+			</Input>
+			<Entity name='Down' type='Direction'>
+				<Component name='Position'>
+					<componentID>direction</componentID>
+					<positionX>0</positionX>
+					<positionY>1</positionY>
+				</Component>
+			</Entity>
+			<Input type='key'>
+				<key>/74.</key>
+				<OnReleased>
+					<system>Move_Chunk_Position</system>
+					<entity>
+						<entityType>Direction</entityType>
+						<entitytName>Down</entitytName>
+						<componentName>Offset</componentName>
+					</entity>
+					<entity>
+						<entityType>View</entityType>
+						<entitytName>MapCrawler</entitytName>
+						<componentName>ChunkMan</componentName>
+					</entity>
+				</OnReleased>
+			</Input>
+			<Entity name='StartMousePos' type='TmpStorage'>
+				<Component name='Position'>
+					<componentID>MouseTilePos</componentID>
+					<positionX>0</positionX>
+					<positionY>0</positionY>
+				</Component>
+			</Entity>
+			<Input type='mouse'>
+				<button>0</button>
+				<OnPressed>
+					<type>action</type>
+					<system>Save_Mouse_Tile_Pos</system>
+					<entity>
+						<entityType>TmpStorage</entityType>
+						<entitytName>StartMousePos</entitytName>
+						<componentName>StartPos</componentName>
+					</entity>
+				</OnPressed>
+				<OnReleased>
+					<system>Alter_Selected_Tile_Area</system>
+					<entity>
+						<entityType>View</entityType>
+						<entitytName>MapCrawler</entitytName>
+						<componentName>ChunkMan</componentName>
+					</entity>
+					<entity>
+						<entityType>TmpStorage</entityType>
+						<entitytName>StartMousePos</entitytName>
+						<componentName>StartPos</componentName>
+					</entity>
+				</OnReleased>
+			</Input>
 		</MapEdi>
-
+		<SaveMapMCData>
+			<viewWidth>1024</viewWidth>
+			<viewHeight>768</viewHeight>
+			<Entity name='MapCrawler' type='View'>
+				<assembleFunc>Assemble_Chunk_Manager</assembleFunc>
+				<drawPriority>-1</drawPriority>
+				<Attributes>
+					<ChunkDataDir>SavedGame</ChunkDataDir>
+					<WorldPos>0,0</WorldPos>
+					<ChunksInWind>2,2</ChunksInWind>
+					<RenderState name='TileAtlas0'>itemAtlas.png</RenderState>
+					<RenderState name='TileAtlas1'>groundAtlas.png</RenderState>
+					<RenderState name='TileAtlas2'>backgroundAtlas.png</RenderState>
+				</Attributes>
+			</Entity>
+			<System>
+				<type>state</type>
+				<systemFunc>Update</systemFunc>
+				<entity>
+					<entityType>View</entityType>
+					<entitytName>MapCrawler</entitytName>
+					<componentName>ChunkMan</componentName>
+				</entity>
+			</System>
+			
+			<Entity name='MapBoundary' type='Storage'>
+				<Component name='Misc'>
+					<componentID>LeftBound</componentID>
+					<storage>0</storage>
+				</Component>
+				<Component name='Misc'>
+					<componentID>RightBound</componentID>
+					<storage>0</storage>
+				</Component>
+				<Component name='Misc'>
+					<componentID>TopBound</componentID>
+					<storage>0</storage>
+				</Component>
+				<Component name='Misc'>
+					<componentID>BottomBound</componentID>
+					<storage>0</storage>
+				</Component>
+			</Entity>
+			<System>
+				<type>action</type>
+				<systemFunc>Determine_Map_Boundaries</systemFunc>
+				<entity>
+					<entityType>Storage</entityType>
+					<entitytName>MapBoundary</entitytName>
+					<componentName>boundary</componentName>
+				</entity>
+				<entity>
+					<entityType>View</entityType>
+					<entitytName>MapCrawler</entitytName>
+					<componentName>ChunkMan</componentName>
+				</entity>
+			</System>
+			
+			<System>
+				<type>action</type>
+				<systemFunc>Setup_Markov_Data_Files</systemFunc>
+			</System>
+			
+			<Entity name='Counter' type='Storage'>
+				<Component name='Counter'>
+					<componentID>x</componentID>
+				</Component>
+				<Component name='Counter'>
+					<componentID>y</componentID>
+				</Component>
+			</Entity>
+			<Entity name='MCData' type='Storage'>
+				<assembleFunc>Assemble_MCData_Storage</assembleFunc>
+				<drawPriority>-1</drawPriority>
+				<Attributes>
+				</Attributes>
+			</Entity>
+			<System>
+				<type>state</type>
+				<systemFunc>Calculate_Markov_Map_Data</systemFunc>
+				<entity>
+					<entityType>View</entityType>
+					<entitytName>MapCrawler</entitytName>
+					<componentName>ChunkMan</componentName>
+				</entity>
+				<entity>
+					<entityType>Storage</entityType>
+					<entitytName>MapBoundary</entitytName>
+					<componentName>boundary</componentName>
+				</entity>
+				<entity>
+					<entityType>Storage</entityType>
+					<entitytName>Counter</entitytName>
+					<componentName>ChunkCounter</componentName>
+				</entity>
+				<entity>
+					<entityType>Storage</entityType>
+					<entitytName>MCData</entitytName>
+					<componentName>MCData</componentName>
+				</entity>
+			</System>
+		</SaveMapMCData>
 	</Menu>
 
-	<Game>	
+	<Game>
+		<ChooseMapDir>
+			<viewWidth>1024</viewWidth>
+			<viewHeight>768</viewHeight>
+			<Entity name='MenuDecor' type='View'>
+				<assembleFunc>Assemble_Chunk_Manager</assembleFunc>
+				<drawPriority>1</drawPriority>
+				<Attributes>
+					<ChunkDataDir>\Resources\ChunkData\MainMenu\</ChunkDataDir>
+					<WorldPos>0,0</WorldPos>
+					<ChunksInWind>2,2</ChunksInWind>
+					<RenderState name='TileAtlas0'>itemAtlas.png</RenderState>
+					<RenderState name='TileAtlas1'>groundAtlas.png</RenderState>
+					<RenderState name='TileAtlas2'>backgroundAtlas.png</RenderState>
+				</Attributes>
+			</Entity>
+			<System>
+				<type>state</type>
+				<systemFunc>Update</systemFunc>
+				<entity>
+					<entityType>View</entityType>
+					<entitytName>MenuDecor</entitytName>
+					<componentName>ChunkMan</componentName>
+				</entity>
+			</System>
+			<System>
+				<type>action</type>
+				<systemFunc>New_Save</systemFunc>
+			</System>
+			<Entity name='Map1' type='Button'>
+				<assembleFunc>Assemble_Button</assembleFunc>
+				<drawPriority>2</drawPriority>
+				<Attributes>
+					<x>400</x>
+					<y>300</y>
+					<width>150</width>
+					<height>50</height>
+					<text>Map1</text>
+					<Font name='Asman'>ASMAN.ttf</Font>
+				</Attributes>
+				<Component name='State'>
+					<componentID>0</componentID>
+					<state>Game,NewGame</state>
+				</Component>
+				<Component name='Misc'>
+					<componentID>Dir</componentID>
+					<storage>\MapData\Map1\MCData\</storage>
+				</Component>
+			</Entity>
+			<Input type='hotspot'>
+				<x>400</x>
+				<y>300</y>
+				<width>150</width>
+				<height>50</height>
+				<OnSelected>
+					<system>Oscillate_Box_Colors</system>
+					<entity>
+						<entityType>Button</entityType>
+						<entitytName>Map1</entitytName>
+						<componentName>box</componentName>
+					</entity>
+				</OnSelected>
+				<OnDeselected>
+					<system>Oscillate_Box_Colors</system>
+					<entity>
+						<entityType>Button</entityType>
+						<entitytName>Map1</entitytName>
+						<componentName>box</componentName>
+					</entity>
+				</OnDeselected>
+				<OnPressed>
+					<type>action</type>
+					<system>Change_Map_Dir</system>
+					<entity>
+						<entityType>Button</entityType>
+						<entitytName>Map1</entitytName>
+						<componentName>button</componentName>						
+					</entity>
+				</OnPressed>
+				<OnReleased>
+					<system>Change_State</system>
+					<entity>
+						<entityType>Button</entityType>
+						<entitytName>Map1</entitytName>
+						<componentName>state</componentName>						
+					</entity>
+				</OnReleased>
+			</Input>
+		</ChooseMapDir>
 		<NewGame>
 			<viewWidth>1024</viewWidth>
 			<viewHeight>768</viewHeight>
@@ -604,38 +1000,41 @@
 					<RenderState name='TileAtlas2'>backgroundAtlas.png</RenderState>
 				</Attributes>
 			</Entity>
-			<Entity name='Counter' type='WorldGen'>
-				<Component name='Misc'>
-					<componentID>spiralSideCount</componentID>
-					<storage>0</storage>
-				</Component>
-				<Component name='Misc'>
-					<componentID>moveCount</componentID>
-					<storage>0</storage>
-				</Component>
-				<Component name='Misc'>
-					<componentID>maxMoves</componentID>
-					<storage>21</storage>
-				</Component>
+			<Entity name='MCData' type='Storage'>
+				<assembleFunc>Assemble_MCData_Storage</assembleFunc>
+				<drawPriority>-1</drawPriority>
+				<Attributes>
+				</Attributes>
 			</Entity>
 			<System>
 				<type>action</type>
-				<systemFunc>New_Save</systemFunc>
+				<systemFunc>Load_MCData</systemFunc>
+				<entity>
+					<entityType>Storage</entityType>
+					<entitytName>MCData</entitytName>
+					<componentName>MCData</componentName>
+				</entity>
 				<entity>
 					<entityType>WorldGen</entityType>
 					<entitytName>MapCrawler</entitytName>
 					<componentName>ChunkMan</componentName>
 				</entity>
 			</System>
-			<System>
-				<type>state</type>
-				<systemFunc>Update</systemFunc>
-				<entity>
-					<entityType>WorldGen</entityType>
-					<entitytName>MapCrawler</entitytName>
-					<componentName>ChunkMan</componentName>
-				</entity>
-			</System>
+			<Entity name='Counter' type='WorldGen'>
+				<Component name='Counter'>
+					<componentID>spiralSideCount</componentID>
+				</Component>
+				<Component name='Counter'>
+					<componentID>moveCount</componentID>
+				</Component>
+				<Component name='Misc'>
+					<componentID>maxMoves</componentID>
+					<storage>6</storage>
+				</Component>
+				<Component name='Counter'>
+					<componentID>chunkCount</componentID>
+				</Component>
+			</Entity>
 			<System>
 				<type>state</type>
 				<systemFunc>Generate_World_Data</systemFunc>
@@ -648,6 +1047,11 @@
 					<entityType>WorldGen</entityType>
 					<entitytName>Counter</entitytName>
 					<componentName>MoveCounter</componentName>
+				</entity>
+				<entity>
+					<entityType>Storage</entityType>
+					<entitytName>MCData</entitytName>
+					<componentName>MCData</componentName>
 				</entity>
 			</System>
 		</NewGame>
@@ -744,7 +1148,7 @@
 					<state>Game,Continue</state>
 				</Component>
 				<Component name='Misc'>
-					<componentID>SaveDir</componentID>
+					<componentID>Dir</componentID>
 					<storage>\SavedGames\Save0\ChunkData\</storage>
 				</Component>
 			</Entity>
@@ -803,7 +1207,7 @@
 					<state>Game,Continue</state>
 				</Component>
 				<Component name='Misc'>
-					<componentID>SaveDir</componentID>
+					<componentID>Dir</componentID>
 					<storage>\SavedGames\TestSave\ChunkData\</storage>
 				</Component>
 			</Entity>

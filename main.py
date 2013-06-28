@@ -111,7 +111,7 @@ class Entity_Manager(object):
         #I'm sure that this is suppose to be an empty list
         if lEntities == []:
 
-            return systemFunc()
+            return systemFunc({})
 
         else:
             #sComponentName:entityInstance
@@ -398,7 +398,12 @@ def ChangeState(lCurState, lNxtState, window, windView, EntManager):
                                             AssembleEntityInfo(inpoot, "OnReleased"))
 
         elif inpoot.attrib["type"] == "mouse":
-            pass
+            Input_Manager._Add_Mouse_Listener(inpoot.find("button").text,             \
+                                              inpoot.find("OnPressed").find("type").text if inpoot.find("OnPressed") != None else None,  \
+                                              inpoot.find("OnPressed").find("system").text if inpoot.find("OnPressed") != None else None,   \
+                                              AssembleEntityInfo(inpoot, "OnPressed"),    \
+                                              inpoot.find("OnReleased").find("system").text if inpoot.find("OnReleased") != None else None,   \
+                                              AssembleEntityInfo(inpoot, "OnReleased"))
 
     #These are the systems that are relevant to this state and they will be added into the System_Queue class.
     for system in root.findall("System"):
@@ -413,38 +418,36 @@ def ChangeState(lCurState, lNxtState, window, windView, EntManager):
         lNxtState[i] = "NULL"
 
 
+
 def Init():
     """This will setup the window and whatever needs setup (just once) at the start of the program."""
-    wind = sf.RenderWindow( sf.VideoMode( config.WINDOW_WIDTH, config.WINDOW_HEIGHT ), "TileGame" )
+
+    config.window = sf.RenderWindow( sf.VideoMode( config.WINDOW_WIDTH, config.WINDOW_HEIGHT ), "TileGame" )
 
     #This makes the background of the screen Black.
-    wind.clear(sf.Color.BLACK)
+    config.window.clear(sf.Color.BLACK)
 
-    windView = sf.View()
-
-    return wind, windView
-    
+    config.windowView = sf.View()
 
 
 def main():
     #Initialize the window and windowView (the windowView won't be setup until the state changes!)
-    window, windowView = Init()
+    Init()
     
     #These variables will track our position within the game.
     lCurrentState = ["NULL","NULL"]
-    lNextState = ["Game","NewGame"]
+    lNextState = ["Menu","Intro"]
 
     #This will be updated when we change to a state.
     EntityManager = Entity_Manager()
 
-    ChangeState(lCurrentState, lNextState, window, windowView, EntityManager)
+    ChangeState(lCurrentState, lNextState, config.window, config.windowView, EntityManager)
 
     t = sf.Time(0.0)
-    DT = sf.Time(1./config.TICKS_PER_SEC)
 
     accumulator = sf.Time(0.0)
     
-    MAX_FRAMESKIP = 9
+    MAX_FRAMESKIP = 5
 
     timer = sf.Clock()
 
@@ -472,10 +475,10 @@ def main():
 
 
         #This will loop through all of the events that have been triggered by player input
-        for event in window.iter_events():
+        for event in config.window.iter_events():
 
             if event.type == sf.Event.MOUSE_MOVED:
-                Input_Manager._Mouse_Has_Moved(window.convert_coords(event.x,event.y))
+                Input_Manager._Mouse_Has_Moved(config.window.convert_coords(event.x,event.y))
 
             #elif event.type == sf.Event.TEXT_ENTERED:
                 #Input_Manager._Key_Input(event.unicode, True, lastKeyPress.elapsed_time)
@@ -516,7 +519,7 @@ def main():
         iLoops = 0  #A counter for the amount of game update loops that are made in sucession whilst skipping rendering updates.
         
         #This loop will start if it is time to commence the next update and will keep going if we are behind schedule and need to catch up.
-        while accumulator >= DT and iLoops < MAX_FRAMESKIP:
+        while accumulator >= sf.Time(1./config.FRAME_RATE) and iLoops < MAX_FRAMESKIP:
 
             #This makes the program so that it basically pauses all of its game updates when a user clicks outside of the window. And it waits until the user clicks on the window.
             if windowIsActive:
@@ -532,14 +535,14 @@ def main():
 
                     #If one of the lNextState elements is changed, they all are (just how it goes.)
                     if lNextState[0] != "NULL" and lNextState[0] != "QUIT":
-                        ChangeState(lCurrentState, lNextState, window, windowView, EntityManager)
+                        ChangeState(lCurrentState, lNextState, config.window, config.windowView, EntityManager)
 
                     #Finally after we've handled input and have correctly adjusted to the nextState (in most cases it won't happen,)
                     #we can then update our game's model with stuff that will happen in the respective state with each game update.
 
                     #Notice that DT is a constant variable that represents how much time is going by during
                     #   this update.
-                    lNextState = EntityManager._Logic_Update(DT)
+                    lNextState = EntityManager._Logic_Update(sf.Time(1./config.FRAME_RATE))
 
                     #Check to see if we have signaled to quit the game thus far
                     if lNextState[0] == "QUIT":
@@ -547,7 +550,7 @@ def main():
 
                     #If one of the lNextState elements is changed, they all are (just how it goes.)
                     if lNextState[0] != "NULL" and lNextState[0] != "QUIT":
-                        ChangeState(lCurrentState, lNextState, window, windowView, EntityManager)
+                        ChangeState(lCurrentState, lNextState, config.window, config.windowView, EntityManager)
 
 
             #If we have received a quit signal, we should stop our loop and quit the game!
@@ -558,19 +561,19 @@ def main():
             #The accumulator contains the time that hasn't yet been used for the updates.
             #Each update will assume that dt time is going by, so the accumulator just
             #   needs to subtract by the time that is being used up.
-            accumulator -= DT
+            accumulator -= sf.Time(1./config.FRAME_RATE)
             
             #This counts the Update loop
             iLoops += 1
             
         #This makes the program so that it basically pauses all of its game updates when a user clicks outside of the window. And it waits until the user clicks on the window.
         if windowIsActive:
-            EntityManager._Render_Update(window, windowView)
+            EntityManager._Render_Update(config.window, config.windowView)
             
-        window.display()
+        config.window.display()
 
     #This closes our RenderWindow!
-    window.close()
+    config.window.close()
 
 
 #If this file was ran as the main, then we will call the main (if it was included in another file, this would prevent main() from being called.)

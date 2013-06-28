@@ -134,7 +134,7 @@ def Handle_Input(window):
 
             if position[0] >= window_View.viewport.left:
                 if position[1] >= window_View.viewport.top:
-                    position = window.convert_coords(position[0], position[1], window_View)
+                    #position = window.convert_coords(position[0], position[1], window_View)
 
                     offset = position[0] % config.TILE_SIZE
                     startTileX = int((position[0]-offset) / config.TILE_SIZE)
@@ -154,7 +154,7 @@ def Handle_Input(window):
 
             if position[0] >= window_View.viewport.left:
                 if position[1] >= window_View.viewport.top:
-                    position = window.convert_coords(position[0], position[1], window_View)
+                    #position = window.convert_coords(position[0], position[1], window_View)
 
                     offset = position[0] % config.TILE_SIZE
                     endTileX = int((position[0]-offset) / config.TILE_SIZE)

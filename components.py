@@ -671,10 +671,8 @@ class State(Component):
 class Position(Component):
     def __init__(self, dData):
         Component.__init__(self, "POS:%s"%(dData['componentID']), False, 0)
-        self._position = dData['position']
+        self._position = [int(dData['positionX']), int(dData['positionY'])]
 
-        self._position[0] = int(self._position[0])
-        self._position[1] = int(self._position[1])
 
     def _Get_Position(self):
         return self._position
@@ -694,6 +692,25 @@ class Position(Component):
     def _Add_To_Y(self, number):
         self._position[1] += number
 
+class Counter(Component):
+    def __init__(self, dData):
+        Component.__init__(self, "COUNT:%s"%(dData['componentID']), False, 0)
+        self._counter = 0
+
+    def _Reset_Counter(self):
+        self._counter = 0
+
+    def _Set_Counter(self, count):
+        self._counter = count
+
+    def _Add(self, number):
+        self._counter += number
+
+    def _Increment(self):
+        self._counter += 1
+
+    def _Get_Count(self):
+        return self._counter
 
 class Misc(Component):
     def __init__(self, dData):

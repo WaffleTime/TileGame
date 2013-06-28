@@ -1,6 +1,25 @@
 #These are Global variables for the program
 
-TICKS_PER_SEC = 42          #Game updates per second
+FRAME_RATE = 42
+
+LOADING_FRAME_RATE = 2
+
+
+#These two vars will contain two sfml objects that until recently
+#   were just stored within the main.py's main().
+#   They are stored here now, because the system functions for altering the tiles
+#   need to be able to query for the mouse's locations
+window = None
+windowView = None
+
+FOREGROUND_TILE_TYPES = 5
+GROUND_TILE_TYPES = 15
+BACKGROUND_TILE_TYPES = 5
+
+TILE_XRELATION_MIN = -8
+TILE_XRELATION_MAX = 8
+TILE_YRELATION_MIN = -6
+TILE_YRELATION_MAX = 6
 
 VIEW_TILE_WIDTH = 16      #Tiles along the x-axis of the visible screen
 VIEW_TILE_HEIGHT = 12     #Tiles along the y-axis of the visible screen
@@ -15,6 +34,8 @@ WINDOW_WIDTH = 1024           #Pixels alongthe x-axis of the visible screen
 WINDOW_HEIGHT = 768           #Pixels along the y-axis of the visible screen
 
 Saved_Game_Directory = ""
+
+Map_Data_Directory = ""
 
 #Note that the window and view dimensions are dependent on the CHUNK_SIZE/TILE_SIZE.
 #This is because the window is going to be the view's size with an extra chunk added to each dimension (x-/y-axis.)

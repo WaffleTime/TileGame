@@ -28,6 +28,82 @@ def Assemble_Button(sEntityName, sEntityType, iDrawPriority, attribDict):
 
     return entity
 
+def Assemble_MCData_Storage(sEntityName, sEntityType, iDrawPriority, attribDict):
+    """This is for storing the Markov Chain data for the maps made in the tile editor.
+    This essentially is just temporary storage until the map is fully iterated over. Then
+    this data will have to be saved to a number of xml files (one for each tile relation
+    that will be compatible.)"""
+
+    #This mostly should store a List of Lists of Lists of Lists. The first depth is the layer
+    #   that the target tile exists on. The second depth is the tile relation.
+    #   The third depth is the relative tile's tile type (on the GROUND layer.) And
+    #   the last depth is the target tile's tile type (on the layer specified by the first depth.)
+
+    #So I'm thinking that some more reasonable numbers may look like 8*6*25*25 (30000.)
+    #   Since that number is still much larger than the amount of tiles we have loaded in memory at
+    #   more points in time (6912,) that's probably what I'm going to shoot for at the most.
+    #Note that those numbers are only for a single layer (which there are three of currently.)
+    #   So I'm going to figure out the minimum number of tile types that should be available
+    #   for the generation. Then all the rest of the tile types would have to be obtained through
+    #   chests or crafting.
+
+    entity = Entity(sEntityName, sEntityType, iDrawPriority, {})
+
+    #This will be what stores the Markov Chain data for the map generation.
+    #   But after the data is all gathered and converted, it will be saved to
+    #   some xml files.
+    MCData = components.List({"componentID":"MCData"})
+
+    for layer in xrange(config.CHUNK_LAYERS):
+
+        tileLayer = components.List({"componentID":"TileLayer%d"%layer})
+
+        for y in xrange(config.TILE_YRELATION_MIN,config.TILE_YRELATION_MAX+1):
+            
+            yRelation = components.List({"componentID":"YRelation%d"%(y)})
+            
+            for x in xrange(config.TILE_XRELATION_MIN,config.TILE_XRELATION_MAX+1):
+
+                if y == 0 and x == 0:
+                    continue
+                
+                xRelation = components.List({"componentID":"XRelation%d"%(x)})
+
+                for r in xrange(config.GROUND_TILE_TYPES):
+
+                    relativeTile = components.List({"componentID":"RelativeTileType%d"%r})
+
+                    if layer == 0:
+
+                        for t in xrange(config.FOREGROUND_TILE_TYPES):
+
+                            relativeTile._Add(components.Counter({"componentID":"TargetTileType%d"%t}))
+
+                    if layer == 1:
+
+                        for t in xrange(config.GROUND_TILE_TYPES):
+
+                            relativeTile._Add(components.Counter({"componentID":"TargetTileType%d"%t}))
+
+                    if layer == 2:
+
+                        for t in xrange(config.BACKGROUND_TILE_TYPES):
+
+                            relativeTile._Add(components.Counter({"componentID":"TargetTileType%d"%t}))
+
+                    xRelation._Add(relativeTile)
+
+                yRelation._Add(xRelation)
+
+            tileLayer._Add(yRelation)
+
+        MCData._Add(tileLayer)
+
+    entity._Add_Component(MCData)
+
+    return entity
+                
+
 def Assemble_Player(sEntityName, sEntityType, iDrawPriority, attribDict):
     entity = Entity(sEntityName, sEntityType, iDrawPriority, {})
 
@@ -40,16 +116,19 @@ def Assemble_Player(sEntityName, sEntityType, iDrawPriority, attribDict):
 
     lWindPos = attribDict["WindPos"].split(",")
 
-    entity._Add_Component(components.Position({"componentID":"LastPos",                         \
-                                               "position":lWindPos}))
+    print lWindPos
+
+    entity._Add_Component(components.Position({"componentID":"LastPos",     \
+                                               "positionX":lWindPos[0],     \
+                                               "positionY":lWindPos[1]}))
 
     
 
     entity._Add_Component(components.Collision_Box({"componentID":"main",                             \
                                                     "dependentComponentName":"STATE_ANIMATIONS:main", \
                                                     "collisionType":"freeMoving",                     \
-                                                    "xOffset":lWindPos[0],  \
-                                                    "yOffset":lWindPos[1], \
+                                                    "xOffset":int(lWindPos[0]),  \
+                                                    "yOffset":int(lWindPos[1]), \
                                                     "width":attribDict["FrameWidth"],        \
                                                     "height":attribDict["FrameHeight"],      \
                                                     "mass":attribDict["mass"]}))
@@ -75,10 +154,12 @@ def Assemble_Chunk(sEntityName, sEntityType, iDrawPriority, attribDict):
     entity._Add_Component(components.Mesh(dMeshData))
 
     entity._Add_Component(components.Position({"componentID":"WorldPos",    \
-                                               "position":attribDict['WorldPos'].split(',')}))
+                                               "positionX":attribDict['WorldPos'].split(',')[0],    \
+                                               "positionY":attribDict['WorldPos'].split(',')[1]}))
     
     entity._Add_Component(components.Position({"componentID":"WindowPos",   \
-                                               "position":attribDict['WindowPos'].split(',')}))
+                                               "positionX":attribDict['WindowPos'].split(',')[0],   \
+                                               "positionY":attribDict['WindowPos'].split(',')[1]}))
 
     entity._Add_Component(components.Flag({"componentID":"IsEmpty", "flag":True}))
     entity._Add_Component(components.Flag({"componentID":"IsLoaded", "flag":False}))
@@ -109,11 +190,20 @@ def Assemble_Chunk_Manager(sEntityName, sEntityType, iDrawPriority, attribDict):
     taken care of.)"""
     entity = Entity(sEntityName, sEntityType, iDrawPriority, {})
 
-    #Notice that the ChunkDataDir is prefixed by the directory that this file is in.
-    entity._Add_Component(components.Misc({"componentID":"ChunkDataDir", "storage":os.getcwd()+attribDict["ChunkDataDir"]}))
+    if attribDict["ChunkDataDir"] == "SavedGame":
+        #Notice that the ChunkDataDir is prefixed by the directory that this file is in.
+        entity._Add_Component(components.Misc({"componentID":"ChunkDataDir", "storage":os.getcwd()+config.Saved_Game_Directory}))
 
-    entity._Add_Component(components.Position({"componentID":"WorldPos", "position":attribDict["WorldPos"].split(',')}))
-    entity._Add_Component(components.Position({"componentID":"ChunksInWind", "position":attribDict["ChunksInWind"].split(",")}))
+    elif attribDict["ChunkDataDir"] == "MapEdi":
+        #Notice that the ChunkDataDir is prefixed by the directory that this file is in.
+        entity._Add_Component(components.Misc({"componentID":"ChunkDataDir", "storage":os.getcwd()+config.Map_Data_Directory}))    
+
+    else:
+        #Notice that the ChunkDataDir is prefixed by the directory that this file is in.
+        entity._Add_Component(components.Misc({"componentID":"ChunkDataDir", "storage":os.getcwd()+attribDict["ChunkDataDir"]}))
+
+    entity._Add_Component(components.Position({"componentID":"WorldPos", "positionX":attribDict["WorldPos"].split(',')[0], "positionY":attribDict["WorldPos"].split(',')[1]}))
+    entity._Add_Component(components.Position({"componentID":"ChunksInWind", "positionX":attribDict["ChunksInWind"].split(",")[0], "positionY":attribDict["ChunksInWind"].split(",")[1]}))
     entity._Add_Component(components.Flag({"componentID":"VisibilityUpdate", "flag":False}))
 
     entity._Add_Component(components.Dictionary({"componentID":"ChunkDict"}))
