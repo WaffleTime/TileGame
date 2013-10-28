@@ -1,0 +1,79 @@
+<Intro>
+	<viewWidth>1024</viewWidth>
+	<viewHeight>768</viewHeight>
+	<Entity name='Title' type='TextBox'>
+		<assembleFunc>Assemble_Text_Box</assembleFunc>
+		<drawPriority>1</drawPriority>
+		<Attributes>
+			<x>325</x>
+			<y>100</y>
+			<width>300</width>
+			<height>50</height>
+			<text>Welcome to the Intro!</text>
+			<Font name='Asman'>ASMAN.ttf</Font>
+		</Attributes>
+	</Entity>
+	<Entity name='Predefined1' type='Button'>
+		<assembleFunc>Assemble_Button</assembleFunc>
+		<drawPriority>1</drawPriority>
+		<Attributes>
+			<x>400</x>
+			<y>300</y>
+			<width>150</width>
+			<height>50</height>
+			<text>Main Menu</text>
+			<Font name='Asman'>ASMAN.ttf</Font>
+		</Attributes>
+		<Component name='State'>
+			<componentID>0</componentID>
+			<state>Menu,MainMenu</state>
+		</Component>
+	</Entity>
+	<Entity name='Custom1' type='KeyPress'>
+		<Component name='State'>
+			<componentID>0</componentID>
+			<state>Menu,MapEdi</state>
+		</Component>
+	</Entity>
+	<Input type='key'>
+		<key>/24.25.</key>
+		<OnReleased>
+			<system>Change_State</system>
+			<entity>
+				<entityType>KeyPress</entityType>
+				<entitytName>Custom1</entitytName>
+				<componentName>state</componentName>
+			</entity>
+		</OnReleased>
+	</Input>
+	<Input type='hotspot'>
+		<x>400</x>
+		<y>300</y>
+		<width>150</width>
+		<height>50</height>
+		<OnSelected>
+			<system>Oscillate_Box_Colors</system>
+			<entity>
+				<entityType>Button</entityType>
+				<entitytName>Predefined1</entitytName>
+				<componentName>box</componentName>
+			</entity>
+		</OnSelected>
+		<OnDeselected>
+			<system>Oscillate_Box_Colors</system>
+			<entity>
+				<entityType>Button</entityType>
+				<entitytName>Predefined1</entitytName>
+				<componentName>box</componentName>
+			</entity>
+		</OnDeselected>
+		<OnReleased>
+			<system>Change_State</system>
+			<entity>
+				<entityType>Button</entityType>
+				<entitytName>Predefined1</entitytName>
+				<componentName>state</componentName>
+			</entity>
+		</OnReleased>
+	</Input>
+</Intro>

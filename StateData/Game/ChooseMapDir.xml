@@ -1,0 +1,88 @@
+<ChooseMapDir>
+	<viewWidth>1024</viewWidth>
+	<viewHeight>768</viewHeight>
+	<Entity name='MenuDecor' type='View'>
+		<assembleFunc>Assemble_Chunk_Manager</assembleFunc>
+		<drawPriority>1</drawPriority>
+		<Attributes>
+			<ChunkDataDir>\Resources\ChunkData\MainMenu\</ChunkDataDir>
+			<WorldPos>0,0</WorldPos>
+			<ChunksInWind>2,2</ChunksInWind>
+			<RenderState name='TileAtlas0'>itemAtlas.png</RenderState>
+			<RenderState name='TileAtlas1'>groundAtlas.png</RenderState>
+			<RenderState name='TileAtlas2'>backgroundAtlas.png</RenderState>
+		</Attributes>
+	</Entity>
+	<System>
+		<type>state</type>
+		<systemFunc>Update</systemFunc>
+		<entity>
+			<entityType>View</entityType>
+			<entitytName>MenuDecor</entitytName>
+			<componentName>ChunkMan</componentName>
+		</entity>
+	</System>
+	<System>
+		<type>action</type>
+		<systemFunc>New_Save</systemFunc>
+	</System>
+	<Entity name='Map1' type='Button'>
+		<assembleFunc>Assemble_Button</assembleFunc>
+		<drawPriority>2</drawPriority>
+		<Attributes>
+			<x>400</x>
+			<y>300</y>
+			<width>150</width>
+			<height>50</height>
+			<text>Map1</text>
+			<Font name='Asman'>ASMAN.ttf</Font>
+		</Attributes>
+		<Component name='State'>
+			<componentID>0</componentID>
+			<state>Game,NewGame</state>
+		</Component>
+		<Component name='Misc'>
+			<componentID>Dir</componentID>
+			<storage>\MapData\Map1\MCData\</storage>
+		</Component>
+	</Entity>
+	<Input type='hotspot'>
+		<x>400</x>
+		<y>300</y>
+		<width>150</width>
+		<height>50</height>
+		<OnSelected>
+			<system>Oscillate_Box_Colors</system>
+			<entity>
+				<entityType>Button</entityType>
+				<entitytName>Map1</entitytName>
+				<componentName>box</componentName>
+			</entity>
+		</OnSelected>
+		<OnDeselected>
+			<system>Oscillate_Box_Colors</system>
+			<entity>
+				<entityType>Button</entityType>
+				<entitytName>Map1</entitytName>
+				<componentName>box</componentName>
+			</entity>
+		</OnDeselected>
+		<OnPressed>
+			<type>action</type>
+			<system>Change_Map_Dir</system>
+			<entity>
+				<entityType>Button</entityType>
+				<entitytName>Map1</entitytName>
+				<componentName>button</componentName>						
+			</entity>
+		</OnPressed>
+		<OnReleased>
+			<system>Change_State</system>
+			<entity>
+				<entityType>Button</entityType>
+				<entitytName>Map1</entitytName>
+				<componentName>state</componentName>						
+			</entity>
+		</OnReleased>
+	</Input>
+</ChooseMapDir>

@@ -766,6 +766,18 @@
 					<positionY>0</positionY>
 				</Component>
 			</Entity>
+			<Entity name='CurLayer' type='TmpStorage'>
+				<Component name='Counter'>
+					<componentID>Layer</componentID>
+					<storage>0</storage>
+				</Component>
+			</Entity>
+			<Entity name='CurTileType' type='TmpStorage'>
+				<Component name='Counter'>
+					<componentID>TileType</componentID>
+					<storage>0</storage>
+				</Component>
+			</Entity>
 			<Input type='mouse'>
 				<button>0</button>
 				<OnPressed>
@@ -788,6 +800,63 @@
 						<entityType>TmpStorage</entityType>
 						<entitytName>StartMousePos</entitytName>
 						<componentName>StartPos</componentName>
+					</entity>
+					<entity>
+						<entityType>TmpStorage</entityType>
+						<entitytName>CurLayer</entitytName>
+						<componentName>Layer</componentName>
+					</entity>
+					<entity>
+						<entityType>TmpStorage</entityType>
+						<entitytName>CurTileType</entitytName>
+						<componentName>NewTileType</componentName>
+					</entity>
+				</OnReleased>
+			</Input>
+			
+			<Input type="key">
+				<key>/46.</key>
+				<OnReleased>
+					<system>Decrement_Counter</system>
+					<entity>
+						<entityType>TmpStorage</entityType>
+						<entitytName>CurLayer</entitytName>
+						<componentName>Layer</componentName>
+					</entity>
+				</OnReleased>
+			</Input>
+			<Input type="key">
+				<key>/47.</key>
+				<OnReleased>
+					<system>Increment_Counter</system>
+					<entity>
+						<entityType>TmpStorage</entityType>
+						<entitytName>CurLayer</entitytName>
+						<componentName>Layer</componentName>
+					</entity>
+				</OnReleased>
+			</Input>
+			
+			<Input type="key">
+				<key>/55.</key>
+				<OnReleased>
+					<system>Increment_Counter</system>
+					<entity>
+						<entityType>TmpStorage</entityType>
+						<entitytName>CurTileType</entitytName>
+						<componentName>NewTileType</componentName>
+					</entity>
+				</OnReleased>
+			</Input>
+			
+			<Input type="key">
+				<key>/56.</key>
+				<OnReleased>
+					<system>Decrement_Counter</system>
+					<entity>
+						<entityType>TmpStorage</entityType>
+						<entitytName>CurTileType</entitytName>
+						<componentName>NewTileType</componentName>
 					</entity>
 				</OnReleased>
 			</Input>

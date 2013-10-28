@@ -338,19 +338,10 @@ def ChangeState(lCurState, lNxtState, window, windView, EntManager):
 
     print "NEW STATE!", lNxtState
     #The data will lie within the nextState[0]+".txt" file and the nextState[1] element within that elemthe ent.
-    tree = parse("StateData/StateInit.xml")
+    tree = parse("StateData/%s/%s.xml"%(lNxtState[0],lNxtState[1]))
     
     #The root element and the element containing the entities we need will be using this variable.
     root = tree.getroot()
-
-    if root.find(lNxtState[0]) != None:
-        #This changes the node to the one that represents the state we're switching to.
-        root = root.find(lNxtState[0]).find(lNxtState[1])
-        
-        if root == None:
-            print "There was a problem finding %s in the StateInit.xml file."%(lNxtState[1])
-    else:
-        print "There was a problem finding %s in the StateInit.xml file."%(lNxtState[0])
 
     #This will reset the windowView's dimensions within the actual window with respect to the new state
     windView.reset(sf.FloatRect((window.width - int(root.find('viewWidth').text))/2, \
@@ -373,6 +364,8 @@ def ChangeState(lCurState, lNxtState, window, windView, EntManager):
             
     #Each one of these nodes will be an input that will be initialized for the state that is being loaded (and a multitude of kinds.)
     for inpoot in root.findall("Input"):
+
+        print inpoot.attrib
 
         #Check to see if this input's type is a hotspot.
         if inpoot.attrib["type"] == "hotspot":

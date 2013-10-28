@@ -709,6 +709,12 @@ class Counter(Component):
     def _Increment(self):
         self._counter += 1
 
+    def _Decrement(self):
+        #Reject decrements that will make the counter negative.
+        if self._counter > 0:
+            self._counter -= 1
+
+
     def _Get_Count(self):
         return self._counter
 

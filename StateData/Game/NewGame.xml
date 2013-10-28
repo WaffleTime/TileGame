@@ -1,0 +1,70 @@
+<NewGame>
+	<viewWidth>1024</viewWidth>
+	<viewHeight>768</viewHeight>
+	<Entity name='MapCrawler' type='WorldGen'>
+		<assembleFunc>Assemble_Chunk_Manager</assembleFunc>
+		<drawPriority>-1</drawPriority>
+		<Attributes>
+			<ChunkDataDir>SavedGame</ChunkDataDir>
+			<WorldPos>0,0</WorldPos>
+			<ChunksInWind>2,2</ChunksInWind>
+			<RenderState name='TileAtlas0'>itemAtlas.png</RenderState>
+			<RenderState name='TileAtlas1'>groundAtlas.png</RenderState>
+			<RenderState name='TileAtlas2'>backgroundAtlas.png</RenderState>
+		</Attributes>
+	</Entity>
+	<Entity name='MCData' type='Storage'>
+		<assembleFunc>Assemble_MCData_Storage</assembleFunc>
+		<drawPriority>-1</drawPriority>
+		<Attributes>
+		</Attributes>
+	</Entity>
+	<System>
+		<type>action</type>
+		<systemFunc>Load_MCData</systemFunc>
+		<entity>
+			<entityType>Storage</entityType>
+			<entitytName>MCData</entitytName>
+			<componentName>MCData</componentName>
+		</entity>
+		<entity>
+			<entityType>WorldGen</entityType>
+			<entitytName>MapCrawler</entitytName>
+			<componentName>ChunkMan</componentName>
+		</entity>
+	</System>
+	<Entity name='Counter' type='WorldGen'>
+		<Component name='Counter'>
+			<componentID>spiralSideCount</componentID>
+		</Component>
+		<Component name='Counter'>
+			<componentID>moveCount</componentID>
+		</Component>
+		<Component name='Misc'>
+			<componentID>maxMoves</componentID>
+			<storage>6</storage>
+		</Component>
+		<Component name='Counter'>
+			<componentID>chunkCount</componentID>
+		</Component>
+	</Entity>
+	<System>
+		<type>state</type>
+		<systemFunc>Generate_World_Data</systemFunc>
+		<entity>
+			<entityType>WorldGen</entityType>
+			<entitytName>MapCrawler</entitytName>
+			<componentName>ChunkMan</componentName>
+		</entity>
+		<entity>
+			<entityType>WorldGen</entityType>
+			<entitytName>Counter</entitytName>
+			<componentName>MoveCounter</componentName>
+		</entity>
+		<entity>
+			<entityType>Storage</entityType>
+			<entitytName>MCData</entitytName>
+			<componentName>MCData</componentName>
+		</entity>
+	</System>
+</NewGame>

@@ -1,0 +1,235 @@
+<MapEdi>
+	<viewWidth>1024</viewWidth>
+	<viewHeight>768</viewHeight>
+	<Entity name='MapCrawler' type='View'>
+		<assembleFunc>Assemble_Chunk_Manager</assembleFunc>
+		<drawPriority>1</drawPriority>
+		<Attributes>
+			<ChunkDataDir>MapEdi</ChunkDataDir>
+			<WorldPos>0,0</WorldPos>
+			<ChunksInWind>2,2</ChunksInWind>
+			<RenderState name='TileAtlas0'>itemAtlas.png</RenderState>
+			<RenderState name='TileAtlas1'>groundAtlas.png</RenderState>
+			<RenderState name='TileAtlas2'>backgroundAtlas.png</RenderState>
+		</Attributes>
+	</Entity>
+	<System>
+		<type>state</type>
+		<systemFunc>Update</systemFunc>
+		<entity>
+			<entityType>View</entityType>
+			<entitytName>MapCrawler</entitytName>
+			<componentName>ChunkMan</componentName>
+		</entity>
+	</System>
+	<Entity name='Menu' type='State'>
+		<Component name='State'>
+			<componentID>0</componentID>
+			<state>Menu,SaveMapMCData</state>
+		</Component>
+	</Entity>
+	<Input type='key'>
+		<key>/36.</key>
+		<OnReleased>
+			<system>Change_State</system>
+			<entity>
+				<entityType>State</entityType>
+				<entitytName>Menu</entitytName>
+				<componentName>state</componentName>
+			</entity>
+		</OnReleased>
+	</Input>
+	<Entity name='Right' type='Direction'>
+		<Component name='Position'>
+			<componentID>direction</componentID>
+			<positionX>1</positionX>
+			<positionY>0</positionY>
+		</Component>
+	</Entity>
+	<Input type='key'>
+		<key>/72.</key>
+		<OnReleased>
+			<system>Move_Chunk_Position</system>
+			<entity>
+				<entityType>Direction</entityType>
+				<entitytName>Right</entitytName>
+				<componentName>Offset</componentName>
+			</entity>
+			<entity>
+				<entityType>View</entityType>
+				<entitytName>MapCrawler</entitytName>
+				<componentName>ChunkMan</componentName>
+			</entity>
+		</OnReleased>
+	</Input>
+	<Entity name='Left' type='Direction'>
+		<Component name='Position'>
+			<componentID>direction</componentID>
+			<positionX>-1</positionX>
+			<positionY>0</positionY>
+		</Component>
+	</Entity>
+	<Input type='key'>
+		<key>/71.</key>
+		<OnReleased>
+			<system>Move_Chunk_Position</system>
+			<entity>
+				<entityType>Direction</entityType>
+				<entitytName>Left</entitytName>
+				<componentName>Offset</componentName>
+			</entity>
+			<entity>
+				<entityType>View</entityType>
+				<entitytName>MapCrawler</entitytName>
+				<componentName>ChunkMan</componentName>
+			</entity>
+		</OnReleased>
+	</Input>
+	<Entity name='Up' type='Direction'>
+		<Component name='Position'>
+			<componentID>direction</componentID>
+			<positionX>0</positionX>
+			<positionY>-1</positionY>
+		</Component>
+	</Entity>
+	<Input type='key'>
+		<key>/73.</key>
+		<OnReleased>
+			<system>Move_Chunk_Position</system>
+			<entity>
+				<entityType>Direction</entityType>
+				<entitytName>Up</entitytName>
+				<componentName>Offset</componentName>
+			</entity>
+			<entity>
+				<entityType>View</entityType>
+				<entitytName>MapCrawler</entitytName>
+				<componentName>ChunkMan</componentName>
+			</entity>
+		</OnReleased>
+	</Input>
+	<Entity name='Down' type='Direction'>
+		<Component name='Position'>
+			<componentID>direction</componentID>
+			<positionX>0</positionX>
+			<positionY>1</positionY>
+		</Component>
+	</Entity>
+	<Input type='key'>
+		<key>/74.</key>
+		<OnReleased>
+			<system>Move_Chunk_Position</system>
+			<entity>
+				<entityType>Direction</entityType>
+				<entitytName>Down</entitytName>
+				<componentName>Offset</componentName>
+			</entity>
+			<entity>
+				<entityType>View</entityType>
+				<entitytName>MapCrawler</entitytName>
+				<componentName>ChunkMan</componentName>
+			</entity>
+		</OnReleased>
+	</Input>
+	<Entity name='StartMousePos' type='TmpStorage'>
+		<Component name='Position'>
+			<componentID>MouseTilePos</componentID>
+			<positionX>0</positionX>
+			<positionY>0</positionY>
+		</Component>
+	</Entity>
+	<Entity name='CurLayer' type='TmpStorage'>
+		<Component name='Counter'>
+			<componentID>Layer</componentID>
+			<storage>0</storage>
+		</Component>
+	</Entity>
+	<Entity name='CurTileType' type='TmpStorage'>
+		<Component name='Counter'>
+			<componentID>TileType</componentID>
+			<storage>0</storage>
+		</Component>
+	</Entity>
+	<Input type='mouse'>
+		<button>0</button>
+		<OnPressed>
+			<type>action</type>
+			<system>Save_Mouse_Tile_Pos</system>
+			<entity>
+				<entityType>TmpStorage</entityType>
+				<entitytName>StartMousePos</entitytName>
+				<componentName>StartPos</componentName>
+			</entity>
+		</OnPressed>
+		<OnReleased>
+			<system>Alter_Selected_Tile_Area</system>
+			<entity>
+				<entityType>View</entityType>
+				<entitytName>MapCrawler</entitytName>
+				<componentName>ChunkMan</componentName>
+			</entity>
+			<entity>
+				<entityType>TmpStorage</entityType>
+				<entitytName>StartMousePos</entitytName>
+				<componentName>StartPos</componentName>
+			</entity>
+			<entity>
+				<entityType>TmpStorage</entityType>
+				<entitytName>CurLayer</entitytName>
+				<componentName>Layer</componentName>
+			</entity>
+			<entity>
+				<entityType>TmpStorage</entityType>
+				<entitytName>CurTileType</entitytName>
+				<componentName>NewTileType</componentName>
+			</entity>
+		</OnReleased>
+	</Input>
+	
+	<Input type="key">
+		<key>/46.</key>
+		<OnReleased>
+			<system>Decrement_Counter</system>
+			<entity>
+				<entityType>TmpStorage</entityType>
+				<entitytName>CurLayer</entitytName>
+				<componentName>Layer</componentName>
+			</entity>
+		</OnReleased>
+	</Input>
+	<Input type="key">
+		<key>/47.</key>
+		<OnReleased>
+			<system>Increment_Counter</system>
+			<entity>
+				<entityType>TmpStorage</entityType>
+				<entitytName>CurLayer</entitytName>
+				<componentName>Layer</componentName>
+			</entity>
+		</OnReleased>
+	</Input>
+	
+	<Input type="key">
+		<key>/55.</key>
+		<OnReleased>
+			<system>Increment_Counter</system>
+			<entity>
+				<entityType>TmpStorage</entityType>
+				<entitytName>CurTileType</entitytName>
+				<componentName>NewTileType</componentName>
+			</entity>
+		</OnReleased>
+	</Input>
+	
+	<Input type="key">
+		<key>/56.</key>
+		<OnReleased>
+			<system>Decrement_Counter</system>
+			<entity>
+				<entityType>TmpStorage</entityType>
+				<entitytName>CurTileType</entitytName>
+				<componentName>NewTileType</componentName>
+			</entity>
+		</OnReleased>
+	</Input>
+</MapEdi>

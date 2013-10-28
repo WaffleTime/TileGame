@@ -1361,6 +1361,34 @@ def Save_Mouse_Tile_Pos(dEntities):
 
     return "NULL,NULL"
 
+def Increment_Counter(dEntities):
+    """This system func's sole purpose is to increment a counter entity. In particular this is
+    useful for keeping track of the layer/tileType that is being used in the tile editor."""
+
+    #Iterate through all entities passed.
+    for entity in dEntities.values():
+
+        #Iterate through all counters for the entity.
+        for counter in entity._Get_All_Components("COUNT:"):
+
+            counter._Increment()
+
+    return "NULL,NULL"
+
+def Decrement_Counter(dEntities):
+    """This system func's sole purpose is to decrement a counter entity. In particular this is
+    useful for keeping track of the layer/tileType that is being used in the tile editor."""
+
+    #Iterate through all entities passed.
+    for entity in dEntities.values():
+
+        #Iterate through all counters for the entity.
+        for counter in entity._Get_All_Components("COUNT:"):
+
+            counter._Decrement()
+
+    return "NULL,NULL"
+
 def Alter_Selected_Tile_Area(dEntities):
     """This is the second part of the Save_Mouse_Tile_Pos() system func and its purpose
     is to make a list of the tiles that are within the box the user selected. Then it
@@ -1390,6 +1418,10 @@ def Alter_Selected_Tile_Area(dEntities):
                 xOffset = 0
                 yOffset = 0
 
+                #Here we'll get the variables for the tiles that are being updated.
+                layer = dEntities["Layer"]._Get_Component("COUNT:Layer")._Get_Count()
+                newTileType = dEntities["NewTileType"]._Get_Component("COUNT:TileType")._Get_Count()
+
                 if startTileX > endTileX:
                     xStep = -1
                     xOffset = -1
@@ -1408,7 +1440,7 @@ def Alter_Selected_Tile_Area(dEntities):
                     if tileX < (config.windowView.viewport.left + config.windowView.width) // config.TILE_SIZE:
                         for tileY in xrange(startTileY, endTileY+yOffset, yStep):
                             if tileY < (config.windowView.viewport.top + config.windowView.height) // config.TILE_SIZE:
-                                tiles.append((tileX, tileY, 1, 1))
+                                tiles.append((tileX, tileY, layer, newTileType))
 
                 Alter_Tiles({"lTileData":tiles, "ChunkMan":dEntities["ChunkMan"]})
 
@@ -1427,7 +1459,7 @@ def Alter_Tiles(dEntities):
     #This assumes all elements of listOfTiles are tuples with four integers in each.
     for (x, y, z, newTileType) in dEntities["lTileData"]:
 
-        #print "Tile Altered:", x, y, z, newTileType
+        print "Tile Altered:", x, y, z, newTileType
 
         #Fill the variables we're going to be using to find the tile and chunk we're altering.
         #This represents the tile position within the chunk it belongs to

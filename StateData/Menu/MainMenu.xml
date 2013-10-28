@@ -1,0 +1,315 @@
+<MainMenu>
+	<viewWidth>1024</viewWidth>
+	<viewHeight>768</viewHeight>
+	<Entity name='MenuDecor' type='View'>
+		<assembleFunc>Assemble_Chunk_Manager</assembleFunc>
+		<drawPriority>0</drawPriority>
+		<Attributes>
+			<ChunkDataDir>\Resources\ChunkData\MainMenu\</ChunkDataDir>
+			<WorldPos>0,0</WorldPos>
+			<ChunksInWind>2,2</ChunksInWind>
+			<RenderState name='TileAtlas0'>itemAtlas.png</RenderState>
+			<RenderState name='TileAtlas1'>groundAtlas.png</RenderState>
+			<RenderState name='TileAtlas2'>backgroundAtlas.png</RenderState>
+		</Attributes>
+	</Entity>
+	<System>
+		<type>state</type>
+		<systemFunc>Update</systemFunc>
+		<entity>
+			<entityType>View</entityType>
+			<entitytName>MenuDecor</entitytName>
+			<componentName>ChunkMan</componentName>
+		</entity>
+	</System>
+	
+	<Entity name='Title' type='TextBox'>
+		<assembleFunc>Assemble_Text_Box</assembleFunc>
+		<drawPriority>1</drawPriority>
+		<Attributes>
+			<x>350</x>
+			<y>100</y>
+			<width>250</width>
+			<height>50</height>
+			<text>The God of Gods</text>
+			<Font name='Asman'>ASMAN.ttf</Font>
+		</Attributes>
+	</Entity>
+	
+	<Entity name='NewGame' type='Button'>
+		<assembleFunc>Assemble_Button</assembleFunc>
+		<drawPriority>1</drawPriority>
+		<Attributes>
+			<x>400</x>
+			<y>200</y>
+			<width>150</width>
+			<height>50</height>
+			<text>New Game</text>
+			<Font name='Asman'>ASMAN.ttf</Font>
+		</Attributes>
+		<Component name='State'>
+			<componentID>0</componentID>
+			<state>Game,ChooseMapDir</state>
+		</Component>
+	</Entity>
+	<Entity name='SavedGame' type='Button'>
+		<assembleFunc>Assemble_Button</assembleFunc>
+		<drawPriority>1</drawPriority>
+		<Attributes>
+			<x>400</x>
+			<y>300</y>
+			<width>150</width>
+			<height>50</height>
+			<text>Saved Game</text>
+			<Font name='Asman'>ASMAN.ttf</Font>
+		</Attributes>
+		<Component name='State'>
+			<componentID>0</componentID>
+			<state>Game,ChooseSavedGame</state>
+		</Component>
+	</Entity>
+	<Entity name='Instructions' type='Button'>
+		<assembleFunc>Assemble_Button</assembleFunc>
+		<drawPriority>1</drawPriority>
+		<Attributes>
+			<x>400</x>
+			<y>400</y>
+			<width>150</width>
+			<height>50</height>
+			<text>Instructions</text>
+			<Font name='Asman'>ASMAN.ttf</Font>
+		</Attributes>
+		<Component name='State'>
+			<componentID>0</componentID>
+			<state>Menu,Instructions</state>
+		</Component>
+	</Entity>
+	<Entity name='Options' type='Button'>
+		<assembleFunc>Assemble_Button</assembleFunc>
+		<drawPriority>1</drawPriority>
+		<Attributes>
+			<x>400</x>
+			<y>500</y>
+			<width>150</width>
+			<height>50</height>
+			<text>Options</text>
+			<Font name='Asman'>ASMAN.ttf</Font>
+		</Attributes>
+		<Component name='State'>
+			<componentID>0</componentID>
+			<state>Menu,Options</state>
+		</Component>
+	</Entity>
+	<Entity name='QuitGame' type='Button'>
+		<assembleFunc>Assemble_Button</assembleFunc>
+		<drawPriority>1</drawPriority>
+		<Attributes>
+			<x>400</x>
+			<y>600</y>
+			<width>150</width>
+			<height>50</height>
+			<text>Quit Game</text>
+			<Font name='Asman'>ASMAN.ttf</Font>
+		</Attributes>
+		<Component name='State'>
+			<componentID>0</componentID>
+			<state>QUIT,QUIT</state>
+		</Component>
+	</Entity>
+	<Entity name='MapEdi' type='Button'>
+		<assembleFunc>Assemble_Button</assembleFunc>
+		<drawPriority>1</drawPriority>
+		<Attributes>
+			<x>150</x>
+			<y>400</y>
+			<width>150</width>
+			<height>50</height>
+			<text>MapEdi!</text>
+			<Font name='Asman'>ASMAN.ttf</Font>
+		</Attributes>
+		<Component name='State'>
+			<componentID>0</componentID>
+			<state>Menu,ChooseMapDir</state>
+		</Component>
+	</Entity>
+	<Input type='hotspot'>
+		<x>400</x>
+		<y>200</y>
+		<width>150</width>
+		<height>50</height>
+		<OnSelected>
+			<system>Oscillate_Box_Colors</system>
+			<entity>
+				<entityType>Button</entityType>
+				<entitytName>NewGame</entitytName>
+				<componentName>box</componentName>
+			</entity>
+		</OnSelected>
+		<OnDeselected>
+			<system>Oscillate_Box_Colors</system>
+			<entity>
+				<entityType>Button</entityType>
+				<entitytName>NewGame</entitytName>
+				<componentName>box</componentName>
+			</entity>
+		</OnDeselected>
+		<OnReleased>
+			<system>Change_State</system>
+			<entity>
+				<entityType>Button</entityType>
+				<entitytName>NewGame</entitytName>
+				<componentName>state</componentName>
+			</entity>
+		</OnReleased>
+	</Input>
+	<Input type='hotspot'>
+		<x>400</x>
+		<y>300</y>
+		<width>150</width>
+		<height>50</height>
+		<OnSelected>
+			<system>Oscillate_Box_Colors</system>
+			<entity>
+				<entityType>Button</entityType>
+				<entitytName>SavedGame</entitytName>
+				<componentName>box</componentName>
+			</entity>
+		</OnSelected>
+		<OnDeselected>
+			<system>Oscillate_Box_Colors</system>
+			<entity>
+				<entityType>Button</entityType>
+				<entitytName>SavedGame</entitytName>
+				<componentName>box</componentName>
+			</entity>
+		</OnDeselected>
+		<OnReleased>
+			<system>Change_State</system>
+			<entity>
+				<entityType>Button</entityType>
+				<entitytName>SavedGame</entitytName>
+				<componentName>state</componentName>
+			</entity>
+		</OnReleased>
+	</Input>
+	<Input type='hotspot'>
+		<x>400</x>
+		<y>400</y>
+		<width>150</width>
+		<height>50</height>
+		<OnSelected>
+			<system>Oscillate_Box_Colors</system>
+			<entity>
+				<entityType>Button</entityType>
+				<entitytName>Instructions</entitytName>
+				<componentName>box</componentName>
+			</entity>
+		</OnSelected>
+		<OnDeselected>
+			<system>Oscillate_Box_Colors</system>
+			<entity>
+				<entityType>Button</entityType>
+				<entitytName>Instructions</entitytName>
+				<componentName>box</componentName>
+			</entity>
+		</OnDeselected>
+		<OnReleased>
+			<system>Change_State</system>
+			<entity>
+				<entityType>Button</entityType>
+				<entitytName>Instructions</entitytName>
+				<componentName>state</componentName>
+			</entity>
+		</OnReleased>
+	</Input>
+	<Input type='hotspot'>
+		<x>400</x>
+		<y>500</y>
+		<width>150</width>
+		<height>50</height>
+		<OnSelected>
+			<system>Oscillate_Box_Colors</system>
+			<entity>
+				<entityType>Button</entityType>
+				<entitytName>Options</entitytName>
+				<componentName>box</componentName>
+			</entity>
+		</OnSelected>
+		<OnDeselected>
+			<system>Oscillate_Box_Colors</system>
+			<entity>
+				<entityType>Button</entityType>
+				<entitytName>Options</entitytName>
+				<componentName>box</componentName>
+			</entity>
+		</OnDeselected>
+		<OnReleased>
+			<system>Change_State</system>
+			<entity>
+				<entityType>Button</entityType>
+				<entitytName>Options</entitytName>
+				<componentName>state</componentName>
+			</entity>
+		</OnReleased>
+	</Input>
+	<Input type='hotspot'>
+		<x>400</x>
+		<y>600</y>
+		<width>150</width>
+		<height>50</height>
+		<OnSelected>
+			<system>Oscillate_Box_Colors</system>
+			<entity>
+				<entityType>Button</entityType>
+				<entitytName>QuitGame</entitytName>
+				<componentName>box</componentName>
+			</entity>
+		</OnSelected>
+		<OnDeselected>
+			<system>Oscillate_Box_Colors</system>
+			<entity>
+				<entityType>Button</entityType>
+				<entitytName>QuitGame</entitytName>
+				<componentName>box</componentName>
+			</entity>
+		</OnDeselected>
+		<OnReleased>
+			<system>Change_State</system>
+			<entity>
+				<entityType>Button</entityType>
+				<entitytName>QuitGame</entitytName>
+				<componentName>state</componentName>
+			</entity>
+		</OnReleased>
+	</Input>
+	<Input type='hotspot'>
+		<x>150</x>
+		<y>400</y>
+		<width>150</width>
+		<height>50</height>
+		<OnSelected>
+			<system>Oscillate_Box_Colors</system>
+			<entity>
+				<entityType>Button</entityType>
+				<entitytName>MapEdi</entitytName>
+				<componentName>box</componentName>
+			</entity>
+		</OnSelected>
+		<OnDeselected>
+			<system>Oscillate_Box_Colors</system>
+			<entity>
+				<entityType>Button</entityType>
+				<entitytName>MapEdi</entitytName>
+				<componentName>box</componentName>
+			</entity>
+		</OnDeselected>
+		<OnReleased>
+			<system>Change_State</system>
+			<entity>
+				<entityType>Button</entityType>
+				<entitytName>MapEdi</entitytName>
+				<componentName>state</componentName>
+			</entity>
+		</OnReleased>
+	</Input>
+</MainMenu>

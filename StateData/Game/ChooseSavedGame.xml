@@ -1,0 +1,190 @@
+<ChooseSavedGame>
+	<viewWidth>1024</viewWidth>
+	<viewHeight>768</viewHeight>
+	<Entity name='MenuDecor' type='View'>
+		<assembleFunc>Assemble_Chunk_Manager</assembleFunc>
+		<drawPriority>1</drawPriority>
+		<Attributes>
+			<ChunkDataDir>\Resources\ChunkData\MainMenu\</ChunkDataDir>
+			<WorldPos>0,0</WorldPos>
+			<ChunksInWind>2,2</ChunksInWind>
+			<RenderState name='TileAtlas0'>itemAtlas.png</RenderState>
+			<RenderState name='TileAtlas1'>groundAtlas.png</RenderState>
+			<RenderState name='TileAtlas2'>backgroundAtlas.png</RenderState>
+		</Attributes>
+	</Entity>
+	<System>
+		<type>state</type>
+		<systemFunc>Update</systemFunc>
+		<entity>
+			<entityType>View</entityType>
+			<entitytName>MenuDecor</entitytName>
+			<componentName>ChunkMan</componentName>
+		</entity>
+	</System>
+	<Entity name='Save1' type='Button'>
+		<assembleFunc>Assemble_Button</assembleFunc>
+		<drawPriority>2</drawPriority>
+		<Attributes>
+			<x>400</x>
+			<y>300</y>
+			<width>150</width>
+			<height>50</height>
+			<text>Save1</text>
+			<Font name='Asman'>ASMAN.ttf</Font>
+		</Attributes>
+		<Component name='State'>
+			<componentID>0</componentID>
+			<state>Game,Continue</state>
+		</Component>
+		<Component name='Misc'>
+			<componentID>Dir</componentID>
+			<storage>\SavedGames\Save0\ChunkData\</storage>
+		</Component>
+	</Entity>
+	<Input type='hotspot'>
+		<x>400</x>
+		<y>300</y>
+		<width>150</width>
+		<height>50</height>
+		<OnSelected>
+			<system>Oscillate_Box_Colors</system>
+			<entity>
+				<entityType>Button</entityType>
+				<entitytName>Save1</entitytName>
+				<componentName>box</componentName>
+			</entity>
+		</OnSelected>
+		<OnDeselected>
+			<system>Oscillate_Box_Colors</system>
+			<entity>
+				<entityType>Button</entityType>
+				<entitytName>Save1</entitytName>
+				<componentName>box</componentName>
+			</entity>
+		</OnDeselected>
+		<OnPressed>
+			<type>action</type>
+			<system>Change_Save_Dir</system>
+			<entity>
+				<entityType>Button</entityType>
+				<entitytName>Save1</entitytName>
+				<componentName>button</componentName>						
+			</entity>
+		</OnPressed>
+		<OnReleased>
+			<system>Change_State</system>
+			<entity>
+				<entityType>Button</entityType>
+				<entitytName>Save1</entitytName>
+				<componentName>state</componentName>						
+			</entity>
+		</OnReleased>
+	</Input>
+	<Entity name='TestSave' type='Button'>
+		<assembleFunc>Assemble_Button</assembleFunc>
+		<drawPriority>2</drawPriority>
+		<Attributes>
+			<x>400</x>
+			<y>400</y>
+			<width>150</width>
+			<height>50</height>
+			<text>TestSave</text>
+			<Font name='Asman'>ASMAN.ttf</Font>
+		</Attributes>
+		<Component name='State'>
+			<componentID>0</componentID>
+			<state>Game,Continue</state>
+		</Component>
+		<Component name='Misc'>
+			<componentID>Dir</componentID>
+			<storage>\SavedGames\TestSave\ChunkData\</storage>
+		</Component>
+	</Entity>
+	<Input type='hotspot'>
+		<x>400</x>
+		<y>400</y>
+		<width>150</width>
+		<height>50</height>
+		<OnSelected>
+			<system>Oscillate_Box_Colors</system>
+			<entity>
+				<entityType>Button</entityType>
+				<entitytName>TestSave</entitytName>
+				<componentName>box</componentName>
+			</entity>
+		</OnSelected>
+		<OnDeselected>
+			<system>Oscillate_Box_Colors</system>
+			<entity>
+				<entityType>Button</entityType>
+				<entitytName>TestSave</entitytName>
+				<componentName>box</componentName>
+			</entity>
+		</OnDeselected>
+		<OnPressed>
+			<type>action</type>
+			<system>Change_Save_Dir</system>
+			<entity>
+				<entityType>Button</entityType>
+				<entitytName>TestSave</entitytName>
+				<componentName>button</componentName>						
+			</entity>
+		</OnPressed>
+		<OnReleased>
+			<system>Change_State</system>
+			<entity>
+				<entityType>Button</entityType>
+				<entitytName>TestSave</entitytName>
+				<componentName>state</componentName>						
+			</entity>
+		</OnReleased>
+	</Input>
+	
+	<Entity name='GoBack' type='Button'>
+		<assembleFunc>Assemble_Button</assembleFunc>
+		<drawPriority>2</drawPriority>
+		<Attributes>
+			<x>150</x>
+			<y>550</y>
+			<width>150</width>
+			<height>50</height>
+			<text>Go Back</text>
+			<Font name='Asman'>ASMAN.ttf</Font>
+		</Attributes>
+		<Component name='State'>
+			<componentID>0</componentID>
+			<state>Menu,MainMenu</state>
+		</Component>
+	</Entity>
+	<Input type='hotspot'>
+		<x>150</x>
+		<y>550</y>
+		<width>150</width>
+		<height>50</height>
+		<OnSelected>
+			<system>Oscillate_Box_Colors</system>
+			<entity>
+				<entityType>Button</entityType>
+				<entitytName>GoBack</entitytName>
+				<componentName>box</componentName>
+			</entity>
+		</OnSelected>
+		<OnDeselected>
+			<system>Oscillate_Box_Colors</system>
+			<entity>
+				<entityType>Button</entityType>
+				<entitytName>GoBack</entitytName>
+				<componentName>box</componentName>
+			</entity>
+		</OnDeselected>
+		<OnReleased>
+			<system>Change_State</system>
+			<entity>
+				<entityType>Button</entityType>
+				<entitytName>GoBack</entitytName>
+				<componentName>state</componentName>
+			</entity>
+		</OnReleased>
+	</Input>
+</ChooseSavedGame>

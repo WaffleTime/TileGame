@@ -1,0 +1,102 @@
+<SaveMapMCData>
+	<viewWidth>1024</viewWidth>
+	<viewHeight>768</viewHeight>
+	<Entity name='MapCrawler' type='View'>
+		<assembleFunc>Assemble_Chunk_Manager</assembleFunc>
+		<drawPriority>-1</drawPriority>
+		<Attributes>
+			<ChunkDataDir>SavedGame</ChunkDataDir>
+			<WorldPos>0,0</WorldPos>
+			<ChunksInWind>2,2</ChunksInWind>
+			<RenderState name='TileAtlas0'>itemAtlas.png</RenderState>
+			<RenderState name='TileAtlas1'>groundAtlas.png</RenderState>
+			<RenderState name='TileAtlas2'>backgroundAtlas.png</RenderState>
+		</Attributes>
+	</Entity>
+	<System>
+		<type>state</type>
+		<systemFunc>Update</systemFunc>
+		<entity>
+			<entityType>View</entityType>
+			<entitytName>MapCrawler</entitytName>
+			<componentName>ChunkMan</componentName>
+		</entity>
+	</System>
+	
+	<Entity name='MapBoundary' type='Storage'>
+		<Component name='Misc'>
+			<componentID>LeftBound</componentID>
+			<storage>0</storage>
+		</Component>
+		<Component name='Misc'>
+			<componentID>RightBound</componentID>
+			<storage>0</storage>
+		</Component>
+		<Component name='Misc'>
+			<componentID>TopBound</componentID>
+			<storage>0</storage>
+		</Component>
+		<Component name='Misc'>
+			<componentID>BottomBound</componentID>
+			<storage>0</storage>
+		</Component>
+	</Entity>
+	<System>
+		<type>action</type>
+		<systemFunc>Determine_Map_Boundaries</systemFunc>
+		<entity>
+			<entityType>Storage</entityType>
+			<entitytName>MapBoundary</entitytName>
+			<componentName>boundary</componentName>
+		</entity>
+		<entity>
+			<entityType>View</entityType>
+			<entitytName>MapCrawler</entitytName>
+			<componentName>ChunkMan</componentName>
+		</entity>
+	</System>
+	
+	<System>
+		<type>action</type>
+		<systemFunc>Setup_Markov_Data_Files</systemFunc>
+	</System>
+	
+	<Entity name='Counter' type='Storage'>
+		<Component name='Counter'>
+			<componentID>x</componentID>
+		</Component>
+		<Component name='Counter'>
+			<componentID>y</componentID>
+		</Component>
+	</Entity>
+	<Entity name='MCData' type='Storage'>
+		<assembleFunc>Assemble_MCData_Storage</assembleFunc>
+		<drawPriority>-1</drawPriority>
+		<Attributes>
+		</Attributes>
+	</Entity>
+	<System>
+		<type>state</type>
+		<systemFunc>Calculate_Markov_Map_Data</systemFunc>
+		<entity>
+			<entityType>View</entityType>
+			<entitytName>MapCrawler</entitytName>
+			<componentName>ChunkMan</componentName>
+		</entity>
+		<entity>
+			<entityType>Storage</entityType>
+			<entitytName>MapBoundary</entitytName>
+			<componentName>boundary</componentName>
+		</entity>
+		<entity>
+			<entityType>Storage</entityType>
+			<entitytName>Counter</entitytName>
+			<componentName>ChunkCounter</componentName>
+		</entity>
+		<entity>
+			<entityType>Storage</entityType>
+			<entitytName>MCData</entitytName>
+			<componentName>MCData</componentName>
+		</entity>
+	</System>
+</SaveMapMCData>
