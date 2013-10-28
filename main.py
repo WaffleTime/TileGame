@@ -2,9 +2,13 @@ from math import ceil
 #This is so that we can import a module to be used within the ChangeState() func.
 import importlib
 import sfml as sf
+#Strictly for altering the PYTHONPATH environment variable to allow searching for Entities, Components and Systems
+import sys
+#This is for determining the current directory for setting a new PYTHONPATH
+import os
 from elementtree.ElementTree import parse
 import config
-import entities
+import Entity
 from staticInput import Input_Manager
 from systems import System_Manager
 from assets import Asset_Manager as AstManager
@@ -294,7 +298,7 @@ def GetEntityBlueprints(entityRoot):
                 #Anything else will just be put in the dictionary as an attribute
                 dEntityAttribs[attrib.tag] = attrib.text
 
-        module = importlib.import_module('entities')
+        module = importlib.import_module('%s'%(entityRoot.find('assembleFunc').text))
 
         assembleFunc = getattr(module, entityRoot.find('assembleFunc').text)
            
@@ -305,13 +309,13 @@ def GetEntityBlueprints(entityRoot):
 
     else:
         #Here we will add in a default entity instance.
-        entity = entities.Entity(entityRoot.attrib['name'], entityRoot.attrib['type'], iEntityDrawPriority,{})
+        entity = Entity.Entity(entityRoot.attrib['name'], entityRoot.attrib['type'], iEntityDrawPriority,{})
 
     #THis adds in the components that exist in the xml file for this entity (it allows custom/variations of entities to exist.)
     for component in entityRoot.findall('Component'):
 
-        #These are for getting the actual 
-        module = importlib.import_module('components')
+        #Get the module that contains the class we want.
+        module = importlib.import_module('%s'%(component.attrib['name']))
 
         componentClass = getattr(module, component.attrib['name'])
 
@@ -421,6 +425,13 @@ def Init():
     config.window.clear(sf.Color.BLACK)
 
     config.windowView = sf.View()
+
+    #This is required for allowing importlib to import modules within these directories.
+    sys.path.append(os.getcwd() + '\\Components\\')
+    sys.path.append(os.getcwd() + '\\Systems\\')
+    sys.path.append(os.getcwd() + '\\Entities\\')
+
+    print sys.path
 
 
 def main():
