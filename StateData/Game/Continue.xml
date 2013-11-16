@@ -1,6 +1,6 @@
 <Continue>
-	<viewWidth>512</viewWidth>
-	<viewHeight>384</viewHeight>
+	<viewWidthRatio>0.5</viewWidthRatio>
+	<viewHeightRatio>0.5</viewHeightRatio>
 	<Entity name='OnScreenEntities' type='EntityManager'>
 		<assembleFunc>Entity_PQueue</assembleFunc>
 		<drawPriority>3</drawPriority>

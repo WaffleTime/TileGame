@@ -1,6 +1,7 @@
 import components
-
+from ClassRetrieval import getClass
 from Entity import Entity
+import config
 
 def Assemble_Chunk(sEntityName, sEntityType, iDrawPriority, attribDict):
     entity = Entity(sEntityName, sEntityType, iDrawPriority, {})
@@ -18,32 +19,35 @@ def Assemble_Chunk(sEntityName, sEntityType, iDrawPriority, attribDict):
             #   the AssetManager.
             dMeshData[attribName] = attrib
 
-    entity._Add_Component(components.Mesh(dMeshData))
+    entity._Add_Component(getClass("Mesh")(dMeshData))
 
-    entity._Add_Component(components.Position({"componentID":"WorldPos",    \
+    entity._Add_Component(getClass("Position")({"componentID":"WorldPos",    \
                                                "positionX":attribDict['WorldPos'].split(',')[0],    \
                                                "positionY":attribDict['WorldPos'].split(',')[1]}))
     
-    entity._Add_Component(components.Position({"componentID":"WindowPos",   \
+    entity._Add_Component(getClass("Position")({"componentID":"WindowPos",   \
                                                "positionX":attribDict['WindowPos'].split(',')[0],   \
                                                "positionY":attribDict['WindowPos'].split(',')[1]}))
 
-    entity._Add_Component(components.Flag({"componentID":"IsEmpty", "flag":True}))
-    entity._Add_Component(components.Flag({"componentID":"IsLoaded", "flag":False}))
+    entity._Add_Component(getClass("Flag")({"componentID":"IsEmpty", "flag":True}))
+    entity._Add_Component(getClass("Flag")({"componentID":"IsLoaded", "flag":False}))
 
-    tileList = components.List({"componentID":"Tiles"})
+    List = getClass("List")
+    Tile = getClass("Tile")
+
+    tileList = List({"componentID":"Tiles"})
 
     for row in xrange(config.CHUNK_TILES_HIGH):
         #Adds in a list for each row of the tiles
-        tileList._Add(components.List({"componentID":"Tiles"}))
+        tileList._Add(List({"componentID":"Tiles"}))
         
         for col in xrange(config.CHUNK_TILES_WIDE):
             #Adds in a list for each col of the tiles
-            tileList[row]._Add(components.List({"componentID":"Tiles"}))
+            tileList[row]._Add(List({"componentID":"Tiles"}))
             for depth in xrange(config.CHUNK_LAYERS):
                 #Then adds in a tile, for each layer that exists, into
                 #   each 2d tile position in this chunk.
-                tileList[row][col]._Add( components.Tile({"componentID":"%d,%d,%d"%(row,col,depth)}) )
+                tileList[row][col]._Add(Tile({"componentID":"%d,%d,%d"%(row,col,depth)}) )
 
     entity._Add_Component(tileList)
 

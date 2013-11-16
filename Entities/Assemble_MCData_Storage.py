@@ -1,6 +1,7 @@
 import components
-
+from ClassRetrieval import getClass
 from Entity import Entity
+import config
 
 def Assemble_MCData_Storage(sEntityName, sEntityType, iDrawPriority, attribDict):
     """This is for storing the Markov Chain data for the maps made in the tile editor.
@@ -28,42 +29,45 @@ def Assemble_MCData_Storage(sEntityName, sEntityType, iDrawPriority, attribDict)
     #   some xml files.
     MCData = components.List({"componentID":"MCData"})
 
+    List = getClass("List")
+    Counter = getClass("Counter")
+
     for layer in xrange(config.CHUNK_LAYERS):
 
-        tileLayer = components.List({"componentID":"TileLayer%d"%layer})
+        tileLayer = List({"componentID":"TileLayer%d"%layer})
 
         for y in xrange(config.TILE_YRELATION_MIN,config.TILE_YRELATION_MAX+1):
             
-            yRelation = components.List({"componentID":"YRelation%d"%(y)})
+            yRelation = List({"componentID":"YRelation%d"%(y)})
             
             for x in xrange(config.TILE_XRELATION_MIN,config.TILE_XRELATION_MAX+1):
 
                 if y == 0 and x == 0:
                     continue
                 
-                xRelation = components.List({"componentID":"XRelation%d"%(x)})
+                xRelation = List({"componentID":"XRelation%d"%(x)})
 
                 for r in xrange(config.GROUND_TILE_TYPES):
 
-                    relativeTile = components.List({"componentID":"RelativeTileType%d"%r})
+                    relativeTile = List({"componentID":"RelativeTileType%d"%r})
 
                     if layer == 0:
 
                         for t in xrange(config.FOREGROUND_TILE_TYPES):
 
-                            relativeTile._Add(components.Counter({"componentID":"TargetTileType%d"%t}))
+                            relativeTile._Add(Counter({"componentID":"TargetTileType%d"%t}))
 
                     if layer == 1:
 
                         for t in xrange(config.GROUND_TILE_TYPES):
 
-                            relativeTile._Add(components.Counter({"componentID":"TargetTileType%d"%t}))
+                            relativeTile._Add(Counter({"componentID":"TargetTileType%d"%t}))
 
                     if layer == 2:
 
                         for t in xrange(config.BACKGROUND_TILE_TYPES):
 
-                            relativeTile._Add(components.Counter({"componentID":"TargetTileType%d"%t}))
+                            relativeTile._Add(Counter({"componentID":"TargetTileType%d"%t}))
 
                     xRelation._Add(relativeTile)
 

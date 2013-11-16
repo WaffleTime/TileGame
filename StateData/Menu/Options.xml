@@ -1,6 +1,6 @@
 <Options>
-	<viewWidth>1024</viewWidth>
-	<viewHeight>768</viewHeight>
+	<viewWidthRatio>1</viewWidthRatio>
+	<viewHeightRatio>1</viewHeightRatio>
 	<Entity name='MenuDecor' type='View'>
 		<assembleFunc>Assemble_Chunk_Manager</assembleFunc>
 		<drawPriority>1</drawPriority>

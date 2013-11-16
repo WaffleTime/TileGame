@@ -1,6 +1,5 @@
-import components
 from PriorityQueue import PriorityQueue as PQ
-
+from ClassRetrieval import getClass
 from Entity import Entity
 
 class Entity_PQueue(Entity):
@@ -21,7 +20,7 @@ class Entity_PQueue(Entity):
 
         #This is Pymunk's Space() class basically. But it's in a component.
         #   It will contain the collidable object for Entities.
-        Entity._Add_Component( self, components.Collision_Space( {"componentID":"EntityPool",     \
+        Entity._Add_Component( self, getClass("Collision_Space")( {"componentID":"EntityPool",     \
                                                                  "gravity":dAttribs["gravity"].split(",")} ) )
 
         #This will insert the entities into the PriorityQueue through the proper method.

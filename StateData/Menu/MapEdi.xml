@@ -1,6 +1,6 @@
 <MapEdi>
-	<viewWidth>1024</viewWidth>
-	<viewHeight>768</viewHeight>
+	<viewWidthRatio>1</viewWidthRatio>
+	<viewHeightRatio>1</viewHeightRatio>
 	<Entity name='MapCrawler' type='View'>
 		<assembleFunc>Assemble_Chunk_Manager</assembleFunc>
 		<drawPriority>1</drawPriority>
@@ -22,10 +22,16 @@
 			<componentName>ChunkMan</componentName>
 		</entity>
 	</System>
-	<Entity name='Menu' type='State'>
+	<Entity name='SaveMapData' type='State'>
 		<Component name='State'>
 			<componentID>0</componentID>
 			<state>Menu,SaveMapMCData</state>
+		</Component>
+	</Entity>
+	<Entity name='ToMainMenu' type='State'>
+		<Component name='State'>
+			<componentID>0</componentID>
+			<state>Menu,MainMenu</state>
 		</Component>
 	</Entity>
 	<Input type='key'>
@@ -34,7 +40,18 @@
 			<system>Change_State</system>
 			<entity>
 				<entityType>State</entityType>
-				<entitytName>Menu</entitytName>
+				<entitytName>ToMainMenu</entitytName>
+				<componentName>state</componentName>
+			</entity>
+		</OnReleased>
+	</Input>
+	<Input type='key'>
+		<key>/18.</key>
+		<OnReleased>
+			<system>Change_State</system>
+			<entity>
+				<entityType>State</entityType>
+				<entitytName>SaveMapData</entitytName>
 				<componentName>state</componentName>
 			</entity>
 		</OnReleased>
@@ -141,13 +158,15 @@
 	<Entity name='CurLayer' type='TmpStorage'>
 		<Component name='Counter'>
 			<componentID>Layer</componentID>
-			<storage>0</storage>
+			<lowerBound>0</lowerBound>
+			<upperBound>2</upperBound>
 		</Component>
 	</Entity>
 	<Entity name='CurTileType' type='TmpStorage'>
 		<Component name='Counter'>
 			<componentID>TileType</componentID>
-			<storage>0</storage>
+			<lowerBound>0</lowerBound>
+			<upperBound>9</upperBound>
 		</Component>
 	</Entity>
 	<Input type='mouse'>

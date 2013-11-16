@@ -13,6 +13,8 @@ from staticInput import Input_Manager
 from systems import System_Manager
 from assets import Asset_Manager as AstManager
 from PriorityQueue import PriorityQueue as PQ
+#This is for getting classes for components and entities.
+import ClassRetrieval
 
 class Entity_Manager(object):
     def __init__(self):
@@ -126,6 +128,8 @@ class Entity_Manager(object):
                 #This grabs the entity and stores it into the new dictionary we just made
                 dEntities[lEntities[indx][2]] = self._Get_Entity(lEntities[indx][0], lEntities[indx][1])
 
+            #print sSystemFuncName + " is being executed."
+
             return systemFunc(dEntities)        
 
     def _Input_Update(self):
@@ -154,6 +158,8 @@ class Entity_Manager(object):
         #Before updating any of the entities, we need to call all of the active system functions (providing the associated entities as arguments.)
 
         for (sSystemFuncName, lEntities) in System_Manager._Get_Active_Systems():
+            #print sSystemFuncName + " system is being exectuted."
+            
             sNextState = self._Call_System_Func(sSystemFuncName, lEntities)
 
             if sNextState != "NULL,NULL":
@@ -298,9 +304,7 @@ def GetEntityBlueprints(entityRoot):
                 #Anything else will just be put in the dictionary as an attribute
                 dEntityAttribs[attrib.tag] = attrib.text
 
-        module = importlib.import_module('%s'%(entityRoot.find('assembleFunc').text))
-
-        assembleFunc = getattr(module, entityRoot.find('assembleFunc').text)
+        assembleFunc = ClassRetrieval.getClass(entityRoot.find('assembleFunc').text)
            
         #Here we're using the Assemble*() function associated with the name of this entity to assemble the entity so that
         #we can add it to the EntityManager.
@@ -314,10 +318,7 @@ def GetEntityBlueprints(entityRoot):
     #THis adds in the components that exist in the xml file for this entity (it allows custom/variations of entities to exist.)
     for component in entityRoot.findall('Component'):
 
-        #Get the module that contains the class we want.
-        module = importlib.import_module('%s'%(component.attrib['name']))
-
-        componentClass = getattr(module, component.attrib['name'])
+        componentClass = ClassRetrieval.getClass(component.attrib['name'])
 
         #This will add in a component into the entity we just created.
         #And note that it is giving the component a dictionary of the data in the xml files.
@@ -347,11 +348,29 @@ def ChangeState(lCurState, lNxtState, window, windView, EntManager):
     #The root element and the element containing the entities we need will be using this variable.
     root = tree.getroot()
 
+
     #This will reset the windowView's dimensions within the actual window with respect to the new state
-    windView.reset(sf.FloatRect((window.width - int(root.find('viewWidth').text))/2, \
-                (window.height - int(root.find('viewHeight').text))/2,   \
-                int(root.find('viewWidth').text),    \
-                int(root.find('viewHeight').text)))
+    #windView.reset(sf.FloatRect((window.width - int(root.find('viewWidth').text))/2, \
+    #            (window.height - int(root.find('viewHeight').text))/2,   \
+    #            int(root.find('viewWidth').text),    \
+    #            int(root.find('viewHeight').text)))
+
+    print float(root.find('viewWidthRatio').text)
+
+    print "The new view's stats:\nx:%d\ny:%d\nwidth:%d\nheight:%d"%(int(window.width - int(window.width*float(root.find('viewWidthRatio').text)))/2,     \
+                                                                    int(window.height - int(window.height*float(root.find('viewHeightRatio').text)))/2,  \
+                                                                    int(window.width*float(root.find('viewWidthRatio').text)),                      \
+                                                                    int(window.height*float(root.find('viewHeightRatio').text)))
+
+    windView.reset(sf.FloatRect(int(window.width - int(window.width*float(root.find('viewWidthRatio').text)))/2,     \
+                                int(window.height - int(window.height*float(root.find('viewHeightRatio').text)))/2,  \
+                                int(window.width*float(root.find('viewWidthRatio').text)),                           \
+                                int(window.height*float(root.find('viewHeightRatio').text))))
+
+    #windView.reset(sf.FloatRect(int(window.width - window.width*float(root.find('viewWidthRatio').text)/2), \
+    #                int(window.height - window.height*float(root.find('viewHeightRatio').text)/2),            \
+    #                int(window.width*float(root.find('viewWidthRatio').text)),               \
+    #                int(window.height*float(root.find('viewHeightRatio').text))))
 
     #This clears all of the things that in the game since the last state
     EntManager._Empty_Entity_Containers()
@@ -369,7 +388,7 @@ def ChangeState(lCurState, lNxtState, window, windView, EntManager):
     #Each one of these nodes will be an input that will be initialized for the state that is being loaded (and a multitude of kinds.)
     for inpoot in root.findall("Input"):
 
-        print inpoot.attrib
+        #print inpoot.attrib
 
         #Check to see if this input's type is a hotspot.
         if inpoot.attrib["type"] == "hotspot":

@@ -22,7 +22,7 @@ def main():
 
             newImg = sf.Image.load_from_pixels(oldImg.width, oldImg.height, oldImg.get_pixels())
 
-            newImg.create_mask_from_color(sf.Color(255,0,255), 0)
+            newImg.create_mask_from_color(sf.Color(250,0,250), 0)
 
             newImg.save_to_file(item[0:-4]+".png")
 

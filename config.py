@@ -22,16 +22,16 @@ TILE_YRELATION_MIN = -6
 TILE_YRELATION_MAX = 6
 
 VIEW_TILE_WIDTH = 16      #Tiles along the x-axis of the visible screen
-VIEW_TILE_HEIGHT = 12     #Tiles along the y-axis of the visible screen
+VIEW_TILE_HEIGHT = 11     #Tiles along the y-axis of the visible screen
 TILE_SIZE = 32              #Pixels per tile (for both the x- and y-axis)
 CHUNK_TILES_WIDE = 16               #Tiles per chunk x-axis
-CHUNK_TILES_HIGH = 12               #Tiles per chunk x-axis
+CHUNK_TILES_HIGH = 11               #Tiles per chunk x-axis
 CHUNK_LAYERS = 3
 TILE_ATLAS_SIZE = 10        #Tiles per atlas (for both the x- and y-axis)
 
 #The View denotes the size of the user's screen and what it can view inside of the RenderWindow (the RenderWindow is bigger than the view.)
 WINDOW_WIDTH = 1024           #Pixels alongthe x-axis of the visible screen
-WINDOW_HEIGHT = 768           #Pixels along the y-axis of the visible screen
+WINDOW_HEIGHT = 704           #Pixels along the y-axis of the visible screen
 
 Saved_Game_Directory = ""
 

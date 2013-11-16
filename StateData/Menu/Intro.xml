@@ -1,6 +1,6 @@
 <Intro>
-	<viewWidth>1024</viewWidth>
-	<viewHeight>768</viewHeight>
+	<viewWidthRatio>1</viewWidthRatio>
+	<viewHeightRatio>1</viewHeightRatio>
 	<Entity name='Title' type='TextBox'>
 		<assembleFunc>Assemble_Text_Box</assembleFunc>
 		<drawPriority>1</drawPriority>

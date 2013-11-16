@@ -177,6 +177,8 @@ class TreeNode(object):
 
             return hotspotData          #if hotspotData != [] else None
 
+        print "A proble occured when getting data from the quad tree."
+
         #Without this, an error got thrown every now and then. It was a very mysterious thing until I realized this needed to be here.
         #But if the _Check_Collision() method was working properly, I don't think this would be needed (doesn't hurt though.)
         return []

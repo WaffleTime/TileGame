@@ -7,8 +7,8 @@ import xml.etree.ElementTree as ET
 #This is solely for reparsing xml files to give them indentations so that they are readable..
 from xml.dom import minidom
 import config
-import components
 import entities
+from ClassRetrieval import getClass
 
 #This is only necessary because the system functions for altering the tile environment
 #   require them to query for the mouse's location.
@@ -38,6 +38,8 @@ class System_Manager(object):
         For the different types of systems, I'd like them to be handled differently. A state system for instance will have two functions associated with it.
         One function will be to activate continuously and the other one will activate once when the system is removed."""
 
+        #print "systemFunction:%s"%(sSystemFuncName)
+
         if sType == 'action':
             System_Manager.lActionSystems.append((sSystemFuncName, lEntities))
 
@@ -45,25 +47,28 @@ class System_Manager(object):
             System_Manager.lStateSystems.append((sSystemFuncName, lEntities))
 
     @staticmethod
-    def _Remove_State_System(sSystemFuncName):
+    def _Remove_System(sSystemFuncName):
         """This will be for removing the systems that stay active until told otherwise (this is where we say otherwise.)
-        Since the Actions systems will be removed once they are executed, they don't really play an importance here."""
-
-        #I'm not sure why this was here.
-        #for indx in xrange(len(System_Manager.lActionSystems)):
-        #    if System_Manager.lActionSystems[indx][0] == sSystemFuncName:
-        #        System_Manager.lActionSystems.pop(indx)
-        #        break
+        Since the Actions systems will be removed once they are executed, they don't really play an importance here. But then
+        again, those might need to be canceled."""
         
         for indx in xrange(len(System_Manager.lStateSystems)):
            if System_Manager.lStateSystems[indx][0] == sSystemFuncName:
                 System_Manager.lStateSystems.pop(indx)
                 break
 
+        for indx in xrange(len(System_Manager.lActionSystems)):
+            if System_Manager.lActionSystems[indx][0] == sSystemFuncName:
+                System_Manager.lActionSystems.pop(indx)
+                break
+
     @staticmethod
     def _Get_Active_Systems():
         """This will return the active systems. Removing the actions from there containers, while just getting copies of the states."""
         lSystems = System_Manager.lActionSystems + System_Manager.lStateSystems
+
+        #print "The list of systems to be executed: "
+        #print lSystems
 
         del System_Manager.lActionSystems[:]
 
@@ -169,7 +174,7 @@ def Determine_Map_Boundaries(dEntities):
                           "Position":entities.Entity("",  \
                                                      "",  \
                                                      -1,   \
-                                                     {"pos":components.Position( {"componentID":"direction",    \
+                                                     {"pos":getClass("Position")( {"componentID":"direction",    \
                                                                                   "positionX":iLeftBound+1,             \
                                                                                   "positionY":iTopBound+1} )})} )
 
@@ -441,7 +446,7 @@ def Calculate_Markov_Map_Data(dEntities):
                               "Offset":entities.Entity("",  \
                                                        "",  \
                                                        -1,   \
-                                                       {"pos":components.Position( {"componentID":"direction",    \
+                                                       {"pos":getClass("Position")( {"componentID":"direction",    \
                                                                                     "positionX":1,             \
                                                                                     "positionY":0} )})} )
 
@@ -458,7 +463,7 @@ def Calculate_Markov_Map_Data(dEntities):
                                   "Position":entities.Entity("",  \
                                                              "",  \
                                                              -1,   \
-                                                             {"pos":components.Position( {"componentID":"direction",    \
+                                                             {"pos":getClass("Position")( {"componentID":"direction",    \
                                                                                           "positionX":dEntities["boundary"]._Get_Component("MISC:LeftBound")._Get_Storage(),             \
                                                                                           "positionY":dEntities["boundary"]._Get_Component("MISC:TopBound")._Get_Storage()               \
                                                                                                       + dEntities["ChunkCounter"]._Get_Component("COUNT:y")._Get_Count()} )})} )
@@ -466,7 +471,7 @@ def Calculate_Markov_Map_Data(dEntities):
         else:
 
             #We're done with this system function, so we'll remove it.
-            System_Manager._Remove_State_System("Calculate_Markov_Map_Data")
+            System_Manager._Remove_System("Calculate_Markov_Map_Data")
 
             #Before being done with all of this, we first need to convert the data
             #   within the .xml file we just filled so that its usable Markov Chain data.
@@ -591,7 +596,7 @@ def Save_Markov_Map_Data(dEntities):
 
             #Once we hit here, this whole system function is complete and we can remove it from the
             #   System_Manager
-            System_Manager._Remove_State_System("Save_Markov_Map_Data")
+            System_Manager._Remove_System("Save_Markov_Map_Data")
 
             return "Menu,MainMenu"
        
@@ -807,7 +812,7 @@ def Generate_World_Data(dEntities):
                                       "Offset":entities.Entity("",  \
                                                        "",  \
                                                        1,   \
-                                                       {"pos":components.Position( {"componentID":"direction",    \
+                                                       {"pos":getClass("Position")( {"componentID":"direction",    \
                                                                  "positionX":lOrderOfOffsetsX[iSpiralOffset%4],             \
                                                                  "positionY":lOrderOfOffsetsY[iSpiralOffset%4]} )})} )
 
@@ -882,7 +887,7 @@ def Generate_World_Data(dEntities):
                               "Offset":entities.Entity("",  \
                                                        "",  \
                                                        1,   \
-                                                       {"pos":components.Position( {"componentID":"direction",    \
+                                                       {"pos":getClass("Position")( {"componentID":"direction",    \
                                                                  "positionX":4,             \
                                                                  "positionY":0} )})} )
 
@@ -890,7 +895,7 @@ def Generate_World_Data(dEntities):
 
         #And once we reach this point, the generation is done, so
         #   we need to remove this system function from the System_Manager.
-        System_Manager._Remove_State_System("Generate_World_Data")
+        System_Manager._Remove_System("Generate_World_Data")
 
         #Since we're done with the world generation, we can reset the frame rate back
         #   to what it originally was.
@@ -1459,7 +1464,7 @@ def Alter_Tiles(dEntities):
     #This assumes all elements of listOfTiles are tuples with four integers in each.
     for (x, y, z, newTileType) in dEntities["lTileData"]:
 
-        print "Tile Altered:", x, y, z, newTileType
+        #print "Tile Altered:", x, y, z, newTileType
 
         #Fill the variables we're going to be using to find the tile and chunk we're altering.
         #This represents the tile position within the chunk it belongs to
@@ -1523,13 +1528,15 @@ def Move_Chunk_Position(dEntities):
 
         #print "Moving the world position!"
 
+        Assemble_Chunk = getClass('Assemble_Chunk')
+
         #If we move our world chunk position, then we will essentially need to reset all of the chunk's window positions (that are still on the screen.)
         #And the chunks that move off the screen will remain unaltered in case they return to their original window position (which then it won't need its mesh rebuilt.)
         for i in xrange( worldPos[0] - 1, worldPos[0] + chunksInWindow[0] + 1 ):
             for j in xrange( worldPos[1] - 1, worldPos[1] + chunksInWindow[1] + 1 ):
 
                 #This checks to see if the chunk already exists in our dictionary (it was already inside the window or window buffer.)
-                if chunkDict._Get("%d,%d"%(i,j)) != None:
+                if chunkDict["%d,%d"%(i,j)] != None:
 
                     pChunk = chunkDict["%d,%d"%(i,j)]
 
@@ -1540,8 +1547,12 @@ def Move_Chunk_Position(dEntities):
                         #Then we need to update the window chunk position
                         pChunk._Get_Component("POS:WindowPos")._Set_Position([ i - worldPos[0], j - worldPos[1] ])
 
-                        #and push the chunk onto the rebuild list
-                        rebuildList._Add(pChunk)
+                        #and push the chunk onto the rebuild list, provided that it's in the window.
+                        if (0 <= i-worldPos[0])     \
+                          and (i-worldPos[0] <= 1)  \
+                          and (0 <= j-worldPos[1])  \
+                          and (j-worldPos[1] <= 1):
+                            rebuildList._Add(pChunk)
 
                     #else:
 
@@ -1553,17 +1564,32 @@ def Move_Chunk_Position(dEntities):
 
                     #For each chunk that is initialized, there will be one that we will have to free from memory.
 
+                    dData = {"WorldPos":"%d,%d"%(i,j),  \
+                             "WindowPos":str(i - worldPos[0])+","+str(j - worldPos[1])}
+
+                    #A pointer to the tile atlas' is necessary for the Mesh to render the tiles.
+                    for (tileAtlasName, tileAtlas)in dEntities["ChunkMan"]._Get_Component("MISC:TileAtlas")._Get_Storage():
+                        dData[tileAtlasName] = tileAtlas
+
                     #Initialize a new chunk at position i,j in the world of chunks and put it into our dictionary.
-                    chunkDict["%d,%d"%(i,j)] = entities.Assemble_Chunk( "%s,%s" % (i, j),       \
+                    chunkDict["%d,%d"%(i,j)] = Assemble_Chunk( "%s,%s" % (i, j),       \
                                                                           "Chunk",              \
-                                                                          random.choice(chunkDict.values()),        \
-                                                                          {"WorldPos":"%d,%d"%(i,j),                \
-                                                                           "WindowPos":str(i - worldPos[0])+","+str(j - worldPos[1])} )
+                                                                          1,        \
+                                                                          dData)
 
 
                     pChunk = chunkDict["%d,%d"%(i,j)]
 
                     loadList._Add(pChunk)
+
+                    #Since this new chunk may be in the window, we'll send it to the rebuild list.
+                    if (0 <= i-worldPos[0])     \
+                      and (i-worldPos[0] <= 1)  \
+                      and (0 <= j-worldPos[1])  \
+                      and (j-worldPos[1] <= 1):
+                        rebuildList._Add(pChunk)
+
+                    
                     #Schedule an old chunk to be unloaded and then removed from the chunk dictionary
 
                     #Find the middle chunk position inbetween the previous and the next world chunk position.
@@ -1581,7 +1607,7 @@ def Move_Chunk_Position(dEntities):
                     else:
                         q = midChunkY - (j - midChunkY)
 
-                    #print "chunk removed at", p, q
+                    print "chunk removed at", p, q
 
                     #This saves the chunk's data
                     pChunk = chunkDict["%d,%d"%(p,q)]
@@ -1619,6 +1645,8 @@ def Update(dEntities):
     #This will be entered when the rebuild list rebuilds its first chunk.
     if dEntities["ChunkMan"]._Get_Component("FLAG:VisibilityUpdate")._Get_Flag():
 
+        print "updating the render list!"
+
         Update_Flag_List({"FlagList":dEntities["ChunkMan"]._Get_Component("LIST:FlagList")})
 
         #Update the render list if the camera's Position has changed
@@ -1654,6 +1682,9 @@ def Update_Rebuild_List(dEntities):
     was trying to optimize the render calls. But then I realized that in a 2d world, chunks can't really be occluded by other chunks (was thinking in 3d.)"""
 
     iNumberOfChunksRebuilt = 0
+
+    #print "This is the rebuild list"
+    #print dEntities["RebuildList"]
 
     for iChunk in xrange(len(dEntities["RebuildList"])-1,-1,-1):
 
@@ -1692,7 +1723,8 @@ def Update_Unload_List(dEntities):
             Unload({"chunk":dEntities["UnloadList"][iChunk],
                     "ChunkDataDir":dEntities["ChunkDataDir"]})
 
-            #print dEntities["UnloadList"]._Get(iChunk)._Get_Component(CWORLD_POS)._Get_Position()
+            #print "Unloading"
+            #print dEntities["UnloadList"][iChunk]._Get_Component("POS:WorldPos")._Get_Position()
 
             #Now we take the chunk and chunk pointer variables outside of the lists because they aren't needed anymore.
             dEntities["ChunkDict"]._Remove(str(dEntities["UnloadList"][iChunk]._Get_Component("POS:WorldPos")._Get_X())  \
@@ -1733,9 +1765,12 @@ def Update_Render_List(dEntities):
             if dEntities["ChunkDict"]["%d,%d"%(i,j)]._Get_Component("FLAG:IsLoaded")._Get_Flag() \
                and not dEntities["ChunkDict"]["%d,%d"%(i,j)]._Get_Component("FLAG:IsEmpty")._Get_Flag():
 
-                #print "A chunk is being added to the render List!"
+                print "A chunk is being added to the render List! %d,%d"%(i,j)
 
                 pChunk = dEntities["ChunkDict"]["%d,%d"%(i,j)]
+
+                #print "The tile mesh:"
+                #print pChunk._Get_Component("MESH:0")._Get_Meshes()
 
                 #Put the chunk pointer into the render list!
                 dEntities["RenderList"]._Add(pChunk)
@@ -1750,6 +1785,8 @@ def Load_Data(dEntities):
     fileName = dEntities["ChunkDataDir"]._Get_Storage()   \
                 + str(dEntities["chunk"]._Get_Component("POS:WorldPos")._Get_X()) \
                 + " " + str(dEntities["chunk"]._Get_Component("POS:WorldPos")._Get_Y()) + ".txt"
+
+    #print "Filename of chunk being loaded" + fileName
 
     failureFlag = False
 
@@ -1777,7 +1814,7 @@ def Load_Data(dEntities):
         fileObj.close()
 
     except Exception:
-        #print fileName, "data file wasn't found, so the chunk will be filled in as though empty."
+        print fileName, "data file wasn't found, so the chunk will be filled in as though empty."
 
         #If the file doesn't exist, then we can just fill our chunk with transparent tiles!
         for row in xrange(config.CHUNK_TILES_HIGH):
@@ -1828,6 +1865,9 @@ def Flag_Update(dEntities):
             dEntities["chunk"]._Get_Component("FLAG:IsEmpty")._Set_Flag(False)
             break
 
+    #if dEntities["chunk"]._Get_Component("FLAG:IsEmpty")._Get_Flag():
+    #    print "Empty Chunk in Flag_Update()!"
+
 def Build_Meshes(dEntities):
     """We create a mesh here using a VertexArray for a chunk that's on the screen. This only is meant to be for chunk's in relation to their position on the screen.
     Chunks off the screen don't need to have their meshes updated for no reason, but they can still have their data loaded before getting onto the screen."""
@@ -1854,9 +1894,17 @@ def Build_Meshes(dEntities):
                     tileXPos = i*config.TILE_SIZE + windowPos[0]*config.CHUNK_TILES_WIDE*config.TILE_SIZE
                     tileYPos = j*config.TILE_SIZE + windowPos[1]*config.CHUNK_TILES_HIGH*config.TILE_SIZE
 
+                    #if (0 > tileXPos)       \
+                    #   or (1024 < tileXPos) \
+                    #   or (0 > tileYPos)    \
+                    #   or (768 < tileYPos):
+                    #    print "(%d,%d,%d) isn't within the screen."%(i,j,k)
+
                     #Determine the coordinates of the tileType for our tile atlas (TILE_ATLAS_SIZE^2 possible tileTypes) (not working with pixel coords yet)
                     textXPos = (dEntities["chunk"]._Get_Component("LIST:Tiles")[j][i][k]._Get_TileID()-1) % config.TILE_ATLAS_SIZE
                     textYPos = (dEntities["chunk"]._Get_Component("LIST:Tiles")[j][i][k]._Get_TileID()-1-textXPos) / config.TILE_ATLAS_SIZE
+
+                    #print "The texture position within the atlasis (%d,%d)"%(textXPos, textYPos)
 
                     #Normalize the texture positions!
                     textXPos *= config.TILE_SIZE
@@ -1910,6 +1958,8 @@ def Build_Collidable_Meshes(dEntities):
                     tileXPos = i*config.TILE_SIZE + windowPos[0]*config.CHUNK_TILES_WIDE*config.TILE_SIZE
                     tileYPos = j*config.TILE_SIZE + windowPos[1]*config.CHUNK_TILES_HIGH*config.TILE_SIZE
 
+                    #print "The tile's Y pos is: %d"%(tileYPos)
+
                     #Determine the coordinates of the tileType for our tile atlas (TILE_ATLAS_SIZE^2 possible tileTypes) (not working with pixel coords yet)
                     textXPos = (dEntities["chunk"]._Get_Component("LIST:Tiles")[j][i][k]._Get_TileID()-1) % config.TILE_ATLAS_SIZE
                     textYPos = (dEntities["chunk"]._Get_Component("LIST:Tiles")[j][i][k]._Get_TileID()-1-textXPos) / config.TILE_ATLAS_SIZE
@@ -1926,7 +1976,7 @@ def Build_Collidable_Meshes(dEntities):
                     #Currently only the tiles of a specific layer are put into the collision space.
                     if k == 1:
 
-                        cBoxComponent = components.Collision_Box({"componentID":"%d,%d,%d"%(j,i,k),                   \
+                        cBoxComponent = getClass("Collision_Box")({"componentID":"%d,%d,%d"%(j,i,k),                   \
                                                                     "dependentComponentName":"TILE:%d,%d,%d"%(j,i,k),   \
                                                                     "collisionType":"static",                                   \
                                                                     "staticBody":dEntities["CollisionSpace"]._Get_Static_Body(),     \
