@@ -74,13 +74,31 @@ class System_Manager(object):
 
         return lSystems
 
+def Update_Position(dEntities):
+    """This is designed to update the player's position based on the state it is in, but this may be used for other Entities as well.
+    Other than from the physics engine, the player's position is handled through this."""
+    
+
 def Move_Player_Right(dEntities):
     """This will move the player to the right and checking to see if a chunk border was crossed.
     If the chunk border was crossed, then we'd have to signal for the Chunk_Manager and Inhabitant_Manager
     to be added/removed to/from (the Inhabitant_Manager doesn't need things removed necessarily though, so only additional inhabitants will appear.)"""
 
+    #USE SURFACE_VELOCITY Instead of the impulses. It gives the results that we need easily.
+    dEntities["player"]._Get_Component("CBODY:main")._Get_Shape("feet").surface_velocity = (200, 0)
+
+    dEntities["player"]._Get_Component("STATE_ANIMATIONS:main")._Activate("walk")
+
+    #dEntities["player"]._Get_Component("CSHAPE:feet")._Get_Body().
+
+    print "Moving player!"
+
+    #dEntities["player"]._Get_Component("CBODY:main")._Get_Body().apply_impulse((100,0));
+
+    return "NULL,NULL"
+    
+
     #Do a Chipmunk impulse on the colliding shape thingy (the Entity will update the actual position on its own.)
-    pass
 
     #Check to see if the player's chunk position is different than the one at the player's coords (chipmunk coords.)
 
@@ -93,7 +111,14 @@ def Move_Player_Left(dEntities):
 
     #Do a Chipmunk impulse on the colliding shape thingy (the Entity will update the actual position on its own.)
 
-    pass
+    #dEntities["player"]._Get_Component("CBODY:main")._Get_Body().apply_impulse((-100,0));
+    
+    dEntities["player"]._Get_Component("CBODY:main")._Get_Shape("feet").surface_velocity = (-200, 0)
+
+    dEntities["player"]._Get_Component("STATE_ANIMATIONS:main")._Activate("walk")
+    
+    return "NULL,NULL"
+    
     #Check to see if the player's chunk position is different than the one at the player's coords (chipmunk coords.)
 
         #If it is, then we can signal the System function to execute a function that loads/removes in Chunk entities for the Chunk_Manager and loads in Inhabitant entities for the Inhabitant_Manager.
@@ -1411,11 +1436,11 @@ def Alter_Selected_Tile_Area(dEntities):
            and position[1] >= config.windowView.viewport.top:
                 position = config.window.convert_coords(position[0], position[1], config.windowView)
 
-                offset = position[0] % config.TILE_SIZE
-                endTileX = int((position[0]-offset) / config.TILE_SIZE)
+                offset = position[0] % config.Tile_Width
+                endTileX = int((position[0]-offset) / config.Tile_Width)
 
-                offset = position[1] % config.TILE_SIZE
-                endTileY = int((position[1]-offset) / config.TILE_SIZE)
+                offset = position[1] % config.Tile_Height
+                endTileY = int((position[1]-offset) / config.Tile_Height)
 
                 tiles = []
                 xStep = None
@@ -1442,9 +1467,9 @@ def Alter_Selected_Tile_Area(dEntities):
                     yOffset = 1
 
                 for tileX in xrange(startTileX, endTileX+xOffset, xStep):
-                    if tileX < (config.windowView.viewport.left + config.windowView.width) // config.TILE_SIZE:
+                    if tileX < (config.windowView.viewport.left + config.windowView.width) // config.Tile_Width:
                         for tileY in xrange(startTileY, endTileY+yOffset, yStep):
-                            if tileY < (config.windowView.viewport.top + config.windowView.height) // config.TILE_SIZE:
+                            if tileY < (config.windowView.viewport.top + config.windowView.height) // config.Tile_Height:
                                 tiles.append((tileX, tileY, layer, newTileType))
 
                 Alter_Tiles({"lTileData":tiles, "ChunkMan":dEntities["ChunkMan"]})
@@ -1607,7 +1632,7 @@ def Move_Chunk_Position(dEntities):
                     else:
                         q = midChunkY - (j - midChunkY)
 
-                    print "chunk removed at", p, q
+                    #print "chunk removed at", p, q
 
                     #This saves the chunk's data
                     pChunk = chunkDict["%d,%d"%(p,q)]
@@ -1645,7 +1670,7 @@ def Update(dEntities):
     #This will be entered when the rebuild list rebuilds its first chunk.
     if dEntities["ChunkMan"]._Get_Component("FLAG:VisibilityUpdate")._Get_Flag():
 
-        print "updating the render list!"
+        #print "updating the render list!"
 
         Update_Flag_List({"FlagList":dEntities["ChunkMan"]._Get_Component("LIST:FlagList")})
 
@@ -1765,7 +1790,7 @@ def Update_Render_List(dEntities):
             if dEntities["ChunkDict"]["%d,%d"%(i,j)]._Get_Component("FLAG:IsLoaded")._Get_Flag() \
                and not dEntities["ChunkDict"]["%d,%d"%(i,j)]._Get_Component("FLAG:IsEmpty")._Get_Flag():
 
-                print "A chunk is being added to the render List! %d,%d"%(i,j)
+                #print "A chunk is being added to the render List! %d,%d"%(i,j)
 
                 pChunk = dEntities["ChunkDict"]["%d,%d"%(i,j)]
 
@@ -1814,7 +1839,7 @@ def Load_Data(dEntities):
         fileObj.close()
 
     except Exception:
-        print fileName, "data file wasn't found, so the chunk will be filled in as though empty."
+        #print fileName, "data file wasn't found, so the chunk will be filled in as though empty."
 
         #If the file doesn't exist, then we can just fill our chunk with transparent tiles!
         for row in xrange(config.CHUNK_TILES_HIGH):
@@ -1891,8 +1916,8 @@ def Build_Meshes(dEntities):
                 if dEntities["chunk"]._Get_Component("LIST:Tiles")[j][i][k]._Get_Is_Active():
 
                     #Calculates the position inside of our window where the tile will be placed
-                    tileXPos = i*config.TILE_SIZE + windowPos[0]*config.CHUNK_TILES_WIDE*config.TILE_SIZE
-                    tileYPos = j*config.TILE_SIZE + windowPos[1]*config.CHUNK_TILES_HIGH*config.TILE_SIZE
+                    tileXPos = i*config.Tile_Width + windowPos[0]*config.CHUNK_TILES_WIDE*config.Tile_Width
+                    tileYPos = j*config.Tile_Height + windowPos[1]*config.CHUNK_TILES_HIGH*config.Tile_Height
 
                     #if (0 > tileXPos)       \
                     #   or (1024 < tileXPos) \
@@ -1911,9 +1936,9 @@ def Build_Meshes(dEntities):
                     textYPos *= config.TILE_SIZE
 
                     dEntities["chunk"]._Get_Component("MESH:0")._Add_To_Mesh( k, [ sf.Vertex( (tileXPos, tileYPos), sf.Color.WHITE, (textXPos, textYPos) ),  \
-                                                                                   sf.Vertex( (tileXPos, tileYPos+config.TILE_SIZE), sf.Color.WHITE, (textXPos, textYPos+config.TILE_SIZE) ),    \
-                                                                                   sf.Vertex( (tileXPos+config.TILE_SIZE, tileYPos+config.TILE_SIZE), sf.Color.WHITE, (textXPos+config.TILE_SIZE, textYPos+config.TILE_SIZE) ),  \
-                                                                                   sf.Vertex( (tileXPos+config.TILE_SIZE, tileYPos), sf.Color.WHITE, (textXPos+config.TILE_SIZE, textYPos) ) ] )
+                                                                                   sf.Vertex( (tileXPos, tileYPos+config.Tile_Height), sf.Color.WHITE, (textXPos, textYPos+config.TILE_SIZE) ),    \
+                                                                                   sf.Vertex( (tileXPos+config.Tile_Width, tileYPos+config.Tile_Height), sf.Color.WHITE, (textXPos+config.TILE_SIZE, textYPos+config.TILE_SIZE) ),  \
+                                                                                   sf.Vertex( (tileXPos+config.Tile_Width, tileYPos), sf.Color.WHITE, (textXPos+config.TILE_SIZE, textYPos) ) ] )
                     #print "ActiveTile!", tileXPos, tileYPos
                     #If this tile isn't partially see-through, then all tiles behind it are occluded and we don't need to add them to their meshes.
                     if dEntities["chunk"]._Get_Component("LIST:Tiles")[j][i][k]._Get_Is_Transparent() != True:
@@ -1955,8 +1980,8 @@ def Build_Collidable_Meshes(dEntities):
                 if dEntities["chunk"]._Get_Component("LIST:Tiles")[j][i][k]._Get_Is_Active():
 
                     #Calculates the position inside of our window where the tile will be placed
-                    tileXPos = i*config.TILE_SIZE + windowPos[0]*config.CHUNK_TILES_WIDE*config.TILE_SIZE
-                    tileYPos = j*config.TILE_SIZE + windowPos[1]*config.CHUNK_TILES_HIGH*config.TILE_SIZE
+                    tileXPos = i*config.Tile_Width + windowPos[0]*config.CHUNK_TILES_WIDE*config.Tile_Width
+                    tileYPos = j*config.Tile_Height + windowPos[1]*config.CHUNK_TILES_HIGH*config.Tile_Height
 
                     #print "The tile's Y pos is: %d"%(tileYPos)
 
@@ -1969,21 +1994,21 @@ def Build_Collidable_Meshes(dEntities):
                     textYPos *= config.TILE_SIZE
 
                     dEntities["chunk"]._Get_Component("MESH:0")._Add_To_Mesh( k, [ sf.Vertex( (tileXPos, tileYPos), sf.Color.WHITE, (textXPos, textYPos) ),  \
-                                                                                   sf.Vertex( (tileXPos, tileYPos+config.TILE_SIZE), sf.Color.WHITE, (textXPos, textYPos+config.TILE_SIZE) ),    \
-                                                                                   sf.Vertex( (tileXPos+config.TILE_SIZE, tileYPos+config.TILE_SIZE), sf.Color.WHITE, (textXPos+config.TILE_SIZE, textYPos+config.TILE_SIZE) ),  \
-                                                                                   sf.Vertex( (tileXPos+config.TILE_SIZE, tileYPos), sf.Color.WHITE, (textXPos+config.TILE_SIZE, textYPos) ) ] )
+                                                                                   sf.Vertex( (tileXPos, tileYPos+config.Tile_Height), sf.Color.WHITE, (textXPos, textYPos+config.TILE_SIZE) ),    \
+                                                                                   sf.Vertex( (tileXPos+config.Tile_Width, tileYPos+config.Tile_Height), sf.Color.WHITE, (textXPos+config.TILE_SIZE, textYPos+config.TILE_SIZE) ),  \
+                                                                                   sf.Vertex( (tileXPos+config.Tile_Width, tileYPos), sf.Color.WHITE, (textXPos+config.TILE_SIZE, textYPos) ) ] )
 
                     #Currently only the tiles of a specific layer are put into the collision space.
                     if k == 1:
 
-                        cBoxComponent = getClass("Collision_Box")({"componentID":"%d,%d,%d"%(j,i,k),                   \
-                                                                    "dependentComponentName":"TILE:%d,%d,%d"%(j,i,k),   \
-                                                                    "collisionType":"static",                                   \
-                                                                    "staticBody":dEntities["CollisionSpace"]._Get_Static_Body(),     \
-                                                                    "xOffset":tileXPos,                                              \
-                                                                    "yOffset":tileYPos,                                              \
-                                                                    "width":config.TILE_SIZE,                                   \
-                                                                    "height":config.TILE_SIZE})
+                        cBoxComponent = getClass("Tile_Collision_Body")({"componentID":"%d,%d,%d"%(j,i,k),                              \
+                                                                        "dependentComponentID":"TILE:%d,%d,%d"%(j,i,k),                 \
+                                                                        "staticBody":dEntities["CollisionSpace"]._Get_Static_Body(),    \
+                                                                        "xOffset":tileXPos,                                             \
+                                                                        "yOffset":tileYPos,                                             \
+                                                                        "width":config.TILE_SIZE,                                       \
+                                                                        "height":config.TILE_SIZE,                                      \
+                                                                        "friction":0.9})
 
                         dEntities["CollisionSpace"]._Add_Shape(cBoxComponent._Get_Body(), cBoxComponent._Get_Shape())
 

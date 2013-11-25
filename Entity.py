@@ -123,18 +123,20 @@ class Entity(object):
             of its connect collision shape."""
 
         #First we must iterate through each collision shape component.
-        for cShape in self._Get_All_Components("CSHAPE"):
+        for cBody in self._Get_All_Components("CBODY"):
 
             #Then for each collison shape, we must grab its position and
             #   update the dependent component of the collision shape.
 
             #The y position needs flipped because pymunk and sfml's y coordinates start
             #   on different sides (top-left is (0,0) in sfml, bottom-left is (0,0) in pymunk)
-            lPosition = [cShape._Get_Shape().body.position[0],   \
-                        config.WINDOW_HEIGHT - cShape._Get_Shape().body.position[1]]
+            lPosition = [cBody._Get_Body().position[0],   \
+                        config.WINDOW_HEIGHT - cBody._Get_Body().position[1]]
 
-            self._Get_Component(cShape._Get_Dependent_Comp_Name())._Update_Position(lPosition)
-            
+            dependentSprite = self._Get_Component(cBody._Get_Dependent_Component_ID())
+
+            if (dependentSprite):
+                dependentSprite._Update_Position(lPosition, cBody._Get_Body().angle)
         
 
     def _Update(self, timeElapsed):

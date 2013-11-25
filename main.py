@@ -241,37 +241,38 @@ def GetEntityBlueprints(entityRoot):
         #   Note that this only iterates over the immediate children.
         for attrib in entityRoot.find("Attributes"):
 
-            #Check to see if this is a sound for the entity!
+            #Sounds are ultimately stored in the AssetManager, but pointers to those sounds are within entities.
             if attrib.tag == 'Sound':
-                #THis will start a new list of Sounds if we haven't already loaded a sound into this entity's attributes.
+                #THis will start a new list of Sounds if we haven't already loaded one into this entity's attributes.
                 if dEntityAttribs.get(attrib.tag, None) == None:
                     dEntityAttribs[attrib.tag] = {}
 
                 #Query the AssetManager for a sound that is associated with this entity, then throw that into the dictionary of attributes!
                 dEntityAttribs[attrib.tag][attrib.attrib["name"]] = AstManager._Get_Sound(attrib.attrib["name"], attrib.text)
 
+            #Music are ultimately stored in the AssetManager, but pointers to the music is within entities.
             elif attrib.tag == 'Music':
 
-                #THis will start a new list of Musics if we haven't already loaded a sound into this entity's attributes.
+                #THis will start a new list of Musics if we haven't already loaded one into this entity's attributes.
                 if dEntityAttribs.get(attrib.tag, None) == None:
                     dEntityAttribs[attrib.tag] = {}
 
                 dEntityAttribs[attrib.tag][attrib.attrib["name"]] = AstManager._Get_Music(attrib.attrib['name'], attrib.text)
 
-            #Check to see if this is a texture for the entitititity.
+            #Textures are ultimately stored in the AssetManager, but pointers to those textures are within entities.
             elif attrib.tag == 'Texture':
 
-                #THis will start a new list of Textures if we haven't already loaded a sound into this entity's attributes.
+                #THis will start a new list of Textures if we haven't already loaded one into this entity's attributes.
                 if dEntityAttribs.get(attrib.tag, None) == None:
                     dEntityAttribs[attrib.tag] = {}
 
                 #Query the AssetManager for a texture that is associated with this entity, then throw that into the dictionary of attributes!
                 dEntityAttribs[attrib.tag][attrib.attrib["name"]] = AstManager._Get_Texture(attrib.attrib['name'], attrib.text)
 
-            #Check to see if this is a RenderState for the entitititity.
+            #This is for the tileAtlas'
             elif attrib.tag == 'RenderState':
 
-                #THis will start a new list of sf.RenderStates if we haven't already loaded a sound into this entity's attributes.
+                #THis will start a new list of sf.RenderStates if we haven't already loaded one into this entity's attributes.
                 if dEntityAttribs.get(attrib.tag, None) == None:
                     dEntityAttribs[attrib.tag] = {}
 
@@ -279,20 +280,42 @@ def GetEntityBlueprints(entityRoot):
                 dEntityAttribs[attrib.tag][attrib.attrib["name"]] = AstManager._Get_Render_State(attrib.attrib['name'], attrib.text)
 
 
-            #Check to see if this is a font for the entitititity.
+            #Fonts are also in the AssetManager like textures.
             elif attrib.tag == 'Font':
 
-                #THis will start a new list of Fonts if we haven't already loaded a sound into this entity's attributes.
+                #THis will start a new list of Fonts if we haven't already loaded one into this entity's attributes.
                 if dEntityAttribs.get(attrib.tag, None) == None:
                     dEntityAttribs[attrib.tag] = {}
 
                 #Query the AssetManager for a font that is associated with this entity, then throw that into the dictionary of attributes!
                 dEntityAttribs[attrib.tag][attrib.attrib["name"]] = AstManager._Get_Font(attrib.attrib['name'], attrib.text)
 
-            #Check to see if this is a entity for the entitititity.
+            #The Collision_Body needs a list of shapes represented by dictionaries of attribs for each shape. This
+            #   assembles that data representation so that not just entity assemblers are required for collisidable entities.
+            elif attrib.tag == 'CollisionBody':
+                #THis will start a new list of CollisionShapes if we haven't already loaded one into this entity's attributes.
+                if dEntityAttribs.get(attrib.tag, None) == None:
+                    dEntityAttribs[attrib.tag] = {}
+
+                #This list of shapes will define the collision body.
+                lShapes = []
+
+                #Iterate through the collision shapes
+                for cShape in attrib:
+                    dShapeAttribs = {}
+
+                    for shapeAttrib in cShape:
+                        dShapeAttribs[shapeAttrib.tag] = shapeAttrib.text
+                        
+                    lShapes.append(dShapeAttribs)
+
+                #Bodies are marked by their name and are defined by a list of shapes.
+                dEntityAttribs[attrib.tag][attrib.attrib["name"]] = lShapes
+
+            #For storing entities within entities. This was originally for the EntityPQueue.
             elif attrib.tag == 'entity':
 
-                #THis will start a new list of Entities if we haven't already loaded a sound into this entity's attributes.
+                #THis will start a new list of Entities if we haven't already loaded one into this entity's attributes.
                 if dEntityAttribs.get(attrib.tag, None) == None:
                     dEntityAttribs[attrib.tag] = {}
 
@@ -355,18 +378,24 @@ def ChangeState(lCurState, lNxtState, window, windView, EntManager):
     #            int(root.find('viewWidth').text),    \
     #            int(root.find('viewHeight').text)))
 
-    print float(root.find('viewWidthRatio').text)
+    #print float(root.find('viewWidthRatio').text)
 
-    print "The new view's stats:\nx:%d\ny:%d\nwidth:%d\nheight:%d"%(int(window.width - int(window.width*float(root.find('viewWidthRatio').text)))/2,     \
-                                                                    int(window.height - int(window.height*float(root.find('viewHeightRatio').text)))/2,  \
-                                                                    int(window.width*float(root.find('viewWidthRatio').text)),                      \
-                                                                    int(window.height*float(root.find('viewHeightRatio').text)))
-
-    windView.reset(sf.FloatRect(int(window.width - int(window.width*float(root.find('viewWidthRatio').text)))/2,     \
+    print "The new view's stats:\nx:%f\ny:%f\nwidth:%f\nheight:%f"%(int(window.width - int(window.width*float(root.find('viewWidthRatio').text)))/2,     \
                                 int(window.height - int(window.height*float(root.find('viewHeightRatio').text)))/2,  \
                                 int(window.width*float(root.find('viewWidthRatio').text)),                           \
-                                int(window.height*float(root.find('viewHeightRatio').text))))
+                                int(window.height*float(root.find('viewHeightRatio').text)))
+    
+    windView.reset(sf.FloatRect((window.width - int(window.width*float(root.find('viewWidthRatio').text)))/2,     \
+                                (window.height - int(window.height*float(root.find('viewHeightRatio').text)))/2,  \
+                                window.width*float(root.find('viewWidthRatio').text),                           \
+                                window.height*float(root.find('viewHeightRatio').text)))
+    
+    config.Tile_Width = window.width / (config.CHUNK_TILES_WIDE*2.)
+    config.Tile_Height = window.height / (config.CHUNK_TILES_HIGH*2.)
 
+    print "TileWidth is %f and TileHeight is %f"%(config.Tile_Width, config.Tile_Height)
+    print "Window dimensions are %d x %d"%(window.width, window.height)
+    
     #windView.reset(sf.FloatRect(int(window.width - window.width*float(root.find('viewWidthRatio').text)/2), \
     #                int(window.height - window.height*float(root.find('viewHeightRatio').text)/2),            \
     #                int(window.width*float(root.find('viewWidthRatio').text)),               \
@@ -445,12 +474,14 @@ def Init():
 
     config.windowView = sf.View()
 
+    config.windowView.reset(sf.FloatRect(0, 0, config.WINDOW_WIDTH, config.WINDOW_HEIGHT))
+
     #This is required for allowing importlib to import modules within these directories.
     sys.path.append(os.getcwd() + '\\Components\\')
     sys.path.append(os.getcwd() + '\\Systems\\')
     sys.path.append(os.getcwd() + '\\Entities\\')
 
-    print sys.path
+    #print sys.path
 
 
 def main():

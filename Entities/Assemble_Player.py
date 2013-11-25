@@ -1,6 +1,7 @@
 import components
 from ClassRetrieval import getClass
 from Entity import Entity
+import pymunk
 
 def Assemble_Player(sEntityName, sEntityType, iDrawPriority, attribDict):
     entity = Entity(sEntityName, sEntityType, iDrawPriority, {})
@@ -14,21 +15,34 @@ def Assemble_Player(sEntityName, sEntityType, iDrawPriority, attribDict):
 
     lWindPos = attribDict["WindPos"].split(",")
 
-    print lWindPos
+    #print lWindPos
 
     entity._Add_Component(getClass("Position")({"componentID":"LastPos",     \
-                                               "positionX":lWindPos[0],     \
-                                               "positionY":lWindPos[1]}))
+                                                "positionX":lWindPos[0],     \
+                                                "positionY":lWindPos[1]}))
+
+    entity._Add_Component(getClass("Collision_Body")({"componentID":"main",                             \
+                                                      "dependentComponentID":"STATE_ANIMATIONS:main",   \
+                                                      "MomentType":"box",                               \
+                                                      "static":"NO",                                    \
+                                                      "mass":attribDict["mass"],                        \
+                                                      "width":attribDict["FrameWidth"],                 \
+                                                      "height":attribDict["FrameHeight"],               \
+                                                      "xOffset":lWindPos[0],                            \
+                                                      "yOffset":lWindPos[1],                            \
+                                                      "CollisionShape":attribDict["CollisionBody"]["body"]}))
 
     
+    entity._Add_Component(getClass("Collision_Body")({"componentID":"angleAnchor",                      \
+                                                      "dependentComponentID":None,                      \
+                                                      "static":"YES",                                    \
+                                                      "height":attribDict["FrameHeight"],               \
+                                                      "xOffset":lWindPos[0],                            \
+                                                      "yOffset":lWindPos[1],                            \
+                                                      "CollisionShape":attribDict["CollisionBody"]["anchor"]}))
 
-    entity._Add_Component(getClass("Collision_Box")({"componentID":"main",                             \
-                                                    "dependentComponentName":"STATE_ANIMATIONS:main", \
-                                                    "collisionType":"freeMoving",                     \
-                                                    "xOffset":int(lWindPos[0]),  \
-                                                    "yOffset":int(lWindPos[1]), \
-                                                    "width":attribDict["FrameWidth"],        \
-                                                    "height":attribDict["FrameHeight"],      \
-                                                    "mass":attribDict["mass"]}))
+
+    #pymunk.GearJoint(entity._Get_Component("CBODY:angleAnchor")._Get_Body(), entity._Get_Component("CBODY:main")._Get_Body(), 0, 0)
+
 
     return entity

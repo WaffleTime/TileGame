@@ -45,16 +45,42 @@ class Entity_PQueue(Entity):
 
         self._pqEntities._Add_Entity(entity)
 
-        if entity._Get_All_Components("CSHAPE") != []:
+        if entity._Get_All_Components("CBODY") != []:
             #The ENtity must first be flagged so that its render updates
             #   take care of the continuously moving collision shapes.
             entity._Set_Collidable(True)
 
-            for component in entity._Get_All_Components("CSHAPE"):
+            #This is a 2d array that holds shapes for each body inside of an entity
+            shapesOfBodies = []
 
-                #Each CShape within this entity will be added to the EntityPool.
-                self._Get_Component("CSPACE:EntityPool")._Add_Shape(component._Get_Body(), component._Get_Shape())
+            #This holds the bodies for the shapes of the same index in shapesOfBodies
+            bodies = []
 
+            #Iterate through all of the shapes within an entity.
+            for shape in entity._Get_All_Components("CBODY"):
+                newBody = -1
+
+                #This iterates through the previous bodies
+                for shapeIndx in xrange(len(shapesOfBodies)):
+
+                    #Check to see if this shape has the same body
+                    if (bodies[shapeIndx] == shape._Get_Body()):
+                        newBody = shapeIndx
+
+                if (newBody == -1):
+                    #Create a new list for the body that was found
+                    shapesOfBodies.append([shape._Get_Shapes()])
+                    #And add the new body
+                    bodies.append(shape._Get_Body())
+
+                else:
+                    #Add to a existing bodies' list of shapes.
+                    shapesOfBodies[shapeIndx].append(shape._Get_Shapes())
+                    
+            #Now we need to add the bodies along with their shapes into the collision space.
+            for bodyIndx in xrange(len(bodies)):
+                self._Get_Component("CSPACE:EntityPool")._Add_Shape(bodies[bodyIndx], shapesOfBodies[bodyIndx])
+                
         else:
                 entity._Set_Collidable(False)
 

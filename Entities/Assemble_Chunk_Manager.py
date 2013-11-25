@@ -82,7 +82,7 @@ def Assemble_Chunk_Manager(sEntityName, sEntityType, iDrawPriority, attribDict):
 
             pChunk = entity._Get_Component("DICT:ChunkDict")._Get("%d,%d"%(i,j))
 
-            print "(%d,%d) is being added to the loadlist"%(i,j)
+            #print "(%d,%d) is being added to the loadlist"%(i,j)
 
             entity._Get_Component("LIST:LoadList")._Add(pChunk)
 
@@ -115,7 +115,7 @@ def Assemble_Chunk_Manager(sEntityName, sEntityType, iDrawPriority, attribDict):
 
             pChunk = entity._Get_Component("DICT:ChunkDict")._Get("%d,%d"%(i,j))
 
-            print "(%d,%d) is being added to the loadlist"%(i,j)
+            #print "(%d,%d) is being added to the loadlist"%(i,j)
 
             entity._Get_Component("LIST:LoadList")._Add(pChunk)
 
@@ -150,7 +150,7 @@ def Assemble_Chunk_Manager(sEntityName, sEntityType, iDrawPriority, attribDict):
 
             entity._Get_Component("LIST:LoadList")._Add(pChunk)
 
-            print "(%d,%d) is being added to the loadlist"%(i,j)
+            #print "(%d,%d) is being added to the loadlist"%(i,j)
 
             entity._Get_Component("LIST:RebuildList")._Add(pChunk)
 

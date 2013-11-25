@@ -11,18 +11,33 @@ class Collision_Space(Component):
 
     def _Add_Shape(self, cBody, cShape):
         """This is meants for adding in collision bodies into the collision space.
-        @param cBody This is a pymunk Body object. It represents an Entity's body."""
+        @param cBody This is a pymunk Body object. It represents an Entity's body.
+        @param lCShape This is a list of pymunk Shape objects. It allows multiple shapes
+            to be associated with one body."""
 
         #print "Adding Shape into Collision Space"
         #print cBody, cShape
 
         #print cBody.position
 
-        if cBody.is_static:
-            self._cSpace.add(cShape)
+        if type(cShape) is list:
+
+            if cBody.is_static:
+                #Notice the * prefix, this will unpack a list.
+                self._cSpace.add(*cShape)
+
+            else:
+                #Notice the * prefix, this will unpack a list.
+                self._cSpace.add(cBody, *cShape)
 
         else:
-            self._cSpace.add(cBody, cShape)
+            if cBody.is_static:
+                self._cSpace.add(cShape)
+
+            else:
+                self._cSpace.add(cBody, cShape)
+
+
 
     def _Remove_Shape(self, cBody, cShape):
         """This is meant for removing body and shape collision objects out

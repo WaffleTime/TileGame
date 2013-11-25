@@ -11,9 +11,38 @@
 				<drawPriority>7</drawPriority>
 				<Attributes>
 					<WindPos>450,300</WindPos>
-					<mass>5</mass>
 					<FrameWidth>32</FrameWidth>
 					<FrameHeight>48</FrameHeight>
+					<mass>5</mass>
+					<CollisionBody name='body'>
+						<CollisionShape>
+							<name>head</name>
+							<type>circle</type>
+							<radius>16</radius>
+							<friction>0.8</friction>
+							<xBodyOffset>0</xBodyOffset>
+							<yBodyOffset>8</yBodyOffset>
+						</CollisionShape>
+						<CollisionShape>
+							<name>feet</name>
+							<type>circle</type>
+							<radius>16</radius>
+							<friction>0.8</friction>
+							<xBodyOffset>0</xBodyOffset>
+							<yBodyOffset>-8</yBodyOffset>
+						</CollisionShape>
+					</CollisionBody>
+					<CollisionBody name='anchor'>
+						<CollisionShape>
+							<name>main</name>
+							<type>box</type>
+							<width>1</width>
+							<height>1</height>
+							<friction>1</friction>
+							<xBodyOffset>0</xBodyOffset>
+							<yBodyOffset>0</yBodyOffset>
+						</CollisionShape>
+					</CollisionBody>
 					<Delay>0.5</Delay>
 					<Texture name='DEFAULT'>playerDefault.png</Texture>
 					<Texture name='walk'>playerWalk.png</Texture>
@@ -48,5 +77,27 @@
 			<componentName>EntityMan</componentName>
 		</entity>
 	</System>
-	
+
+	<Input type='key'>
+		<key>/72.</key>
+		<OnReleased>
+			<system>Move_Player_Right</system>
+			<entity>
+				<entityType>Human</entityType>
+				<entitytName>Player</entitytName>
+				<componentName>player</componentName>
+			</entity>
+		</OnReleased>
+	</Input>
+	<Input type='key'>
+		<key>/71.</key>
+		<OnReleased>
+			<system>Move_Player_Left</system>
+			<entity>
+				<entityType>Human</entityType>
+				<entitytName>Player</entitytName>
+				<componentName>player</componentName>
+			</entity>
+		</OnReleased>
+	</Input>
 </Continue>
