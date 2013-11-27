@@ -11,7 +11,7 @@ class Collision_Body(Component):
 
         height = None
 
-        if dData["static"] != "YES":
+        if dData["static"] == "NO":
             mass = None
             inertia = None
         
@@ -29,6 +29,10 @@ class Collision_Body(Component):
                 inertia = pymunk.moment_for_box(mass, width, height)
 
             self._cBody = pymunk.Body(mass, inertia)
+
+        elif dData["static"] == "UPRIGHT":
+            height = int(dData["height"])
+            self._cBody = pymunk.Body(int(dData["mass"]), pymunk.inf)
             
         else:
             height = int(dData["height"])

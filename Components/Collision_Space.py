@@ -37,6 +37,13 @@ class Collision_Space(Component):
             else:
                 self._cSpace.add(cBody, cShape)
 
+    def _Add_Constraint(self, cConstraint):
+        """This takes in a constraint that has already been initialed, then adds
+        it into the collision space.
+        @param cConstraint some instance of a constraint."""
+
+        self._cSpace.add(cConstraint)
+
 
 
     def _Remove_Shape(self, cBody, cShape):

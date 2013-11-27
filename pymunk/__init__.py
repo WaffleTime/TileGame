@@ -38,7 +38,7 @@ exactly which Chipmunk library file it loaded. For example::
     Loading chipmunk for Windows (32bit) [C:\code\pymunk\chipmunk.dll]
 
 """
-__version__ = "$Id: __init__.py 446 2012-09-02 13:06:12Z vb@viblo.se $"
+__version__ = "$Id: __init__.py 541 2013-08-22 17:36:25Z vb@viblo.se $"
 __docformat__ = "reStructuredText"
 
 __all__ = ["inf", "version", "chipmunk_version"
@@ -49,6 +49,11 @@ __all__ = ["inf", "version", "chipmunk_version"
 
 import ctypes as ct
 import weakref
+try:
+    #Python 2.7+ 
+    from weakref import WeakSet
+except ImportError:
+    from .weakrefset import WeakSet
 
 from . import _chipmunk as cp
 from . import _chipmunk_ffi as cpffi
@@ -57,13 +62,13 @@ from .vec2d import Vec2d
 
 from pymunk.constraint import *
 
-version = "3.0.0"
+version = "4.0.0"
 """The release version of this pymunk installation.
 Valid only if pymunk was installed from a source or binary 
 distribution (i.e. not in a checked-out copy from svn).
 """
 
-chipmunk_version = "%sR%s" % (cp.cpVersionString.value.decode(), '')
+chipmunk_version = "%sR%s" % (cp.cpVersionString.value.decode(), '3bdf1b7b3c')
 """The Chipmunk version compatible with this pymunk version.
 Other (newer) Chipmunk versions might also work if the new version does not 
 contain any breaking API changes.
@@ -98,6 +103,8 @@ moment.
     without any arguments.
 """
 
+cp.cpEnableSegmentToSegmentCollisions()
+
 class Space(object):
     """Spaces are the basic unit of simulation. You add rigid bodies, shapes 
     and joints to it and then step them all forward together through time. 
@@ -116,6 +123,7 @@ class Space(object):
                 Number of iterations to use in the impulse solver to solve 
                 contacts.
         """
+
         self._space = cp.cpSpaceNew()
         self._space.contents.iterations = iterations
         
@@ -125,21 +133,22 @@ class Space(object):
         self._default_handler = None
         
         self._post_step_callbacks = {}
+        self._post_callback_keys = {}
+        self._post_last_callback_key = 0
+        self._removed_shapes = {}
         
         self._shapes = {}
-        #self._static_shapes = {}
         self._bodies = set()
         self._constraints = set()
+        
+        self._locked = False
+        self._add_later = set()
+        self._remove_later = set()
 
     def _get_shapes(self):
         return list(self._shapes.values())
     shapes = property(_get_shapes, 
         doc="""A list of all the shapes added to this space (both static and non-static)""")
-
-    # def _get_static_shapes(self):
-        # return list(self._static_shapes.values())
-    # static_shapes = property(_get_static_shapes,
-        # doc="""A list of the static shapes added to this space""")
 
     def _get_bodies(self):
         return list(self._bodies)
@@ -157,13 +166,10 @@ class Space(object):
     static_body = property(_get_static_body, doc=_get_static_body.__doc__)
         
     def __del__(self):
-        # check if the imported cp still exists.. think the only case when 
-        # it doesnt is on program exit so should be more or less ok to skip 
-        # the call to *free in that case
-        if cp is not None:
+        try:
             cp.cpSpaceFree(self._space)
-            
-
+        except:
+            pass
 
     def _set_iterations(self, iterations):
         self._space.contents.iterations = iterations
@@ -264,7 +270,17 @@ class Space(object):
         """)
         
     def add(self, *objs):
-        """Add one or many shapes, bodies or joints to the space"""
+        """Add one or many shapes, bodies or joints to the space
+        
+        Unlike Chipmunk and earlier versions of pymunk its now allowed to add 
+        objects even from a callback during the simulation step. However, the 
+        add will not be performed until the end of the step.
+        """
+        
+        if self._locked:
+            self._add_later.add(objs)
+            return
+            
         for o in objs:
             if isinstance(o, Body):
                 self._add_body(o)
@@ -276,23 +292,23 @@ class Space(object):
                 for oo in o:
                     self.add(oo)
                     
-    # def add_static(self, *objs):
-        # """Add one or many static shapes to the space"""
-        # for o in objs:
-            # if isinstance(o, Shape):
-                # self._add_static_shape(o)
-            # else:
-                # for oo in o:
-                    # self.add_static(oo)
-                    
     def remove(self, *objs):
         """Remove one or many shapes, bodies or constraints from the space
+        
+        Unlike Chipmunk and earlier versions of pymunk its now allowed to 
+        remove objects even from a callback during the simulation step. 
+        However, the removal will not be performed until the end of the step.
         
         .. Note:: 
             When removing objects from the space, make sure you remove any 
             other objects that reference it. For instance, when you remove a 
             body, remove the joints and shapes attached to it. 
         """
+        
+        if self._locked:
+            self._remove_later.add(objs)
+            return
+            
         for o in objs:
             if isinstance(o, Body):
                 self._remove_body(o)
@@ -303,29 +319,12 @@ class Space(object):
             else:
                 for oo in o:
                     self.remove(oo)
-                    
-    # def remove_static(self, *objs):
-        # """Remove one or many static shapes from the space"""
-        # for o in objs:
-            # if isinstance(o, Shape):
-                # self._remove_static_shape(o)
-            # else:
-                # for oo in o:
-                    # self.remove_static(oo)
-                    
+                                        
     def _add_shape(self, shape):
         """Adds a shape to the space"""
         assert shape._hashid_private not in self._shapes, "shape already added to space"
         self._shapes[shape._hashid_private] = shape
         cp.cpSpaceAddShape(self._space, shape._shape)
-    # def _add_static_shape(self, static_shape):
-        # """Adds a shape to the space. Static shapes should be be attached to 
-        # a rigid body with an infinite mass and moment of inertia. Also, don't 
-        # add the rigid body used to the space, as that will cause it to fall 
-        # under the effects of gravity."""
-        # assert static_shape._hashid_private not in self._static_shapes, "shape already added to space"
-        # self._static_shapes[static_shape._hashid_private] = static_shape
-        # cp.cpSpaceAddStaticShape(self._space, static_shape._shape)
     def _add_body(self, body):
         """Adds a body to the space"""
         assert body not in self._bodies, "body already added to space"
@@ -340,12 +339,9 @@ class Space(object):
 
     def _remove_shape(self, shape):
         """Removes a shape from the space"""
+        self._removed_shapes[shape._hashid_private] = shape
         del self._shapes[shape._hashid_private]
         cp.cpSpaceRemoveShape(self._space, shape._shape)
-    # def _remove_static_shape(self, static_shape):
-        # """Removes a static shape from the space."""
-        # del self._static_shapes[static_shape._hashid_private]
-        # cp.cpSpaceRemoveStaticShape(self._space, static_shape._shape)
     def _remove_body(self, body):
         """Removes a body from the space"""
         body._space = None
@@ -373,11 +369,22 @@ class Space(object):
         highly recommended. Doing so will increase the efficiency of the
         contact persistence, requiring an order of magnitude fewer iterations
         to resolve the collisions in the usual case."""
-        cp.cpSpaceStep(self._space, dt)
         
-        for obj, (func, args, kwargs) in self._post_step_callbacks.items():
-            func(obj, *args, **kwargs)
+        self._locked = True
+        cp.cpSpaceStep(self._space, dt)
+        self._removed_shapes = {}
         self._post_step_callbacks = {}
+        self._post_callback_keys = {}
+        self._post_last_callback_key = 0
+        self._locked = False
+        
+        for objs in self._add_later:
+            self.add(objs)
+        self._add_later.clear()
+        
+        for objs in self._remove_later:
+            self.remove(objs)
+        self._remove_later.clear()
     
     def add_collision_handler(self, a, b, begin=None, pre_solve=None, post_solve=None, separate=None, *args, **kwargs):
         """Add a collision handler for given collision type pair. 
@@ -521,21 +528,19 @@ class Space(object):
     
     def add_post_step_callback(self, callback_function, obj, *args, **kwargs):
         """Add a function to be called last in the next simulation step.
-        
-        Post step callbacks are the place where you can break the rules about 
-        removing objects from within a callback. In fact, their primary 
-        function is to help you safely remove objects from the space that were 
-        destroyed or disabled during the step.
-        
+                
         Post step callbacks are registered as a function and an object used as 
-        a key. You can only register one post step callback per object. This 
-        prevents you from removing an object more than once. For instance, say 
-        that you get a collision callback between a bullet and object A. The 
-        bullet and object A are destroyed, so you add a post step callback for 
-        each to remove. In the same step, the same bullet also hit object B 
-        and you add two more callbacks, one for object B and a second for the 
-        bullet. This is actually just fine, and the callback to remove the 
-        bullet will only be called once! 
+        a key. You can only register one post step callback per object. 
+        
+        This function was more useful with earlier versions of pymunk where 
+        you weren't allowed to use the add and remove methods on the space 
+        during a simulation step. But this function is still available for 
+        other uses and to keep backwards compatibility. 
+        
+        .. Note::
+            If you remove a shape from the callback it will trigger the
+            collision handler for the 'separate' event if it the shape was 
+            touching when removed.
         
         :Parameters:
             callback_function : ``func(obj, *args, **kwargs)``
@@ -547,12 +552,26 @@ class Space(object):
                 Optional parameters passed to the callback function.
             kwargs
                 Optional keyword parameters passed on to the callback function.
-        
+                
+        :Return: 
+            True if key was not previously added, False otherwise
         """
-        if obj in self._post_step_callbacks:
-            return
-        self._post_step_callbacks[obj] = callback_function, args, kwargs
         
+        if obj in self._post_callback_keys:
+            return False
+            
+        def cf(_space, key, data):
+            callback_function(obj, *args, **kwargs)
+            
+        f = cp.cpPostStepFunc(cf)
+                
+        self._post_last_callback_key += 1
+        self._post_callback_keys[obj] = self._post_last_callback_key    
+        self._post_step_callbacks[obj] = f
+        
+        key = self._post_callback_keys[obj]
+        return bool(cp.cpSpaceAddPostStepCallback(self._space, f, key, None))
+                
     def point_query(self, point, layers = -1, group = 0):
         """Query space at point filtering out matches with the given layers 
         and group. Return a list of found shapes.
@@ -567,12 +586,11 @@ class Space(object):
                 Only pick shapes matching the bit mask. i.e. 
                 (layers & shape.layers) != 0
             group : int
-                Only pick shapes in this group.
+                Only pick shapes not in this group.
                 
         """
         self.__query_hits = []
         def cf(_shape, data):
-            
             shape = self._get_shape(_shape)
             self.__query_hits.append(shape)
         f = cp.cpSpacePointQueryFunc(cf)
@@ -580,14 +598,31 @@ class Space(object):
         
         return self.__query_hits
     
+    def point_query_first(self, point, layers = -1, group = 0):
+        """Query space at point and return the first shape found matching the 
+        given layers and group. Returns None if no shape was found.
+        
+        :Parameters:    
+            point : (x,y) or `Vec2d`
+                Define where to check for collision in the space.
+            layers : int
+                Only pick shapes matching the bit mask. i.e. 
+                (layers & shape.layers) != 0
+            group : int
+                Only pick shapes not in this group.
+        """
+        _shape = cp.cpSpacePointQueryFirst(self._space, point, layers, group)
+        return self._get_shape(_shape)
+        
     def _get_shape(self, _shape):
         if not bool(_shape):
             return None
         hashid_private = _shape.contents.hashid_private
+        #return self._shapes[hashid_private]  
         if hashid_private in self._shapes:
-            shape = self._shapes[hashid_private]
-        elif hashid_private in self._static_shapes:
-            shape = self._static_shapes[hashid_private]
+            shape = self._shapes[hashid_private]        
+        elif hashid_private in self._removed_shapes:
+            shape = self._removed_shapes[hashid_private]
         return shape
         
     def nearest_point_query(self, point, max_distance, layers = -1, group = 0):
@@ -606,7 +641,7 @@ class Space(object):
                 Only pick shapes matching the bit mask. i.e. 
                 (layers & shape.layers) != 0
             group : int
-                Only pick shapes in this group.
+                Only pick shapes not in this group.
         
         :Return: 
             [dict(shape=`Shape`, distance = distance, point = Vec2d)]
@@ -637,7 +672,7 @@ class Space(object):
                 Only pick shapes matching the bit mask. i.e. 
                 (layers & shape.layers) != 0
             group : int
-                Only pick shapes in this group.
+                Only pick shapes not in this group.
         
         :Return: 
             dict(shape=`Shape`, distance = distance, point = Vec2d)
@@ -650,21 +685,7 @@ class Space(object):
             return dict(shape=shape, point=info.p, distance=info.d)
         return None        
         
-    def point_query_first(self, point, layers = -1, group = 0):
-        """Query space at point and return the first shape found matching the 
-        given layers and group. Returns None if no shape was found.
-        
-        :Parameters:    
-            point : (x,y) or `Vec2d`
-                Define where to check for collision in the space.
-            layers : int
-                Only pick shapes matching the bit mask. i.e. 
-                (layers & shape.layers) != 0
-            group : int
-                Only pick shapes in this group.
-        """
-        _shape = cp.cpSpacePointQueryFirst(self._space, point, layers, group)
-        return self._get_shape(_shape)
+
         
     def segment_query(self, start, end, layers = -1, group = 0):
         """Query space along the line segment from start to end filtering out 
@@ -764,9 +785,14 @@ class Body(object):
         
         self._space = None # Weak ref to the space holding this body (if any)
         
+        self._constraints = WeakSet() # weak refs to any constraints attached
+        self._shapes = WeakSet() # weak refs to any shapes attached
+        
     def __del__(self):
-        if cp is not None:
+        try:
             cp.cpBodyFree(self._body)
+        except: 
+            pass
 
     def _set_mass(self, mass):
         cp.cpBodySetMass(self._body, mass)
@@ -963,15 +989,11 @@ class Body(object):
         
     def _is_sleeping(self):
         return cpffi.cpBodyIsSleeping(self._body)
-        #todo: use ffi function
-        #return bool(self._bodycontents.node_private.root)
     is_sleeping = property(_is_sleeping, 
         doc="""Returns true if the body is sleeping.""")
     
     def _is_rogue(self):
         return cpffi.cpBodyIsRogue(self._body)
-        #todo: use ffi function
-        return not bool(self._bodycontents.space_private)
     is_rogue = property(_is_rogue,
         doc="""Returns true if the body has not been added to a space.""")
     
@@ -1005,6 +1027,17 @@ class Body(object):
         f = cp.cpBodyArbiterIteratorFunc(impl)
         cp.cpBodyEachArbiter(self._body, f, None)
         
+    def _get_constraints(self):
+        return set(self._constraints)
+    
+    constraints = property(_get_constraints, 
+        doc="""Get the constraints this body is attached to.""")
+    
+    def _get_shapes(self):
+        return set(self._shapes)
+    
+    shapes = property(_get_shapes, 
+        doc="""Get the shapes attached to this body.""")
     
     def local_to_world(self, v):
         """Convert body local coordinates to world space coordinates
@@ -1039,9 +1072,11 @@ class Shape(object):
         self.data = None
 
     def __del__(self):
-        if cp is not None:
+        try:
             cp.cpShapeFree(self._shape)
-
+        except:
+            pass
+            
     def _get_hashid_private(self):
         return self._shapecontents.hashid_private
     _hashid_private = property(_get_hashid_private)
@@ -1135,13 +1170,46 @@ class Shape(object):
         conveyor belts or players that move around. This value is only used 
         when calculating friction, not resolving the collision.""")
 
-    body = property(lambda self: self._body, 
-        doc="""The body this shape is attached to""")
+    def _get_body(self):
+        return self._body
+    def _set_body(self, body):
+        if self._body != None:
+            self._body._shapes.remove(self)
+        if body != None:
+            body._shapes.add(self)
+            self._shapecontents.body = body._body
+        else:
+            self._shapecontents.body = None
+            
+        self._body = body
+        
+    body = property(_get_body, _set_body,
+        doc="""The body this shape is attached to. Can be set to None to 
+        indicate that this shape doesnt belong to a body.""")
 
+    def update(self, position, rotation_vector):
+        """Update, cache and return the bounding box of a shape with an 
+        explicit transformation.
+        
+        Useful if you have a shape without a body and want to use it for 
+        querying.
+        """
+        return BB(cp.cpShapeUpdate(self._shape, position, rotation_vector))
+        
     def cache_bb(self):
         """Update and returns the bouding box of this shape"""
         return BB(cp.cpShapeCacheBB(self._shape))
 
+    def _get_bb(self):
+        return BB(cpffi.cpShapeGetBB(self._shape))
+        
+    bb = property(_get_bb, doc="""The bounding box of the shape.
+    Only guaranteed to be valid after Shape.cache_bb() or Space.step() is 
+    called. Moving a body that a shape is connected to does not update it's 
+    bounding box. For shapes used for queries that aren't attached to bodies, 
+    you can also use Shape.update().
+    """)
+        
     def point_query(self, p):
         """Check if the given point lies within the shape."""
         return bool(cp.cpShapePointQuery(self._shape, p))
@@ -1159,6 +1227,244 @@ class Shape(object):
         else:
             return None
     
+
+    
+class Circle(Shape):
+    """A circle shape defined by a radius
+    
+    This is the fastest and simplest collision shape
+    """
+    def __init__(self, body, radius, offset = (0, 0)):
+        """body is the body attach the circle to, offset is the offset from the
+        body's center of gravity in body local coordinates.
+        
+        It is legal to send in None as body argument to indicate that this 
+        shape is not attached to a body.
+        """
+        self._body = body
+        body_body = None if body is None else body._body
+        if body != None: 
+            body._shapes.add(self)
+        
+        self._shape = cp.cpCircleShapeNew(body_body, radius, offset)
+        self._shapecontents = self._shape.contents
+        self._cs = ct.cast(self._shape, ct.POINTER(cp.cpCircleShape))
+        
+        
+    def unsafe_set_radius(self, r):
+        """Unsafe set the radius of the circle. 
+    
+        .. note:: 
+            This change is only picked up as a change to the position 
+            of the shape's surface, but not it's velocity. Changing it will 
+            not result in realistic physical behavior. Only use if you know 
+            what you are doing!
+        """
+        cp.cpCircleShapeSetRadius(self._shape, r)
+        
+    def _get_radius(self):
+        return cp.cpCircleShapeGetRadius(self._shape)
+    radius = property(_get_radius, doc="""The Radius of the circle""")
+
+    def unsafe_set_offset(self, o):
+        """Unsafe set the offset of the circle. 
+    
+        .. note:: 
+            This change is only picked up as a change to the position 
+            of the shape's surface, but not it's velocity. Changing it will 
+            not result in realistic physical behavior. Only use if you know 
+            what you are doing!
+        """
+        cp.cpCircleShapeSetOffset(self._shape, o)
+    
+    def _get_offset (self):
+        return cp.cpCircleShapeGetOffset(self._shape)
+    offset = property(_get_offset, doc="""Offset. (body space coordinates)""")
+
+    
+class Segment(Shape):
+    """A line segment shape between two points
+    
+    This shape can be attached to moving bodies, but don't currently generate 
+    collisions with other line segments. Can be beveled in order to give it a 
+    thickness. 
+    
+    It is legal to send in None as body argument to indicate that this 
+    shape is not attached to a body.
+    """
+    def __init__(self, body, a, b, radius):
+        """Create a Segment
+        
+        :Parameters:
+            body : `Body`
+                The body to attach the segment to
+            a : (x,y) or `Vec2d`
+                The first endpoint of the segment
+            b : (x,y) or `Vec2d`
+                The second endpoint of the segment
+            radius : float
+                The thickness of the segment
+        """
+        self._body = body
+        body_body = None if body is None else body._body
+        if body != None: 
+            body._shapes.add(self)
+        self._shape = cp.cpSegmentShapeNew(body_body, a, b, radius)
+        self._shapecontents = self._shape.contents
+    
+    def unsafe_set_a(self, a):
+        """Set the first of the two endpoints for this segment
+
+        .. note:: 
+            This change is only picked up as a change to the position 
+            of the shape's surface, but not it's velocity. Changing it will 
+            not result in realistic physical behavior. Only use if you know 
+            what you are doing!
+        """
+        ct.cast(self._shape, ct.POINTER(cp.cpSegmentShape)).contents.a = a
+    def _get_a(self):
+        return ct.cast(self._shape, ct.POINTER(cp.cpSegmentShape)).contents.a
+    a = property(_get_a,  
+        doc="""The first of the two endpoints for this segment""")
+
+    def unsafe_set_b(self, b):
+        """Set the second of the two endpoints for this segment
+
+        .. note:: 
+            This change is only picked up as a change to the position 
+            of the shape's surface, but not it's velocity. Changing it will 
+            not result in realistic physical behavior. Only use if you know 
+            what you are doing!
+        """
+        ct.cast(self._shape, ct.POINTER(cp.cpSegmentShape)).contents.b = b
+    def _get_b(self):
+        return ct.cast(self._shape, ct.POINTER(cp.cpSegmentShape)).contents.b
+    b = property(_get_b,  
+        doc="""The second of the two endpoints for this segment""")
+        
+    def unsafe_set_radius(self, r):
+        """Set the radius of the segment
+
+        .. note:: 
+            This change is only picked up as a change to the position 
+            of the shape's surface, but not it's velocity. Changing it will 
+            not result in realistic physical behavior. Only use if you know 
+            what you are doing!
+        """
+        ct.cast(self._shape, ct.POINTER(cp.cpSegmentShape)).contents.r = r
+    def _get_radius(self):
+        return ct.cast(self._shape, ct.POINTER(cp.cpSegmentShape)).contents.r
+    radius = property(_get_radius,  
+        doc="""The radius/thickness of the segment""")
+
+
+class Poly(Shape):
+    """A convex polygon shape
+    
+    Slowest, but most flexible collision shape.
+
+    It is legal to send in None as body argument to indicate that this 
+    shape is not attached to a body.    
+    """
+    def __init__(self, body, vertices, offset=(0, 0), radius=0):
+        """Create a polygon
+        
+            body : `Body`
+                The body to attach the poly to
+            vertices : [(x,y)] or [`Vec2d`]
+                Define a convex hull of the polygon with a counterclockwise
+                winding.
+            offset : (x,y) or `Vec2d`
+                The offset from the body's center of gravity in body local 
+                coordinates.
+            radius : int
+                Set the radius of the poly shape.
+        """
+        
+        self._body = body
+        self.offset = offset
+        self._set_verts(vertices)
+                
+        body_body = None if body is None else body._body
+        if body != None: 
+            body._shapes.add(self)
+        self._shape = cp.cpPolyShapeNew2(body_body, len(vertices), self.verts, offset, radius)
+        self._shapecontents = self._shape.contents
+
+    def unsafe_set_radius(self, radius):
+        """Unsafe set the radius of the poly.
+
+        .. note:: 
+            This change is only picked up as a change to the position 
+            of the shape's surface, but not it's velocity. Changing it will 
+            not result in realistic physical behavior. Only use if you know 
+            what you are doing!
+        """
+        cp.cpPolyShapeSetRadius(self._shape, radius)    
+    
+    def _get_radius(self):
+        return cp.cpPolyShapeGetRadius(self._shape)
+    radius = property(_get_radius, 
+        doc="""The radius of the poly shape. Extends the poly in all 
+        directions with the given radius""")
+
+    def _set_verts(self, vertices):
+        auto_order_vertices = True
+        self.verts = (Vec2d * len(vertices))
+        self.verts = self.verts(Vec2d(0, 0))
+        
+        i_vs = enumerate(vertices)
+        if auto_order_vertices and not u.is_clockwise(vertices):
+            i_vs = zip(range(len(vertices)-1, -1, -1), vertices)
+        
+        for (i, vertex) in i_vs:
+            self.verts[i].x = vertex[0]
+            self.verts[i].y = vertex[1]
+        
+    @staticmethod
+    def create_box(body, size=(10,10), offset=(0,0), radius=0): 
+        """Convenience function to create a box centered around the body position.
+
+        The size is given as as (w,h) tuple.
+        """
+        x,y = size[0]*.5,size[1]*.5
+        vs = [(-x,-y),(-x,y),(x,y),(x,-y)]
+    
+        return Poly(body, vs, offset, radius)
+        
+        
+    def get_vertices(self): 
+        """Get the vertices in world coordinates for the polygon
+        
+        :return: [`Vec2d`] in world coords
+        """
+        #shape = ct.cast(self._shape, ct.POINTER(cp.cpPolyShape))
+        #num = shape.contents.numVerts
+        #verts = shape.contents.verts
+        points = []
+        rv = self._body.rotation_vector
+        bp = self._body.position
+        vs = self.verts
+        o = self.offset
+        for i in range(len(vs)):
+            p = (vs[i]+o).cpvrotate(rv)+bp
+            points.append(Vec2d(p))
+            
+        return points
+
+    def unsafe_set_vertices(self, vertices, offset=(0, 0)):
+        """Unsafe set the vertices of the poly. 
+    
+        .. note:: 
+            This change is only picked up as a change to the position 
+            of the shape's surface, but not it's velocity. Changing it will 
+            not result in realistic physical behavior. Only use if you know 
+            what you are doing!
+        """
+        self._set_verts(vertices)
+        cp.cpPolyShapeSetVerts(self._shape, len(vertices), self.verts, offset)
+        
+        
 class SegmentQueryInfo(object):
     """Segment queries return more information than just a simple yes or no, 
     they also return where a shape was hit and it's surface normal at the hit 
@@ -1200,163 +1506,6 @@ class SegmentQueryInfo(object):
         return Vec2d(self._start).get_distance(self._end) * self.t
     
     
-class Circle(Shape):
-    """A circle shape defined by a radius
-    
-    This is the fastest and simplest collision shape
-    """
-    def __init__(self, body, radius, offset = (0, 0)):
-        """body is the body attach the circle to, offset is the offset from the
-        body's center of gravity in body local coordinates."""
-        self._body = body
-        self._shape = cp.cpCircleShapeNew(body._body, radius, offset)
-        self._shapecontents = self._shape.contents
-        self._cs = ct.cast(self._shape, ct.POINTER(cp.cpCircleShape))
-        
-    def unsafe_set_radius(self, r):
-        """Unsafe set the radius of the circle. 
-    
-        .. note:: 
-            This change is only picked up as a change to the position 
-            of the shape's surface, but not it's velocity. Changing it will 
-            not result in realistic physical behavior. Only use if you know 
-            what you are doing!
-        """
-        cp.cpCircleShapeSetRadius(self._shape, r)
-        
-    def _get_radius(self):
-        return cp.cpCircleShapeGetRadius(self._shape)
-    radius = property(_get_radius, doc="""The Radius of the circle""")
-
-    def unsafe_set_offset(self, o):
-        """Unsafe set the offset of the circle. 
-    
-        .. note:: 
-            This change is only picked up as a change to the position 
-            of the shape's surface, but not it's velocity. Changing it will 
-            not result in realistic physical behavior. Only use if you know 
-            what you are doing!
-        """
-        cp.cpCircleShapeSetOffset(self._shape, o)
-    
-    def _get_offset (self):
-        return cp.cpCircleShapeGetOffset(self._shape)
-    offset = property(_get_offset, doc="""Offset. (body space coordinates)""")
-
-    
-class Segment(Shape):
-    """A line segment shape between two points
-    
-    This shape can be attached to moving bodies, but don't currently generate 
-    collisions with other line segments. Can be beveled in order to give it a 
-    thickness. 
-    """
-    def __init__(self, body, a, b, radius):
-        """Create a Segment
-        
-        :Parameters:
-            body : `Body`
-                The body to attach the segment to
-            a : (x,y) or `Vec2d`
-                The first endpoint of the segment
-            b : (x,y) or `Vec2d`
-                The second endpoint of the segment
-            radius : float
-                The thickness of the segment
-        """
-        self._body = body
-        self._shape = cp.cpSegmentShapeNew(body._body, a, b, radius)
-        self._shapecontents = self._shape.contents
-    
-    def _set_a(self, a):
-        ct.cast(self._shape, ct.POINTER(cp.cpSegmentShape)).contents.a = a
-    def _get_a(self):
-        return ct.cast(self._shape, ct.POINTER(cp.cpSegmentShape)).contents.a
-    a = property(_get_a, _set_a, 
-        doc="""The first of the two endpoints for this segment""")
-
-    def _set_b(self, b):
-        ct.cast(self._shape, ct.POINTER(cp.cpSegmentShape)).contents.b = b
-    def _get_b(self):
-        return ct.cast(self._shape, ct.POINTER(cp.cpSegmentShape)).contents.b
-    b = property(_get_b, _set_b, 
-        doc="""The second of the two endpoints for this segment""")
-        
-    def _set_radius(self, r):
-        ct.cast(self._shape, ct.POINTER(cp.cpSegmentShape)).contents.r = r
-    def _get_radius(self):
-        return ct.cast(self._shape, ct.POINTER(cp.cpSegmentShape)).contents.r
-    radius = property(_get_radius, _set_radius, 
-        doc="""The thickness of the segment""")
-
-
-class Poly(Shape):
-    """A convex polygon shape
-    
-    Slowest, but most flexible collision shape. 
-    """
-    def __init__(self, body, vertices, offset=(0, 0), auto_order_vertices=True):
-        """Create a polygon
-        
-            body : `Body`
-                The body to attach the poly to
-            vertices : [(x,y)] or [`Vec2d`]
-                Define a convex hull of the polygon with a counterclockwise
-                winding.
-            offset : (x,y) or `Vec2d`
-                The offset from the body's center of gravity in body local 
-                coordinates. 
-            auto_order_vertices : bool 
-                Set to True to automatically order the vertices. If you know 
-                the vertices are in the correct (clockwise) orded you can gain 
-                a little performance by setting this to False.
-        """
-        
-        self._body = body
-        self.offset = offset
-        #self.verts = (Vec2d * len(vertices))(*vertices)
-        self.verts = (Vec2d * len(vertices))
-        self.verts = self.verts(Vec2d(0, 0))
-        
-        i_vs = enumerate(vertices)
-        if auto_order_vertices and not u.is_clockwise(vertices):
-            i_vs = zip(range(len(vertices)-1, -1, -1), vertices)
-        
-        for (i, vertex) in i_vs:
-            self.verts[i].x = vertex[0]
-            self.verts[i].y = vertex[1]
-
-        self._shape = cp.cpPolyShapeNew(body._body, len(vertices), self.verts, offset)
-        self._shapecontents = self._shape.contents
-        
-    @staticmethod
-    def create_box(body, size=(10,10)): 
-        """Convenience function to create a box centered around the body position."""
-        x,y = size[0]*.5,size[1]*.5
-        vs = [(-x,-y),(-x,y),(x,y),(x,-y)]
-    
-        return Poly(body,vs)
-        
-    def get_points(self):
-        """Get the points in world coordinates for the polygon
-        
-        :return: [`Vec2d`] in world coords
-        """
-        #shape = ct.cast(self._shape, ct.POINTER(cp.cpPolyShape))
-        #num = shape.contents.numVerts
-        #verts = shape.contents.verts
-        points = []
-        rv = self._body.rotation_vector
-        bp = self._body.position
-        vs = self.verts
-        o = self.offset
-        for i in range(len(vs)):
-            p = (vs[i]+o).cpvrotate(rv)+bp
-            points.append(Vec2d(p))
-            
-        return points
-
-        
 def moment_for_circle(mass, inner_radius, outer_radius, offset=(0, 0)):
     """Calculate the moment of inertia for a circle"""
     return cp.cpMomentForCircle(mass, inner_radius, outer_radius, offset)
@@ -1580,7 +1729,7 @@ class BB(object):
     
     def clamp_vect(self, v):
         """Returns a copy of the vector v clamped to the bounding box"""
-        return cp.cpBBClampVect(self._bb, v)
+        return cpffi.cpBBClampVect(self._bb, v)
     
     def wrap_vect(self, v):
         """Returns a copy of v wrapped to the bounding box.

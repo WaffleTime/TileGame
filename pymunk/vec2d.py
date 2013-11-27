@@ -41,7 +41,7 @@ do not need to explcitily do conversions if you happen to have a tuple::
     Vec2d(5.0, 11.0)
 
 """
-__version__ = "$Id: vec2d.py 439 2012-08-30 22:14:05Z vb@viblo.se $"
+__version__ = "$Id: vec2d.py 478 2013-01-21 11:01:39Z vb@viblo.se $"
 __docformat__ = "reStructuredText"
 
 import operator
@@ -483,16 +483,12 @@ class Vec2d(ctypes.Structure):
         """The inverse of cpvrotate"""
         return Vec2d(self.x*other.x + self.y*other.y, self.y*other.x - self.x*other.y)
     
-    # Pickle, does not work atm.
-    def __getstate__(self):
-        return [self.x, self.y]
-        
-    def __setstate__(self, dict):
-        self.x, self.y = dict
-    def __newobj__(cls, *args):
-        return cls.__new__(cls, *args)   
+    # Pickle
+    def __reduce__(self):
+        callable = Vec2d
+        args = (self.x, self.y)
+        return (callable, args)
 
-       
 Vec2d._fields_ = [
             ('x', float_type),
             ('y', float_type),

@@ -76,10 +76,23 @@ class Entity_PQueue(Entity):
                 else:
                     #Add to a existing bodies' list of shapes.
                     shapesOfBodies[shapeIndx].append(shape._Get_Shapes())
+
+            cSpace = self._Get_Component("CSPACE:EntityPool")
                     
             #Now we need to add the bodies along with their shapes into the collision space.
             for bodyIndx in xrange(len(bodies)):
-                self._Get_Component("CSPACE:EntityPool")._Add_Shape(bodies[bodyIndx], shapesOfBodies[bodyIndx])
+                cSpace._Add_Shape(bodies[bodyIndx], shapesOfBodies[bodyIndx])
+
+            #print "About to add entity's constraints to the space."
+
+            #Now that we've added the CBODY's into the CSPACE, we need to add CCONSTRAINTS as well.
+            #   Then those components can be removed from the entity as they are unneeded thereafter.
+            for constraintComponent in entity._Get_All_Components("CCONSTRAINT"):
+
+                print "This should be a constraint that is being added to the cSpace:", constraintComponent._Get_Constraint()
+                cSpace._Add_Constraint(constraintComponent._Get_Constraint())
+
+                #entity._Remove_Component(constraintComponent._Get_Name())
                 
         else:
                 entity._Set_Collidable(False)
@@ -105,7 +118,11 @@ class Entity_PQueue(Entity):
     def _Update(self, timeElapsed):
         """This will be where we update all of the contained entities. (This happens once per game update!)"""
 
+        #print "gonna update the cSpace."
+
         Entity._Update(self, timeElapsed)
+
+        #print "done updating the cSpace."
         
         for indx in xrange(len(self._pqEntities)):
             #This will check to see if the current Entity has signaled to be removed.
