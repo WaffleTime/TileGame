@@ -242,7 +242,7 @@ class Input_Manager(object):
 
     @staticmethod
     def _Remove_Key_Listener(sKeyCode):
-        """This currently does not work the way it should. If there are any key listeners that use the same system funcs andentities"""
+        """This currently does not work the way it should. If there are any key listeners that use the same system funcs and entities"""
         tKeyData = Input_Manager.dKeyListeners.get(sKeyCode,None)
         if tKeyData != None:
             if tKeyData[0] == "action":
