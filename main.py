@@ -569,7 +569,6 @@ def main():
             elif event.type == sf.Event.GAINED_FOCUS:
                 windowIsActive = True
 
-
         iLoops = 0  #A counter for the amount of game update loops that are made in sucession whilst skipping rendering updates.
         
         #This loop will start if it is time to commence the next update and will keep going if we are behind schedule and need to catch up.
