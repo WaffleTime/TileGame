@@ -50,4 +50,4 @@ python main.py
 Below is just a sample of the main menu. The really interesting part about this menu is that it is built using the same
 components and systems that are used in many of the other parts of the current game. It really was incredible to watch as it evolved.
 
-[sample](https://https://github.com/jawaff/TileGame/images/sample.jpg)
+[sample](https://https://github.com/jawaff/TileGame/blob/master/images/sample.jpg)
