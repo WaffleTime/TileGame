@@ -34,3 +34,9 @@ nosetests.xml
 .mr.developer.cfg
 .project
 .pydevproject
+
+
+# Generated Dirs/Files
+ChunkData/
+MapData/
+SavedGames/

@@ -1,4 +1,3 @@
-import components
 from ClassRetrieval import getClass
 from Entity import Entity
 import config

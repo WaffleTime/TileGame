@@ -7,7 +7,7 @@ import xml.etree.ElementTree as ET
 #This is solely for reparsing xml files to give them indentations so that they are readable..
 from xml.dom import minidom
 import config
-import entities
+from Entity import Entity
 from ClassRetrieval import getClass
 
 #This is only necessary because the system functions for altering the tile environment
@@ -834,12 +834,12 @@ def Generate_World_Data(dEntities):
             if iCurrentChunk == 0:
                 #These two moves will move the chunk manager over four new chunks.
                 Move_Chunk_Position( {"ChunkMan":dEntities["ChunkMan"],
-                                      "Offset":entities.Entity("",  \
-                                                       "",  \
-                                                       1,   \
-                                                       {"pos":getClass("Position")( {"componentID":"direction",    \
-                                                                 "positionX":lOrderOfOffsetsX[iSpiralOffset%4],             \
-                                                                 "positionY":lOrderOfOffsetsY[iSpiralOffset%4]} )})} )
+                                      "Offset":Entity("",  \
+                                                      "",  \
+                                                      1,   \
+                                                      {"pos":getClass("Position")( {"componentID":"direction",    \
+                                                       "positionX":lOrderOfOffsetsX[iSpiralOffset%4],             \
+                                                       "positionY":lOrderOfOffsetsY[iSpiralOffset%4]} )})} )
 
                 #This is called here, because it will speed up the world generation if this is called
                 #   only when it needs to be (and that's right after the chunk position is moved.)

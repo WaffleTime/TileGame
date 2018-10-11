@@ -1,8 +1,5 @@
-import components
+import component
 import config
-
-#Maybe we can include the Components file here and then have
-#assemblage functions for creating common entities.
 
 class Entity(object):
     def __init__(self, sEntityName, sEntityType, iDrawPriority, dAttribs):

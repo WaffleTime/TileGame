@@ -1,4 +1,3 @@
-import components
 from ClassRetrieval import getClass
 from Entity import Entity
 import config
@@ -24,13 +23,13 @@ def Assemble_MCData_Storage(sEntityName, sEntityType, iDrawPriority, attribDict)
 
     entity = Entity(sEntityName, sEntityType, iDrawPriority, {})
 
+    List = getClass("List")
+    Counter = getClass("Counter")
+	
     #This will be what stores the Markov Chain data for the map generation.
     #   But after the data is all gathered and converted, it will be saved to
     #   some xml files.
-    MCData = components.List({"componentID":"MCData"})
-
-    List = getClass("List")
-    Counter = getClass("Counter")
+    MCData = List({"componentID":"MCData"})
 
     for layer in xrange(config.CHUNK_LAYERS):
 
